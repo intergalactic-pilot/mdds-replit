@@ -81,8 +81,8 @@ export function commitPurchases(
     }
   }
   
-  // Clear cart
-  teamState.cart = [];
+  // Clear cart (must be done AFTER applying effects to avoid being overwritten)
+  newGameState.teams[team].cart = [];
   
   // Add to strategy log
   newGameState.strategyLog.push({
