@@ -1,0 +1,172 @@
+
+Build an interactive MDDS — Multi Domain Deterrence Strategy (web app)
+Non-negotiable constraints
+•	Title and all UI text: never use the words “game” or “operation.” Use “strategy” instead. Add a runtime guard that replaces these words if they ever appear.
+•	Teams: NATO and Russia.
+•	Domains (fixed colors):
+o	Joint #808080 (grey)
+o	Economy #2e8b57 (green)
+o	Cognitive #800080 (purple)
+o	Space #1e90ff (blue)
+o	Cyber #ffd700 (yellow)
+•	Card types:
+1.	Asset — immediate deterrence effects when purchases are committed.
+2.	Permanent — persist for buyer; apply –50K flat discount to the specific card IDs listed for that Permanent (from data). Discounts apply before spending checks.
+3.	Expert — skip one full turn before becoming available; no deterrence effect; display informational text only.
+•	Starting deterrence: 100 per domain (Cyber/Economy/Cognitive/Space/Joint), total 500 per team.
+•	Budgets:
+o	Turn 1 (Base Turn): each team must spend 200K per domain (five lanes; total 1000K) only within that domain.
+o	Turns 2+: each team has 1000K pooled; free allocation across domains.
+•	Currency label: K.
+•	End: toggle to set maximum turns (default 8) or allow both teams to Conclude Strategy; show final per-domain and total deterrence with deltas.
+Tech stack
+•	Vite + React + TypeScript
+•	State: Zustand or Redux Toolkit
+•	Styling: Tailwind CSS
+•	Persistence: localStorage (save/load/export/import strategy state)
+•	No backend
+Project structure
+/src
+  /components
+    DomainTrack.tsx
+    CardShop.tsx
+    CardDetailModal.tsx
+    TeamPanel.tsx
+    TurnController.tsx
+    BudgetBar.tsx
+    Scoreboard.tsx
+    StrategyLog.tsx
+    Toast.tsx
+  /data
+    cards.json            // USE the provided JSON content below (from Excel)
+  /logic
+    scoring.ts            // deterrence calc
+    turnEngine.ts         // phases: purchase/commit/activate/recompute/advance
+    pricing.ts            // applies –50K Permanent discounts to listed IDs
+    guards.ts             // forbidden-words guard (“game”, “operation”)
+    filters.ts            // domain quotas filter
+  /state
+    store.ts              // teams, cart, budgets, turn, history
+  App.tsx
+  main.tsx
+index.html
+tailwind.config.js
+UI/UX
+•	Top bar: title, Rules modal, New Strategy, Save/Load, Export/Import JSON, Conclude Strategy.
+•	Two Team Panels (NATO / Russia): budget, owned Permanents (badges), Expert queue (with T+1 availability), deterrence bars per domain, total.
+•	Center: Card Shop with filters (domain/type/cost/search) + Cart; Card Detail Modal shows cost, type, domain, effects; for Permanents, list target card IDs they discount by –50K.
+•	Bottom: Turn Controller (Commit Purchases, Advance Turn, Undo last commit), Strategy Log (chronological).
+•	A11y: keyboard navigation, ARIA on modals, AA contrast.
+Turn & phase logic
+1.	Purchase Phase: add/remove cards, enforce budget rules (Turn-1 lanes vs Turn-2+ pooled).
+2.	Commit Phase (deterministic order):
+o	Apply Permanent discount rules (–50K per eligible card ID); recompute cart costs.
+o	Deduct cost; block overspend.
+o	Queue Expert cards (no deterrence this turn).
+o	Apply Asset effects to deterrence (buyer/opponent, domain, signed delta).
+3.	Expert Activation: experts purchased in Turn t become Active (Informational) in Turn t+1; still no deterrence effect.
+4.	Recompute Deterrence per team/domain (clamp ≥ 0) and Total Deterrence (sum of five domains).
+5.	Advance Turn.
+Data model (TypeScript)
+type Domain = 'cyber' | 'economy' | 'cognitive' | 'space' | 'joint';
+type CardType = 'asset' | 'permanent' | 'expert';
+
+interface CardEffect {
+  target: 'self' | 'opponent';   // A = self, B = opponent
+  domain: Domain;                // affected domain
+  delta: number;                 // signed change to deterrence
+}
+
+interface PermanentMods {
+  flatDiscountK: number;         // ALWAYS -50K for listed cards
+  appliesToCardIds: string[];    // exact card IDs this permanent discounts
+}
+
+interface Card {
+  id: string;                    // from Excel (e.g., J1, CY7, E3, ...)
+  name: string;
+  domain: Domain;                // inferred from ID prefix
+  type: CardType;                // asset | permanent | expert
+  baseCostK: number;             // integer K units from Excel
+  effects?: CardEffect[];        // only for asset
+  permanentMods?: PermanentMods; // only for permanent
+  expertInfo?: string;           // only for expert
+}
+Domain quotas (load-time filter)
+Your Excel contains slightly more cards than requested for Joint. Enforce this strict distribution at load time:
+•	Economy: 10
+•	Cyber: 11
+•	Joint: 9
+•	Space: 10
+•	Cognitive: 13
+If a domain has more than its quota in the input JSON, sort by numeric part of the ID (e.g., J1, J2, …) and keep the first N; mark extras as hidden and do not display them.
+Implement helper:
+// filters.ts
+export function applyDomainQuotas(cards: Card[]): Card[] {
+  const quotas: Record<Domain, number> = {
+    economy: 10, cyber: 11, joint: 9, space: 10, cognitive: 13
+  };
+  const byDomain: Record<Domain, Card[]> = {
+    economy: [], cyber: [], joint: [], space: [], cognitive: []
+  };
+  for (const c of cards) byDomain[c.domain].push(c);
+  const kept: Card[] = [];
+  for (const dom of Object.keys(byDomain) as Domain[]) {
+    const sorted = byDomain[dom].slice().sort((a,b)=>{
+      const na = parseInt(a.id.replace(/\D/g,'')) || 0;
+      const nb = parseInt(b.id.replace(/\D/g,'')) || 0;
+      return na - nb;
+    });
+    kept.push(...sorted.slice(0, quotas[dom]));
+  }
+  return kept;
+}
+Pricing & discounts
+•	Before checkout, collect all Permanents the buyer already owns.
+•	For each card in the cart, if its id appears in any owned Permanent’s appliesToCardIds, subtract 50K (do not go below 0).
+•	If multiple Permanents reference the same target card, discounts stack additively (e.g., two references = –100K), but cost cannot be negative.
+•	Apply discounts, then validate budget.
+Strategy Log (examples)
+•	“NATO committed purchases: CY3 (–100K after discounts), S2 (–50K after discounts).”
+•	“Expert queued: J11 — available next turn (informational only).”
+•	“Deterrence adjusted: NATO +7 Cyber, Russia –7 Space; Totals NATO 522, Russia 498.”
+Forbidden-word guard
+•	At build-time: ensure no static string contains “game” or “operation.”
+•	At runtime: sanitize rendered text nodes; replace with “strategy.”
+Save / Load
+•	Save entire state to localStorage.
+•	Export/Import JSON for portability.
+Acceptance tests
+•	Turn-1 domain lanes enforced (200K each).
+•	Turn-2+ pooled 1000K allowed.
+•	Permanent –50K discount applied only to the specified target card IDs; stacks; min 0.
+•	Experts delay by exactly one turn; no deterrence effect ever.
+•	Assets apply buyer/opponent deltas per domain correctly; deterrence never < 0.
+•	Domain quotas enforced at load.
+•	Forbidden words never render.
+•	A11y checks pass keyboard navigation.
+________________________________________
+Seed data (cards.json)
+Use the JSON file parsed from your Excel that includes:
+•	All card names and IDs.
+•	Effects interpreted as:
+o	“A [DOMAIN] = X” → { target: "self", domain, delta: X }
+o	“B [DOMAIN] = X” → { target: "opponent", domain, delta: X }
+•	Permanent cards with
+permanentMods: { flatDiscountK: 50, appliesToCardIds: [ ...exact IDs from the row... ] }
+•	Expert cards with expertInfo.
+➡️ Either copy the JSON from the downloaded file into /src/data/cards.json, or load it at build time.
+Download: mdds_cards_from_excel.json
+________________________________________
+Implementation notes
+•	Infer domain from ID prefix: E→economy, CY→cyber, CG→cognitive, S→space, J→joint.
+•	Use Tailwind for domain color accents (pills/badges/left borders).
+•	Provide a compact delta (▲/▼) per domain on the Scoreboard.
+•	Add a Reset Strategy button with confirmation.
+________________________________________
+How to use
+1.	Create a new Replit (Vite React TS).
+2.	Paste this entire prompt to generate the project.
+3.	Replace /src/data/cards.json with the content from mdds_cards_from_excel.json.
+4.	Run and verify: Turn-1 lanes, discount application (–50K per listed ID), Expert timing, and domain quotas (10/11/9/10/13).
+
