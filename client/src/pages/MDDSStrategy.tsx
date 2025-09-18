@@ -7,7 +7,7 @@ import AppHeader from '../components/AppHeader';
 import TeamPanel from '../components/TeamPanel';
 import CardShop from '../components/CardShop';
 import CardDetailModal from '../components/CardDetailModal';
-import TurnController from '../components/TurnController';
+import { SkipForward } from 'lucide-react';
 import DeterrenceChart from '../components/DeterrenceChart';
 import CartDisplay from '../components/CartDisplay';
 import cardsData from '../data/cards.json';
@@ -162,29 +162,9 @@ export default function MDDSStrategy() {
               </div>
             </div>
 
-            {/* Right Sidebar - Turn Controller and Cart */}
+            {/* Right Sidebar - NATO and Russia Carts */}
             <div className="lg:col-span-2 order-3">
               <div className="lg:sticky lg:top-24 space-y-4">
-                <div className="glass-panel p-4">
-                  <TurnController
-                    currentTurn={store.turn}
-                    maxTurns={store.maxTurns}
-                    currentTeam={store.currentTeam}
-                    phase={store.phase}
-                    onCommitPurchases={() => {
-                      store.commitTeamPurchases(store.currentTeam);
-                      store.saveToLocalStorage(); // Auto-save after commits
-                    }}
-                    onAdvanceTurn={() => {
-                      store.advanceGameTurn();
-                      store.saveToLocalStorage(); // Auto-save after turn advance
-                    }}
-                    canCommit={canCommit && canAfford}
-                    canAdvance={canAdvance}
-                    validationErrors={validationErrors}
-                  />
-                </div>
-
                 <div className="glass-panel p-4">
                   <CartDisplay
                     team="NATO"
@@ -192,6 +172,12 @@ export default function MDDSStrategy() {
                     onRemoveFromCart={(cardId) => store.removeFromCart('NATO', cardId)}
                     getDiscountedPrice={priceForNATO}
                     cartTotal={natoCartTotal}
+                    onConfirmPurchases={() => {
+                      store.commitTeamPurchases('NATO');
+                      store.saveToLocalStorage();
+                    }}
+                    canConfirm={natoState.cart.length > 0 && natoCartTotal <= natoState.budget}
+                    budget={natoState.budget}
                   />
                 </div>
 
@@ -202,7 +188,30 @@ export default function MDDSStrategy() {
                     onRemoveFromCart={(cardId) => store.removeFromCart('Russia', cardId)}
                     getDiscountedPrice={priceForRussia}
                     cartTotal={russiaCartTotal}
+                    onConfirmPurchases={() => {
+                      store.commitTeamPurchases('Russia');
+                      store.saveToLocalStorage();
+                    }}
+                    canConfirm={russiaState.cart.length > 0 && russiaCartTotal <= russiaState.budget}
+                    budget={russiaState.budget}
                   />
+                </div>
+
+                {/* Finish Turn Button */}
+                <div className="glass-panel p-4">
+                  <Button
+                    onClick={() => {
+                      store.advanceGameTurn();
+                      store.saveToLocalStorage();
+                    }}
+                    size="lg"
+                    variant="outline"
+                    className="w-full"
+                    data-testid="button-finish-turn"
+                  >
+                    <SkipForward className="w-4 h-4 mr-2" />
+                    Finish Turn {store.turn}/{store.maxTurns}
+                  </Button>
                 </div>
               </div>
             </div>

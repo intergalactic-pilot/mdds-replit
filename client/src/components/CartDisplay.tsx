@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Trash2 } from "lucide-react";
+import { ShoppingCart, Trash2, Play } from "lucide-react";
 import { Card as CardType } from '@shared/schema';
 import { sanitizeText } from '../logic/guards';
 import { formatCurrency } from '../logic/pricing';
@@ -13,6 +13,9 @@ interface CartDisplayProps {
   onRemoveFromCart?: (cardId: string) => void;
   getDiscountedPrice: (card: CardType) => number;
   cartTotal: number;
+  onConfirmPurchases?: () => void;
+  canConfirm?: boolean;
+  budget?: number;
 }
 
 export default function CartDisplay({ 
@@ -20,7 +23,10 @@ export default function CartDisplay({
   cartItems, 
   onRemoveFromCart,
   getDiscountedPrice,
-  cartTotal
+  cartTotal,
+  onConfirmPurchases,
+  canConfirm = true,
+  budget
 }: CartDisplayProps) {
   const teamColor = team === 'NATO' ? 'text-blue-400' : 'text-red-400';
   const teamBgColor = team === 'NATO' ? 'bg-blue-600' : 'bg-red-600';
@@ -109,10 +115,30 @@ export default function CartDisplay({
         )}
 
         {cartItems.length > 0 && (
-          <div className="mt-3 pt-3 border-t border-border">
+          <div className="mt-3 pt-3 border-t border-border space-y-3">
             <div className="text-xs text-muted-foreground">
               <p>Effects will be applied when you commit purchases</p>
             </div>
+            
+            {onConfirmPurchases && (
+              <div className="space-y-2">
+                {budget && cartTotal > budget && (
+                  <div className="text-xs text-destructive">
+                    ⚠️ Total exceeds budget ({formatCurrency(budget)})
+                  </div>
+                )}
+                <Button
+                  onClick={onConfirmPurchases}
+                  disabled={!canConfirm}
+                  size="sm"
+                  className={`w-full ${team === 'NATO' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-red-600 hover:bg-red-700'} text-white`}
+                  data-testid={`button-confirm-${team.toLowerCase()}`}
+                >
+                  <Play className="w-3 h-3 mr-2" />
+                  Confirm {team} Purchases
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </CardContent>
