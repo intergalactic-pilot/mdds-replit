@@ -50,7 +50,7 @@ export default function MDDSStrategy() {
   const canAfford = cartTotal <= currentTeamState.budget;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <AppHeader
         currentTurn={store.turn}
         maxTurns={store.maxTurns}
@@ -85,77 +85,95 @@ export default function MDDSStrategy() {
         }}
       />
 
-      <div className="container mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
           {/* Left Sidebar - Team Panels */}
-          <div className="xl:col-span-3 space-y-4">
-            <TeamPanel
-              team={store.currentTeam}
-              teamState={currentTeamState}
-              isActive={true}
-            />
-            <TeamPanel
-              team={opponentTeam}
-              teamState={opponentTeamState}
-            />
+          <div className="lg:col-span-3 order-2 lg:order-1">
+            <div className="space-y-4 lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)]">
+              <div className="glass-panel p-4">
+                <TeamPanel
+                  team={store.currentTeam}
+                  teamState={currentTeamState}
+                  isActive={true}
+                />
+              </div>
+              <div className="glass-panel p-4">
+                <TeamPanel
+                  team={opponentTeam}
+                  teamState={opponentTeamState}
+                />
+              </div>
+            </div>
           </div>
 
           {/* Main Content */}
-          <div className="xl:col-span-6 space-y-6">
-            {/* Budget Summary */}
-            <div className="bg-card rounded-lg border p-4">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold">Current Budget Status</h3>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">Cart Total:</span>
-                  <span className={`font-mono font-bold ${canAfford ? 'text-green-600' : 'text-red-600'}`}>
-                    {cartTotal}K
-                  </span>
-                  <span className="text-sm text-muted-foreground">/ {currentTeamState.budget}K</span>
+          <div className="lg:col-span-6 order-1 lg:order-2">
+            <div className="space-y-4 lg:space-y-6">
+              {/* Budget Summary */}
+              <div className="glass-card p-4 lg:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+                  <h3 className="font-semibold text-lg">Current Budget Status</h3>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm text-muted-foreground">Cart Total:</span>
+                    <span className={`font-mono font-bold text-lg ${canAfford ? 'text-green-600' : 'text-red-600'}`}>
+                      {cartTotal}K
+                    </span>
+                    <span className="text-sm text-muted-foreground">/ {currentTeamState.budget}K</span>
+                  </div>
                 </div>
+                {!canAfford && (
+                  <div className="bg-destructive/10 border border-destructive/20 rounded-md p-3">
+                    <p className="text-sm text-destructive font-medium">
+                      ⚠️ Cart total exceeds available budget
+                    </p>
+                  </div>
+                )}
               </div>
-              {!canAfford && (
-                <p className="text-sm text-red-600">
-                  ⚠️ Cart total exceeds available budget
-                </p>
-              )}
-            </div>
 
-            {/* Card Shop */}
-            <CardShop
-              cards={availableCards}
-              onAddToCart={(card) => store.addToCart(store.currentTeam, card)}
-              onViewDetails={(card) => store.setSelectedCard(card)}
-              cartItems={currentTeamState.cart}
-              getDiscountedPrice={getDiscountedPrice}
-              disabled={store.phase !== 'purchase'}
-            />
+              {/* Card Shop */}
+              <div className="glass-card p-4 lg:p-6">
+                <CardShop
+                  cards={availableCards}
+                  onAddToCart={(card) => store.addToCart(store.currentTeam, card)}
+                  onViewDetails={(card) => store.setSelectedCard(card)}
+                  cartItems={currentTeamState.cart}
+                  getDiscountedPrice={getDiscountedPrice}
+                  disabled={store.phase !== 'purchase'}
+                />
+              </div>
+            </div>
           </div>
 
           {/* Right Sidebar - Controls */}
-          <div className="xl:col-span-3 space-y-4">
-            <TurnController
-              currentTurn={store.turn}
-              maxTurns={store.maxTurns}
-              currentTeam={store.currentTeam}
-              phase={store.phase}
-              onCommitPurchases={() => {
-                store.commitTeamPurchases(store.currentTeam);
-                store.saveToLocalStorage(); // Auto-save after commits
-              }}
-              onAdvanceTurn={() => {
-                store.advanceGameTurn();
-                store.saveToLocalStorage(); // Auto-save after turn advance
-              }}
-              canCommit={canCommit && canAfford}
-              canAdvance={canAdvance}
-              validationErrors={validationErrors}
-            />
+          <div className="lg:col-span-3 order-3">
+            <div className="space-y-4 lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto">
+              <div className="glass-panel p-4">
+                <TurnController
+                  currentTurn={store.turn}
+                  maxTurns={store.maxTurns}
+                  currentTeam={store.currentTeam}
+                  phase={store.phase}
+                  onCommitPurchases={() => {
+                    store.commitTeamPurchases(store.currentTeam);
+                    store.saveToLocalStorage(); // Auto-save after commits
+                  }}
+                  onAdvanceTurn={() => {
+                    store.advanceGameTurn();
+                    store.saveToLocalStorage(); // Auto-save after turn advance
+                  }}
+                  canCommit={canCommit && canAfford}
+                  canAdvance={canAdvance}
+                  validationErrors={validationErrors}
+                />
+              </div>
 
-            <StrategyLog
-              entries={store.strategyLog}
-              maxHeight="400px"
-            />
+              <div className="glass-panel p-4">
+                <StrategyLog
+                  entries={store.strategyLog}
+                  maxHeight="400px"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
