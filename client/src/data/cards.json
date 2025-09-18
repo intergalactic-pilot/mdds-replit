@@ -89,7 +89,7 @@
     "baseCostK": 400,
     "permanentMods": {
       "flatDiscountK": 50,
-      "appliesToCardIds": ["J1", "J6", "CY1", "CY7", "S1", "S5", "S7", "CG1", "CG7", "E1", "E6"]
+      "appliesToCardIds": ["J1", "J6", "CY1", "CY7", "S1", "S5", "S7", "CG1", "CG7N", "CG7R", "E1", "E6"]
     }
   },
   {
@@ -200,7 +200,7 @@
     "baseCostK": 400,
     "permanentMods": {
       "flatDiscountK": 50,
-      "appliesToCardIds": ["J3", "J6", "J7", "CY3", "S3", "S7", "CG3", "CG7", "E2"]
+      "appliesToCardIds": ["J3", "J6", "J7", "CY3", "S3", "S7", "CG3", "CG7N", "CG7R", "E2"]
     }
   },
   {
@@ -233,7 +233,7 @@
   },
   {
     "id": "S3",
-    "name": "Stallite Communication Jamming",
+    "name": "Satellite Communication Jamming",
     "domain": "space",
     "type": "asset",
     "baseCostK": 100,
@@ -423,7 +423,7 @@
     "baseCostK": 400,
     "permanentMods": {
       "flatDiscountK": 50,
-      "appliesToCardIds": ["J4", "J7", "CY4", "CY5", "CY7", "S4", "S6", "CG4", "CG7", "E4", "E7"]
+      "appliesToCardIds": ["J4", "J7", "CY4", "CY5", "CY7", "S4", "S6", "CG4", "CG7N", "CG7R", "E4", "E7"]
     }
   },
   {
@@ -532,7 +532,7 @@
     "baseCostK": 400,
     "permanentMods": {
       "flatDiscountK": 50,
-      "appliesToCardIds": ["J8", "S8", "CY8", "CG5", "CG8", "E5", "E7", "E8"]
+      "appliesToCardIds": ["J8", "S8", "CY8N", "CY8R", "CG5N", "CG5R", "CG8", "E5", "E7", "E8"]
     }
   },
   {

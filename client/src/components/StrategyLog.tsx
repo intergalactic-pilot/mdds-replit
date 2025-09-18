@@ -18,7 +18,7 @@ interface StrategyLogProps {
 }
 
 export default function StrategyLog({ entries, maxHeight = "400px" }: StrategyLogProps) {
-  const sortedEntries = [...entries].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+  const sortedEntries = [...entries].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
   const getTeamBadgeColor = (team: 'NATO' | 'Russia') => {
     return team === 'NATO' ? 'bg-blue-600 text-white' : 'bg-red-600 text-white';
@@ -67,7 +67,7 @@ export default function StrategyLog({ entries, maxHeight = "400px" }: StrategyLo
                     <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                       <Clock className="w-3 h-3" />
                       <span data-testid={`text-timestamp-${index}`}>
-                        {formatDistanceToNow(entry.timestamp, { addSuffix: true })}
+                        {formatDistanceToNow(new Date(entry.timestamp), { addSuffix: true })}
                       </span>
                     </div>
                   </div>
