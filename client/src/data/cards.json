@@ -1,120 +1,546 @@
 [
   {
     "id": "J1",
-    "name": "Strategic Command Center",
+    "name": "Forces Forward Basing",
     "domain": "joint",
     "type": "asset",
-    "baseCostK": 150,
+    "baseCostK": 100,
     "effects": [
-      { "target": "self", "domain": "joint", "delta": 15 },
-      { "target": "opponent", "domain": "joint", "delta": -5 }
+      { "target": "self", "domain": "joint", "delta": 7 }
     ]
   },
   {
-    "id": "J2", 
-    "name": "Intelligence Fusion Hub",
+    "id": "J2",
+    "name": "Attack Satellite Ground Station Capability",
     "domain": "joint",
-    "type": "permanent",
-    "baseCostK": 200,
-    "permanentMods": {
-      "flatDiscountK": 50,
-      "appliesToCardIds": ["CY3", "CG5", "S4"]
-    }
+    "type": "asset",
+    "baseCostK": 100,
+    "effects": [
+      { "target": "opponent", "domain": "space", "delta": -7 }
+    ]
   },
   {
     "id": "J3",
-    "name": "Joint Strategic Advisor",
+    "name": "Attack on Cyber Server Facility",
     "domain": "joint",
-    "type": "expert",
+    "type": "asset",
     "baseCostK": 100,
-    "expertInfo": "Provides strategic insights for cross-domain coordination and threat assessment."
-  },
-  {
-    "id": "E1",
-    "name": "Economic Sanctions Package",
-    "domain": "economy",
-    "type": "asset", 
-    "baseCostK": 120,
     "effects": [
-      { "target": "self", "domain": "economy", "delta": 10 },
-      { "target": "opponent", "domain": "economy", "delta": -15 }
+      { "target": "opponent", "domain": "cyber", "delta": -7 }
     ]
   },
   {
-    "id": "E2",
-    "name": "Trade Alliance Network",
-    "domain": "economy",
+    "id": "J4",
+    "name": "Humanitarian Operation",
+    "domain": "joint",
+    "type": "asset",
+    "baseCostK": 100,
+    "effects": [
+      { "target": "self", "domain": "cognitive", "delta": 7 }
+    ]
+  },
+  {
+    "id": "J5",
+    "name": "Ballistic Missile Protection",
+    "domain": "joint",
+    "type": "asset",
+    "baseCostK": 200,
+    "effects": [
+      { "target": "self", "domain": "space", "delta": 14 }
+    ]
+  },
+  {
+    "id": "J6",
+    "name": "Capture Network Infrastructure",
+    "domain": "joint",
+    "type": "asset",
+    "baseCostK": 200,
+    "effects": [
+      { "target": "opponent", "domain": "joint", "delta": -7 },
+      { "target": "self", "domain": "cyber", "delta": 7 }
+    ]
+  },
+  {
+    "id": "J7",
+    "name": "Tactical Innovation Unit",
+    "domain": "joint",
+    "type": "asset",
+    "baseCostK": 300,
+    "effects": [
+      { "target": "self", "domain": "cyber", "delta": 10 },
+      { "target": "opponent", "domain": "cognitive", "delta": -11 }
+    ]
+  },
+  {
+    "id": "J8",
+    "name": "Electro-Magnetic Pulse",
+    "domain": "joint",
+    "type": "asset",
+    "baseCostK": 100,
+    "effects": [
+      { "target": "opponent", "domain": "economy", "delta": -7 }
+    ]
+  },
+  {
+    "id": "J9",
+    "name": "Joint Permanent Card",
+    "domain": "joint",
     "type": "permanent",
-    "baseCostK": 180,
+    "baseCostK": 400,
     "permanentMods": {
       "flatDiscountK": 50,
-      "appliesToCardIds": ["E5", "E7", "J4"]
+      "appliesToCardIds": ["J1", "J6", "CY1", "CY7", "S1", "S5", "S7", "CG1", "CG7", "E1", "E6"]
     }
   },
   {
+    "id": "J11",
+    "name": "Joint Expert",
+    "domain": "joint",
+    "type": "expert",
+    "baseCostK": 100,
+    "expertInfo": "Informational only; becomes available next turn; no deterrence change."
+  },
+  {
     "id": "CY1",
-    "name": "Cyber Defense Grid",
+    "name": "GPS Spoofing",
     "domain": "cyber",
     "type": "asset",
-    "baseCostK": 140,
+    "baseCostK": 100,
     "effects": [
-      { "target": "self", "domain": "cyber", "delta": 20 },
-      { "target": "opponent", "domain": "cyber", "delta": -10 }
+      { "target": "opponent", "domain": "joint", "delta": -7 }
     ]
   },
   {
     "id": "CY2",
-    "name": "Attribution Platform",
+    "name": "Satellite Blindspot",
     "domain": "cyber",
-    "type": "permanent",
-    "baseCostK": 160,
-    "permanentMods": {
-      "flatDiscountK": 50,
-      "appliesToCardIds": ["CY4", "CY6", "CG3"]
-    }
-  },
-  {
-    "id": "CG1",
-    "name": "Information Campaign",
-    "domain": "cognitive",
     "type": "asset",
     "baseCostK": 100,
     "effects": [
-      { "target": "self", "domain": "cognitive", "delta": 12 },
-      { "target": "opponent", "domain": "cognitive", "delta": -8 }
+      { "target": "opponent", "domain": "space", "delta": -7 }
     ]
   },
   {
-    "id": "CG2",
-    "name": "Media Control Center",
-    "domain": "cognitive",
-    "type": "permanent",
-    "baseCostK": 190,
-    "permanentMods": {
-      "flatDiscountK": 50,
-      "appliesToCardIds": ["CG4", "CG6", "E3"]
-    }
+    "id": "CY3",
+    "name": "Cyber Defense",
+    "domain": "cyber",
+    "type": "asset",
+    "baseCostK": 100,
+    "effects": [
+      { "target": "self", "domain": "cyber", "delta": 7 }
+    ]
   },
   {
-    "id": "S1",
-    "name": "Satellite Constellation",
-    "domain": "space",
+    "id": "CY4",
+    "name": "Cyber Attack",
+    "domain": "cyber",
+    "type": "asset",
+    "baseCostK": 100,
+    "effects": [
+      { "target": "opponent", "domain": "cognitive", "delta": -7 }
+    ]
+  },
+  {
+    "id": "CY5",
+    "name": "Data Poisoning",
+    "domain": "cyber",
     "type": "asset",
     "baseCostK": 200,
     "effects": [
-      { "target": "self", "domain": "space", "delta": 18 },
-      { "target": "opponent", "domain": "space", "delta": -12 }
+      { "target": "opponent", "domain": "cognitive", "delta": -14 }
+    ]
+  },
+  {
+    "id": "CY6",
+    "name": "Satellite Hijacking",
+    "domain": "cyber",
+    "type": "asset",
+    "baseCostK": 200,
+    "effects": [
+      { "target": "opponent", "domain": "space", "delta": -14 }
+    ]
+  },
+  {
+    "id": "CY7",
+    "name": "Attack and Defense AI Tech",
+    "domain": "cyber",
+    "type": "asset",
+    "baseCostK": 300,
+    "effects": [
+      { "target": "opponent", "domain": "joint", "delta": -11 },
+      { "target": "self", "domain": "space", "delta": 5 },
+      { "target": "self", "domain": "cognitive", "delta": 5 }
+    ]
+  },
+  {
+    "id": "CY8N",
+    "name": "Crypto Currency Ban",
+    "domain": "cyber",
+    "type": "asset",
+    "baseCostK": 100,
+    "effects": [
+      { "target": "opponent", "domain": "economy", "delta": -7 }
+    ]
+  },
+  {
+    "id": "CY8R",
+    "name": "Banking System Hack",
+    "domain": "cyber",
+    "type": "asset",
+    "baseCostK": 100,
+    "effects": [
+      { "target": "opponent", "domain": "economy", "delta": -7 }
+    ]
+  },
+  {
+    "id": "CY9",
+    "name": "Cyber Permanent Card",
+    "domain": "cyber",
+    "type": "permanent",
+    "baseCostK": 400,
+    "permanentMods": {
+      "flatDiscountK": 50,
+      "appliesToCardIds": ["J3", "J6", "J7", "CY3", "S3", "S7", "CG3", "CG7", "E2"]
+    }
+  },
+  {
+    "id": "CY11",
+    "name": "Cyber Expert",
+    "domain": "cyber",
+    "type": "expert",
+    "baseCostK": 100,
+    "expertInfo": "Informational only; becomes available next turn; no deterrence change."
+  },
+  {
+    "id": "S1",
+    "name": "Redundant Navigation Satellite",
+    "domain": "space",
+    "type": "asset",
+    "baseCostK": 100,
+    "effects": [
+      { "target": "self", "domain": "joint", "delta": 7 }
     ]
   },
   {
     "id": "S2",
-    "name": "Space Control Center",
+    "name": "Satellite Kinetic Attack Protection",
+    "domain": "space",
+    "type": "asset",
+    "baseCostK": 100,
+    "effects": [
+      { "target": "self", "domain": "space", "delta": 7 }
+    ]
+  },
+  {
+    "id": "S3",
+    "name": "Stallite Communication Jamming",
+    "domain": "space",
+    "type": "asset",
+    "baseCostK": 100,
+    "effects": [
+      { "target": "opponent", "domain": "cyber", "delta": -7 }
+    ]
+  },
+  {
+    "id": "S4",
+    "name": "Improved Image Capture",
+    "domain": "space",
+    "type": "asset",
+    "baseCostK": 100,
+    "effects": [
+      { "target": "self", "domain": "cognitive", "delta": 7 }
+    ]
+  },
+  {
+    "id": "S5",
+    "name": "Hypersonic Ballistic Missiles",
+    "domain": "space",
+    "type": "asset",
+    "baseCostK": 200,
+    "effects": [
+      { "target": "opponent", "domain": "joint", "delta": -7 },
+      { "target": "self", "domain": "space", "delta": 7 }
+    ]
+  },
+  {
+    "id": "S6",
+    "name": "Micro Swarms",
+    "domain": "space",
+    "type": "asset",
+    "baseCostK": 200,
+    "effects": [
+      { "target": "self", "domain": "cognitive", "delta": 14 }
+    ]
+  },
+  {
+    "id": "S7",
+    "name": "Multipurpose Satellite Fleet",
+    "domain": "space",
+    "type": "asset",
+    "baseCostK": 300,
+    "effects": [
+      { "target": "self", "domain": "joint", "delta": 5 },
+      { "target": "self", "domain": "space", "delta": 5 },
+      { "target": "opponent", "domain": "cyber", "delta": -11 }
+    ]
+  },
+  {
+    "id": "S8",
+    "name": "Space Research Program",
+    "domain": "space",
+    "type": "asset",
+    "baseCostK": 100,
+    "effects": [
+      { "target": "self", "domain": "economy", "delta": 7 }
+    ]
+  },
+  {
+    "id": "S9",
+    "name": "Space Permanent Card",
     "domain": "space",
     "type": "permanent",
-    "baseCostK": 220,
+    "baseCostK": 400,
     "permanentMods": {
       "flatDiscountK": 50,
-      "appliesToCardIds": ["S3", "S5", "CY5"]
+      "appliesToCardIds": ["J2", "J5", "CY2", "CY6", "CY7", "S2", "S5", "S7", "CG2", "CG6", "E3", "E6"]
     }
+  },
+  {
+    "id": "S11",
+    "name": "Space Expert",
+    "domain": "space",
+    "type": "expert",
+    "baseCostK": 100,
+    "expertInfo": "Informational only; becomes available next turn; no deterrence change."
+  },
+  {
+    "id": "CG1",
+    "name": "Information Operation",
+    "domain": "cognitive",
+    "type": "asset",
+    "baseCostK": 100,
+    "effects": [
+      { "target": "self", "domain": "joint", "delta": 7 }
+    ]
+  },
+  {
+    "id": "CG2",
+    "name": "Strategic Partnerships",
+    "domain": "cognitive",
+    "type": "asset",
+    "baseCostK": 100,
+    "effects": [
+      { "target": "self", "domain": "space", "delta": 7 }
+    ]
+  },
+  {
+    "id": "CG3",
+    "name": "Hackers Recruitment",
+    "domain": "cognitive",
+    "type": "asset",
+    "baseCostK": 100,
+    "effects": [
+      { "target": "self", "domain": "cyber", "delta": 7 }
+    ]
+  },
+  {
+    "id": "CG4",
+    "name": "Military Deception",
+    "domain": "cognitive",
+    "type": "asset",
+    "baseCostK": 100,
+    "effects": [
+      { "target": "opponent", "domain": "cognitive", "delta": -7 }
+    ]
+  },
+  {
+    "id": "CG5N",
+    "name": "Western Ideal",
+    "domain": "cognitive",
+    "type": "asset",
+    "baseCostK": 200,
+    "effects": [
+      { "target": "opponent", "domain": "economy", "delta": -14 }
+    ]
+  },
+  {
+    "id": "CG5R",
+    "name": "Industrial Espionage",
+    "domain": "cognitive",
+    "type": "asset",
+    "baseCostK": 200,
+    "effects": []
+  },
+  {
+    "id": "CG6",
+    "name": "Private Micro-Sat Boost",
+    "domain": "cognitive",
+    "type": "asset",
+    "baseCostK": 200,
+    "effects": [
+      { "target": "opponent", "domain": "space", "delta": -14 }
+    ]
+  },
+  {
+    "id": "CG7N",
+    "name": "Democracy for Russia",
+    "domain": "cognitive",
+    "type": "asset",
+    "baseCostK": 300,
+    "effects": [
+      { "target": "self", "domain": "joint", "delta": 5 },
+      { "target": "opponent", "domain": "cyber", "delta": -11 },
+      { "target": "self", "domain": "cognitive", "delta": 5 }
+    ]
+  },
+  {
+    "id": "CG7R",
+    "name": "Cyber Tech Mistrust Campaign",
+    "domain": "cognitive",
+    "type": "asset",
+    "baseCostK": 300,
+    "effects": [
+      { "target": "self", "domain": "joint", "delta": 5 },
+      { "target": "opponent", "domain": "cyber", "delta": -11 },
+      { "target": "self", "domain": "cognitive", "delta": 5 }
+    ]
+  },
+  {
+    "id": "CG8",
+    "name": "Diplomatic Partnership",
+    "domain": "cognitive",
+    "type": "asset",
+    "baseCostK": 100,
+    "effects": [
+      { "target": "self", "domain": "economy", "delta": 7 }
+    ]
+  },
+  {
+    "id": "CG9",
+    "name": "Cognitive Permanent Card",
+    "domain": "cognitive",
+    "type": "permanent",
+    "baseCostK": 400,
+    "permanentMods": {
+      "flatDiscountK": 50,
+      "appliesToCardIds": ["J4", "J7", "CY4", "CY5", "CY7", "S4", "S6", "CG4", "CG7", "E4", "E7"]
+    }
+  },
+  {
+    "id": "CG10",
+    "name": "Intelligence",
+    "domain": "cognitive",
+    "type": "asset",
+    "baseCostK": 200,
+    "effects": []
+  },
+  {
+    "id": "CG11",
+    "name": "Cognition Expert",
+    "domain": "cognitive",
+    "type": "expert",
+    "baseCostK": 100,
+    "expertInfo": "Informational only; becomes available next turn; no deterrence change."
+  },
+  {
+    "id": "E1",
+    "name": "Embargo",
+    "domain": "economy",
+    "type": "asset",
+    "baseCostK": 100,
+    "effects": [
+      { "target": "opponent", "domain": "joint", "delta": -7 }
+    ]
+  },
+  {
+    "id": "E2",
+    "name": "AI Tech Legal Framework",
+    "domain": "economy",
+    "type": "asset",
+    "baseCostK": 100,
+    "effects": [
+      { "target": "self", "domain": "cyber", "delta": 7 }
+    ]
+  },
+  {
+    "id": "E3",
+    "name": "Space Collaborations Halt",
+    "domain": "economy",
+    "type": "asset",
+    "baseCostK": 100,
+    "effects": [
+      { "target": "opponent", "domain": "space", "delta": -7 }
+    ]
+  },
+  {
+    "id": "E4",
+    "name": "Brain Drain",
+    "domain": "economy",
+    "type": "asset",
+    "baseCostK": 100,
+    "effects": [
+      { "target": "opponent", "domain": "cognitive", "delta": -7 }
+    ]
+  },
+  {
+    "id": "E5",
+    "name": "Partners' Economy",
+    "domain": "economy",
+    "type": "asset",
+    "baseCostK": 200,
+    "effects": [
+      { "target": "self", "domain": "economy", "delta": 14 }
+    ]
+  },
+  {
+    "id": "E6",
+    "name": "Airspace Industry Boost",
+    "domain": "economy",
+    "type": "asset",
+    "baseCostK": 200,
+    "effects": [
+      { "target": "self", "domain": "joint", "delta": 7 },
+      { "target": "self", "domain": "space", "delta": 7 }
+    ]
+  },
+  {
+    "id": "E7",
+    "name": "Innovation Fund",
+    "domain": "economy",
+    "type": "asset",
+    "baseCostK": 300,
+    "effects": [
+      { "target": "self", "domain": "cognitive", "delta": 10 },
+      { "target": "self", "domain": "economy", "delta": 11 }
+    ]
+  },
+  {
+    "id": "E8",
+    "name": "Protectionism",
+    "domain": "economy",
+    "type": "asset",
+    "baseCostK": 100,
+    "effects": [
+      { "target": "opponent", "domain": "economy", "delta": -7 }
+    ]
+  },
+  {
+    "id": "E9",
+    "name": "Economy Permanent Card",
+    "domain": "economy",
+    "type": "permanent",
+    "baseCostK": 400,
+    "permanentMods": {
+      "flatDiscountK": 50,
+      "appliesToCardIds": ["J8", "S8", "CY8", "CG5", "CG8", "E5", "E7", "E8"]
+    }
+  },
+  {
+    "id": "E11",
+    "name": "Economy Expert",
+    "domain": "economy",
+    "type": "expert",
+    "baseCostK": 100,
+    "expertInfo": "Informational only; becomes available next turn; no deterrence change."
   }
 ]
