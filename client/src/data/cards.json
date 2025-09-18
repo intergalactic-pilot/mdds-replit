@@ -1,0 +1,120 @@
+[
+  {
+    "id": "J1",
+    "name": "Strategic Command Center",
+    "domain": "joint",
+    "type": "asset",
+    "baseCostK": 150,
+    "effects": [
+      { "target": "self", "domain": "joint", "delta": 15 },
+      { "target": "opponent", "domain": "joint", "delta": -5 }
+    ]
+  },
+  {
+    "id": "J2", 
+    "name": "Intelligence Fusion Hub",
+    "domain": "joint",
+    "type": "permanent",
+    "baseCostK": 200,
+    "permanentMods": {
+      "flatDiscountK": 50,
+      "appliesToCardIds": ["CY3", "CG5", "S4"]
+    }
+  },
+  {
+    "id": "J3",
+    "name": "Joint Strategic Advisor",
+    "domain": "joint",
+    "type": "expert",
+    "baseCostK": 100,
+    "expertInfo": "Provides strategic insights for cross-domain coordination and threat assessment."
+  },
+  {
+    "id": "E1",
+    "name": "Economic Sanctions Package",
+    "domain": "economy",
+    "type": "asset", 
+    "baseCostK": 120,
+    "effects": [
+      { "target": "self", "domain": "economy", "delta": 10 },
+      { "target": "opponent", "domain": "economy", "delta": -15 }
+    ]
+  },
+  {
+    "id": "E2",
+    "name": "Trade Alliance Network",
+    "domain": "economy",
+    "type": "permanent",
+    "baseCostK": 180,
+    "permanentMods": {
+      "flatDiscountK": 50,
+      "appliesToCardIds": ["E5", "E7", "J4"]
+    }
+  },
+  {
+    "id": "CY1",
+    "name": "Cyber Defense Grid",
+    "domain": "cyber",
+    "type": "asset",
+    "baseCostK": 140,
+    "effects": [
+      { "target": "self", "domain": "cyber", "delta": 20 },
+      { "target": "opponent", "domain": "cyber", "delta": -10 }
+    ]
+  },
+  {
+    "id": "CY2",
+    "name": "Attribution Platform",
+    "domain": "cyber",
+    "type": "permanent",
+    "baseCostK": 160,
+    "permanentMods": {
+      "flatDiscountK": 50,
+      "appliesToCardIds": ["CY4", "CY6", "CG3"]
+    }
+  },
+  {
+    "id": "CG1",
+    "name": "Information Campaign",
+    "domain": "cognitive",
+    "type": "asset",
+    "baseCostK": 100,
+    "effects": [
+      { "target": "self", "domain": "cognitive", "delta": 12 },
+      { "target": "opponent", "domain": "cognitive", "delta": -8 }
+    ]
+  },
+  {
+    "id": "CG2",
+    "name": "Media Control Center",
+    "domain": "cognitive",
+    "type": "permanent",
+    "baseCostK": 190,
+    "permanentMods": {
+      "flatDiscountK": 50,
+      "appliesToCardIds": ["CG4", "CG6", "E3"]
+    }
+  },
+  {
+    "id": "S1",
+    "name": "Satellite Constellation",
+    "domain": "space",
+    "type": "asset",
+    "baseCostK": 200,
+    "effects": [
+      { "target": "self", "domain": "space", "delta": 18 },
+      { "target": "opponent", "domain": "space", "delta": -12 }
+    ]
+  },
+  {
+    "id": "S2",
+    "name": "Space Control Center",
+    "domain": "space",
+    "type": "permanent",
+    "baseCostK": 220,
+    "permanentMods": {
+      "flatDiscountK": 50,
+      "appliesToCardIds": ["S3", "S5", "CY5"]
+    }
+  }
+]
