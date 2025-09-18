@@ -9,6 +9,7 @@ import CardShop from '../components/CardShop';
 import CardDetailModal from '../components/CardDetailModal';
 import TurnController from '../components/TurnController';
 import DeterrenceChart from '../components/DeterrenceChart';
+import CartDisplay from '../components/CartDisplay';
 import cardsData from '../data/cards.json';
 import { Card } from '@shared/schema';
 
@@ -153,9 +154,9 @@ export default function MDDSStrategy() {
               </div>
             </div>
 
-            {/* Right Sidebar - Turn Controller Only */}
+            {/* Right Sidebar - Turn Controller and Cart */}
             <div className="lg:col-span-2 order-3">
-              <div className="lg:sticky lg:top-24">
+              <div className="lg:sticky lg:top-24 space-y-4">
                 <div className="glass-panel p-4">
                   <TurnController
                     currentTurn={store.turn}
@@ -173,6 +174,16 @@ export default function MDDSStrategy() {
                     canCommit={canCommit && canAfford}
                     canAdvance={canAdvance}
                     validationErrors={validationErrors}
+                  />
+                </div>
+
+                <div className="glass-panel p-4">
+                  <CartDisplay
+                    team={store.currentTeam}
+                    cartItems={currentTeamState.cart}
+                    onRemoveFromCart={(cardId) => store.removeFromCart(store.currentTeam, cardId)}
+                    getDiscountedPrice={getDiscountedPrice}
+                    cartTotal={cartTotal}
                   />
                 </div>
               </div>
