@@ -1,0 +1,172 @@
+[J1] Forces Forward Basing — Asset — Joint — 100K
+  - Buyer gains +7 Joint deterrence.
+
+[J2] Attack Satellite Ground Station Capability — Asset — Joint — 100K
+  - Opponent loses 7 Space deterrence.
+
+[J3] Attack on Cyber Server Facility — Asset — Joint — 100K
+  - Opponent loses 7 Cyber deterrence.
+
+[J4] Humanitarian Operation — Asset — Joint — 100K
+  - Buyer gains +7 Cognitive deterrence.
+
+[J5] Ballistic Missile Protection — Asset — Joint — 200K
+  - Buyer gains +14 Space deterrence.
+
+[J6] Capture Network Infrastructure — Asset — Joint — 200K
+  - Opponent loses 7 Joint deterrence.
+  - Buyer gains +7 Cyber deterrence.
+
+[J7] Tactical Innovation Unit — Asset — Joint — 300K
+  - Buyer gains +10 Cyber deterrence.
+  - Opponent loses 11 Cognitive deterrence.
+
+[J8] Electro-Magnetic Pulse — Asset — Joint — 100K
+  - Opponent loses 7 Economy deterrence.
+
+[J9] Joint Permanent Card — Permanent — Joint — 400K
+  - Permanent benefit: reduces the **purchase cost** of the following cards by 50K each for the buyer: J1, J6, CY1, CY7, S1, S5, S7, CG1, CG7, E1, E6.
+
+[J11] Joint Expert — Expert — Joint — 100K
+  - Expert: informational only; becomes available next turn; no deterrence change.
+
+[CY1] GPS Spoofing — Asset — Cyber — 100K
+  - Opponent loses 7 Joint deterrence.
+
+[CY2] Satellite Blindspot — Asset — Cyber — 100K
+  - Opponent loses 7 Space deterrence.
+
+[CY3] Cyber Defense — Asset — Cyber — 100K
+  - Buyer gains +7 Cyber deterrence.
+
+[CY4] Cyber Attack — Asset — Cyber — 100K
+  - Opponent loses 7 Cognitive deterrence.
+
+[CY5] Data Poisoning — Asset — Cyber — 200K
+  - Opponent loses 14 Cognitive deterrence.
+
+[CY6] Satellite Hijacking — Asset — Cyber — 200K
+  - Opponent loses 14 Space deterrence.
+
+[CY7] Attack and Defense AI Tech — Asset — Cyber — 300K
+  - Opponent loses 11 Joint deterrence.
+  - Buyer gains +5 Space deterrence.
+  - Buyer gains +5 Cognitive deterrence.
+
+[CY8N] Crypto Currency Ban — Asset — Cyber — 100K
+  - Opponent loses 7 Economy deterrence.
+
+[CY8R] Banking System Hack — Asset — Cyber — 100K
+  - Opponent loses 7 Economy deterrence.
+
+[CY9] Cyber Permanent Card — Permanent — Cyber — 400K
+  - Permanent benefit: reduces the **purchase cost** of the following cards by 50K each for the buyer: J3, J6, J7, CY3, S3, S7, CG3, CG7, E2.
+
+[CY11] Cyber Expert — Expert — Cyber — 100K
+  - Expert: informational only; becomes available next turn; no deterrence change.
+
+[S1] Redundant Navigation Satellite — Asset — Space — 100K
+  - Buyer gains +7 Joint deterrence.
+
+[S2] Satellite Kinetic Attack Protection — Asset — Space — 100K
+  - Buyer gains +7 Space deterrence.
+
+[S3] Stallite Communication Jamming — Asset — Space — 100K
+  - Opponent loses 7 Cyber deterrence.
+
+[S4] Improved Image Capture — Asset — Space — 100K
+  - Buyer gains +7 Cognitive deterrence.
+
+[S5] Hypersonic Ballistic Missiles — Asset — Space — 200K
+  - Opponent loses 7 Joint deterrence.
+  - Buyer gains +7 Space deterrence.
+
+[S6] Micro Swarms — Asset — Space — 200K
+  - Buyer gains +14 Cognitive deterrence.
+
+[S7] Multipurpose Satellite Fleet — Asset — Space — 300K
+  - Buyer gains +5 Joint deterrence.
+  - Buyer gains +5 Space deterrence.
+  - Opponent loses 11 Cyber deterrence.
+
+[S8] Space Research Program — Asset — Space — 100K
+  - Buyer gains +7 Economy deterrence.
+
+[S9] Space Permanent Card — Permanent — Space — 400K
+  - Permanent benefit: reduces the **purchase cost** of the following cards by 50K each for the buyer: J2, J5, CY2, CY6, CY7, S2, S5, S7, CG2, CG6, E3, E6.
+
+[S11] Space Expert — Expert — Space — 100K
+  - Expert: informational only; becomes available next turn; no deterrence change.
+
+[CG1] Information Operation — Asset — Cognitive — 100K
+  - Buyer gains +7 Joint deterrence.
+
+[CG2] Strategic Partnerships — Asset — Cognitive — 100K
+  - Buyer gains +7 Space deterrence.
+
+[CG3] Hackers Recruitment — Asset — Cognitive — 100K
+  - Buyer gains +7 Cyber deterrence.
+
+[CG4] Military Deception — Asset — Cognitive — 100K
+  - Opponent loses 7 Cognitive deterrence.
+
+[CG5N] Western Ideal — Asset — Cognitive — 200K
+  - Opponent loses 14 Economy deterrence.
+
+[CG5R] Industrial Espionage — Asset — Cognitive — 200K
+
+[CG6] Private Micro-Sat Boost — Asset — Cognitive — 200K
+  - Opponent loses 14 Space deterrence.
+
+[CG7N] Democracy for Russia — Asset — Cognitive — 300K
+  - Buyer gains +5 Joint deterrence.
+  - Opponent loses 11 Cyber deterrence.
+  - Buyer gains +5 Cognitive deterrence.
+
+[CG7R] Cyber Tech Mistrust Campaign — Asset — Cognitive — 300K
+  - Buyer gains +5 Joint deterrence.
+  - Opponent loses 11 Cyber deterrence.
+  - Buyer gains +5 Cognitive deterrence.
+
+[CG8] Diplomatic Partnership — Asset — Cognitive — 100K
+  - Buyer gains +7 Economy deterrence.
+
+[CG9] Cognitive Permanent Card — Permanent — Cognitive — 400K
+  - Permanent benefit: reduces the **purchase cost** of the following cards by 50K each for the buyer: J4, J7, CY4, CY5, Cy7, S4, S6, CG4, CG7, E4, E7.
+
+[CG10] Intelligence — Asset — Cognitive — 200K
+
+[CG11] Cognition Expert — Expert — Cognitive — 100K
+  - Expert: informational only; becomes available next turn; no deterrence change.
+
+[E1] Embargo — Asset — Economy — 100K
+  - Opponent loses 7 Joint deterrence.
+
+[E2] AI Tech Legal Framework — Asset — Economy — 100K
+  - Buyer gains +7 Cyber deterrence.
+
+[E3] Space Collaborations Halt — Asset — Economy — 100K
+  - Opponent loses 7 Space deterrence.
+
+[E4] Brain Drain — Asset — Economy — 100K
+  - Opponent loses 7 Cognitive deterrence.
+
+[E5] Partners' Economy — Asset — Economy — 200K
+  - Buyer gains +14 Economy deterrence.
+
+[E6] Airspace Industry Boost — Asset — Economy — 200K
+  - Buyer gains +7 Joint deterrence.
+  - Buyer gains +7 Space deterrence.
+
+[E7] Innovation Fund  — Asset — Economy — 300K
+  - Buyer gains +10 Cognitive deterrence.
+  - Buyer gains +11 Economy deterrence.
+
+[E8] Protectionism — Asset — Economy — 100K
+  - Opponent loses 7 Economy deterrence.
+
+[E9] Economy Permanent Card — Permanent — Economy — 400K
+  - Permanent benefit: reduces the **purchase cost** of the following cards by 50K each for the buyer: J8, S8, CY8, CG5, CG8, E5, E7, E8.
+
+[E11] Economy Expert — Expert — Economy — 100K
+  - Expert: informational only; becomes available next turn; no deterrence change.
