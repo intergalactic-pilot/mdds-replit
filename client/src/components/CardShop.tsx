@@ -6,8 +6,126 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import CardDisplay from './CardDisplay';
+import DomainBadge from './DomainBadge';
 import { sanitizeText } from '../logic/guards';
-import { Search, Filter, ShoppingCart } from 'lucide-react';
+import { formatCurrency } from '../logic/pricing';
+import { Search, Filter, ShoppingCart, Info, Zap, Clock } from 'lucide-react';
+
+const cardTypeIcons = {
+  asset: <Zap className="w-4 h-4" />,
+  permanent: <ShoppingCart className="w-4 h-4" />,
+  expert: <Clock className="w-4 h-4" />
+};
+
+const cardTypeLabels = {
+  asset: "Asset",
+  permanent: "Permanent", 
+  expert: "Expert"
+};
+
+interface CardListItemProps {
+  card: CardType;
+  discountedPrice?: number;
+  onViewDetails?: () => void;
+  onAddToNATOCart?: () => void;
+  onAddToRussiaCart?: () => void;
+  inCart?: boolean;
+  disabled?: boolean;
+}
+
+function CardListItem({ 
+  card, 
+  discountedPrice, 
+  onViewDetails,
+  onAddToNATOCart,
+  onAddToRussiaCart,
+  inCart = false,
+  disabled = false 
+}: CardListItemProps) {
+  const finalPrice = discountedPrice ?? card.baseCostK;
+  const hasDiscount = discountedPrice !== undefined && discountedPrice < card.baseCostK;
+
+  return (
+    <div 
+      className={`glass-panel p-4 hover-elevate transition-all ${disabled ? 'opacity-50' : ''} ${inCart ? 'ring-2 ring-primary' : ''}`}
+      data-testid={`card-${card.id}`}
+    >
+      <div className="flex items-center justify-between gap-4">
+        {/* Left side - Card info */}
+        <div className="flex items-center gap-4 flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-xs">
+              {cardTypeIcons[card.type]}
+              <span className="ml-1">{sanitizeText(cardTypeLabels[card.type])}</span>
+            </Badge>
+          </div>
+          
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="font-semibold text-sm truncate" data-testid={`text-card-name-${card.id}`}>
+                {sanitizeText(card.name)}
+              </h3>
+              <DomainBadge domain={card.domain} className="text-xs shrink-0" />
+            </div>
+            <p className="text-xs text-muted-foreground font-mono" data-testid={`text-card-id-${card.id}`}>
+              {card.id}
+            </p>
+          </div>
+
+          <div className="text-right">
+            {hasDiscount && (
+              <div className="text-xs text-muted-foreground line-through">
+                {formatCurrency(card.baseCostK)}
+              </div>
+            )}
+            <div className={`font-semibold ${hasDiscount ? 'text-green-600' : ''}`} data-testid={`text-price-${card.id}`}>
+              {formatCurrency(finalPrice)}
+            </div>
+          </div>
+        </div>
+
+        {/* Right side - Action buttons */}
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={onViewDetails}
+            data-testid={`button-view-details-${card.id}`}
+          >
+            <Info className="w-3 h-3 mr-1" />
+            Details
+          </Button>
+          
+          {onAddToNATOCart && (
+            <Button
+              size="sm"
+              onClick={onAddToNATOCart}
+              disabled={disabled || inCart}
+              variant="default"
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+              data-testid={`button-add-nato-${card.id}`}
+            >
+              NATO
+            </Button>
+          )}
+          
+          {onAddToRussiaCart && (
+            <Button
+              size="sm"
+              onClick={onAddToRussiaCart}
+              disabled={disabled || inCart}
+              variant="default" 
+              className="bg-red-600 hover:bg-red-700 text-white"
+              data-testid={`button-add-russia-${card.id}`}
+            >
+              Russia
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 interface CardShopProps {
   cards: CardType[];
@@ -16,6 +134,8 @@ interface CardShopProps {
   cartItems: CardType[];
   getDiscountedPrice: (card: CardType) => number;
   disabled?: boolean;
+  onAddToNATOCart?: (card: CardType) => void;
+  onAddToRussiaCart?: (card: CardType) => void;
 }
 
 export default function CardShop({ 
@@ -24,7 +144,9 @@ export default function CardShop({
   onViewDetails, 
   cartItems,
   getDiscountedPrice,
-  disabled = false 
+  disabled = false,
+  onAddToNATOCart,
+  onAddToRussiaCart
 }: CardShopProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [domainFilter, setDomainFilter] = useState<Domain | 'all'>('all');
@@ -125,14 +247,15 @@ export default function CardShop({
             <p>No cards match your filters</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="space-y-3">
             {filteredCards.map(card => (
-              <CardDisplay
+              <CardListItem
                 key={card.id}
                 card={card}
                 discountedPrice={getDiscountedPrice(card)}
-                onAddToCart={() => onAddToCart(card)}
                 onViewDetails={() => onViewDetails(card)}
+                onAddToNATOCart={onAddToNATOCart ? () => onAddToNATOCart(card) : undefined}
+                onAddToRussiaCart={onAddToRussiaCart ? () => onAddToRussiaCart(card) : undefined}
                 inCart={cartItemIds.has(card.id)}
                 disabled={disabled}
               />
