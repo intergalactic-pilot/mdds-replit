@@ -8,6 +8,7 @@ import TeamPanel from '../components/TeamPanel';
 import CardShop from '../components/CardShop';
 import CardDetailModal from '../components/CardDetailModal';
 import { SkipForward } from 'lucide-react';
+import { Button } from "@/components/ui/button";
 import DeterrenceChart from '../components/DeterrenceChart';
 import CartDisplay from '../components/CartDisplay';
 import cardsData from '../data/cards.json';
