@@ -50,6 +50,14 @@ export default function MDDSStrategy() {
   const cartTotal = calculateCartTotal(currentTeamState.cart, currentTeamState.ownedPermanents);
   const canAfford = cartTotal <= currentTeamState.budget;
 
+  // Per-team cart calculations for dual cart display
+  const natoState = store.teams.NATO;
+  const russiaState = store.teams.Russia;
+  const priceForNATO = (card: Card) => calculateDiscountedPrice(card, natoState.ownedPermanents);
+  const priceForRussia = (card: Card) => calculateDiscountedPrice(card, russiaState.ownedPermanents);
+  const natoCartTotal = calculateCartTotal(natoState.cart, natoState.ownedPermanents);
+  const russiaCartTotal = calculateCartTotal(russiaState.cart, russiaState.ownedPermanents);
+
   return (
     <div className="min-h-screen">
       <AppHeader
