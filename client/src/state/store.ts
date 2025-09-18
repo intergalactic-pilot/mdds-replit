@@ -12,6 +12,7 @@ interface MDDSStore extends GameState {
   advanceGameTurn: () => void;
   resetStrategy: () => void;
   concludeStrategy: (team: Team) => void;
+  setCurrentTeam: (team: Team) => void;
   
   // UI State
   selectedCard: Card | null;
@@ -55,6 +56,8 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
   selectedCard: null,
 
   setSelectedCard: (card) => set({ selectedCard: card }),
+
+  setCurrentTeam: (team) => set({ currentTeam: team }),
 
   addToCart: (team, card) => {
     set((state) => {

@@ -187,11 +187,21 @@ export default function MDDSStrategy() {
 
                 <div className="glass-panel p-4">
                   <CartDisplay
-                    team={store.currentTeam}
-                    cartItems={currentTeamState.cart}
-                    onRemoveFromCart={(cardId) => store.removeFromCart(store.currentTeam, cardId)}
-                    getDiscountedPrice={getDiscountedPrice}
-                    cartTotal={cartTotal}
+                    team="NATO"
+                    cartItems={natoState.cart}
+                    onRemoveFromCart={(cardId) => store.removeFromCart('NATO', cardId)}
+                    getDiscountedPrice={priceForNATO}
+                    cartTotal={natoCartTotal}
+                  />
+                </div>
+
+                <div className="glass-panel p-4">
+                  <CartDisplay
+                    team="Russia"
+                    cartItems={russiaState.cart}
+                    onRemoveFromCart={(cardId) => store.removeFromCart('Russia', cardId)}
+                    getDiscountedPrice={priceForRussia}
+                    cartTotal={russiaCartTotal}
                   />
                 </div>
               </div>
