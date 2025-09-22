@@ -15,6 +15,13 @@ export default function MobileFooter() {
   const natoCartCount = natoState.cart.length;
   const russiaCartCount = russiaState.cart.length;
 
+  const scrollToSection = (selector: string) => {
+    const element = document.querySelector(selector);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur border-t border-border z-50 md:hidden">
       <div className="flex items-center justify-around p-2">
@@ -23,6 +30,7 @@ export default function MobileFooter() {
           variant="ghost"
           size="sm"
           className="flex-1 flex flex-col items-center gap-1 py-2 px-1 h-auto text-blue-600"
+          onClick={() => scrollToSection('[data-testid="cart-nato"]')}
           data-testid="footer-nato-cart"
         >
           <div className="relative">
@@ -41,6 +49,7 @@ export default function MobileFooter() {
           variant="ghost"
           size="sm"
           className="flex-1 flex flex-col items-center gap-1 py-2 px-1 h-auto text-red-600"
+          onClick={() => scrollToSection('[data-testid="cart-russia"]')}
           data-testid="footer-russia-cart"
         >
           <div className="relative">
@@ -59,6 +68,7 @@ export default function MobileFooter() {
           variant="ghost"
           size="sm"
           className="flex-1 flex flex-col items-center gap-1 py-2 px-1 h-auto"
+          onClick={() => scrollToSection('.glass-panel')}
           data-testid="footer-teams"
         >
           <Users className="w-4 h-4" />
@@ -70,6 +80,7 @@ export default function MobileFooter() {
           variant="ghost"
           size="sm"
           className="flex-1 flex flex-col items-center gap-1 py-2 px-1 h-auto"
+          onClick={() => scrollToSection('[data-testid="deterrence-chart"]')}
           data-testid="footer-deterrence"
         >
           <Target className="w-4 h-4" />
