@@ -147,7 +147,7 @@ export default function CardShop({
   onAddToRussiaCart
 }: CardShopProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [domainFilter, setDomainFilter] = useState<Domain | 'all'>('all');
+  const [domainFilter, setDomainFilter] = useState<Domain | 'all'>('joint');
   const [typeFilter, setTypeFilter] = useState<CardTypeEnum | 'all'>('all');
   const [maxCost, setMaxCost] = useState<string>('');
 
