@@ -69,6 +69,11 @@ export default function MDDSStrategy() {
           store.saveToLocalStorage();
           alert('Strategy saved to local storage!');
         }}
+        onResetProgress={() => {
+          if (confirm('Reset all progress and start a new strategy?')) {
+            store.resetStrategy();
+          }
+        }}
         onSetMaxTurns={(turns) => {
           // Note: This could be enhanced to update the store
           console.log('Set max turns:', turns);
