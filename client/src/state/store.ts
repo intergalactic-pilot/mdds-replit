@@ -53,7 +53,7 @@ const createInitialState = (): Omit<GameState, 'teams'> & { teams: Record<Team, 
   
   return {
     turn: 1,
-    maxTurns: 6,
+    maxTurns: 7,
     currentTeam: 'NATO',
     teams: {
       NATO: natoTeam,
