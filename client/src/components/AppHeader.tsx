@@ -2,17 +2,12 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { sanitizeText } from '../logic/guards';
 import { 
   HelpCircle, 
   RotateCcw, 
   Save, 
-  Upload, 
-  Download, 
   Settings,
   Moon,
   Sun
@@ -25,9 +20,6 @@ interface AppHeaderProps {
   maxTurns: number;
   onNewStrategy: () => void;
   onSave: () => void;
-  onLoad: () => boolean;
-  onExport: () => string;
-  onImport: (data: string) => boolean;
   onConcludeStrategy: () => void;
   onSetMaxTurns: (turns: number) => void;
 }
@@ -37,57 +29,12 @@ export default function AppHeader({
   maxTurns,
   onNewStrategy,
   onSave,
-  onLoad,
-  onExport,
-  onImport,
   onConcludeStrategy,
   onSetMaxTurns
 }: AppHeaderProps) {
   const { theme, setTheme } = useTheme();
   const [showRules, setShowRules] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [importData, setImportData] = useState('');
-
-  const handleExport = () => {
-    const data = onExport();
-    const blob = new Blob([data], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `mdds-strategy-turn-${currentTurn}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const handleImport = () => {
-    try {
-      const success = onImport(importData);
-      if (success) {
-        setImportData('');
-        alert('Strategy imported successfully!');
-      } else {
-        alert('Failed to import strategy. Please check the format.');
-      }
-    } catch {
-      alert('Invalid JSON format.');
-    }
-  };
-
-  const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const content = e.target?.result as string;
-        if (onImport(content)) {
-          alert('Strategy imported successfully!');
-        } else {
-          alert('Failed to import strategy file.');
-        }
-      };
-      reader.readAsText(file);
-    }
-  };
 
   return (
     <header className="glass-header">
@@ -201,56 +148,6 @@ export default function AppHeader({
             <Button variant="ghost" size="icon" onClick={onSave} data-testid="button-save">
               <Save className="w-4 h-4" />
             </Button>
-
-            {/* Load */}
-            <Button variant="ghost" size="icon" onClick={onLoad} data-testid="button-load">
-              <Upload className="w-4 h-4" />
-            </Button>
-
-            {/* Export */}
-            <Button variant="ghost" size="icon" onClick={handleExport} data-testid="button-export">
-              <Download className="w-4 h-4" />
-            </Button>
-
-            {/* Import */}
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="ghost" size="sm" data-testid="button-import">
-                  Import
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>{sanitizeText('Import Strategy')}</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="file-import">Import from file</Label>
-                    <Input
-                      id="file-import"
-                      type="file"
-                      accept=".json"
-                      onChange={handleFileImport}
-                      data-testid="input-import-file"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="json-import">Or paste JSON data</Label>
-                    <Textarea
-                      id="json-import"
-                      placeholder="Paste strategy JSON here..."
-                      value={importData}
-                      onChange={(e) => setImportData(e.target.value)}
-                      rows={6}
-                      data-testid="textarea-import-json"
-                    />
-                  </div>
-                  <Button onClick={handleImport} disabled={!importData.trim()} data-testid="button-import-confirm">
-                    {sanitizeText('Import Strategy')}
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
 
             {/* New Strategy */}
             <Button 
