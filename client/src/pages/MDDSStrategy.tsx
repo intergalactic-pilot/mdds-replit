@@ -237,6 +237,15 @@ export default function MDDSStrategy() {
         disabled={store.phase !== 'purchase'}
       />
       
+      {/* Motto Container */}
+      <div className="w-full border-t border-border bg-background/50 backdrop-blur">
+        <div className="container mx-auto px-4 py-4 max-w-7xl">
+          <p className="text-center text-muted-foreground italic text-sm">
+            Link your visions with reality.
+          </p>
+        </div>
+      </div>
+      
       {/* Mobile Footer Navigation */}
       <MobileFooter />
     </div>
