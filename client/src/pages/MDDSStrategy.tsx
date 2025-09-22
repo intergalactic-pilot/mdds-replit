@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import DeterrenceChart from '../components/DeterrenceChart';
 import CartDisplay from '../components/CartDisplay';
 import MobileFooter from '../components/MobileFooter';
-import Statistics from '../components/Statistics';
+import TurnBasedLogs from '../components/Statistics';
 import cardsData from '../data/cards.json';
 import { Card } from '@shared/schema';
 
@@ -186,9 +186,9 @@ export default function MDDSStrategy() {
           </div>
         </div>
         
-        {/* Statistics Section */}
+        {/* Turn-based logs Section */}
         <div className="mt-6">
-          <Statistics />
+          <TurnBasedLogs />
         </div>
       </div>
 

@@ -10,7 +10,7 @@ const domainColors = {
   cyber: 'text-yellow-500'
 } as const;
 
-export default function Statistics() {
+export default function TurnBasedLogs() {
   const [isExpanded, setIsExpanded] = useState(false);
   const turnStatistics = useMDDSStore(state => state.turnStatistics);
 
@@ -22,11 +22,11 @@ export default function Statistics() {
       <button
         onClick={toggleExpanded}
         className="w-full flex items-center justify-between p-4 hover-elevate transition-all duration-300 text-left"
-        data-testid="button-toggle-statistics"
+        data-testid="button-toggle-turn-logs"
       >
         <div className="flex items-center gap-3">
           <BarChart3 className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-semibold">Statistics</h2>
+          <h2 className="text-lg font-semibold">Turn-based logs</h2>
           <span className="text-sm text-muted-foreground">
             ({turnStatistics.length} turn{turnStatistics.length !== 1 ? 's' : ''})
           </span>
@@ -40,7 +40,7 @@ export default function Statistics() {
 
       {/* Content */}
       {isExpanded && (
-        <div className="border-t border-border/50 p-4 space-y-4" data-testid="statistics-content">
+        <div className="border-t border-border/50 p-4 space-y-4" data-testid="turn-logs-content">
           {turnStatistics.length === 0 ? (
             <p className="text-muted-foreground text-center py-4">No statistics available yet.</p>
           ) : (
