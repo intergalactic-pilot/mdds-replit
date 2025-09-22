@@ -74,17 +74,6 @@ export default function MDDSStrategy() {
           store.saveToLocalStorage();
           alert('Strategy saved to local storage!');
         }}
-        onLoad={() => {
-          const success = store.loadFromLocalStorage();
-          if (success) {
-            alert('Strategy loaded successfully!');
-          } else {
-            alert('No saved strategy found.');
-          }
-          return success;
-        }}
-        onExport={store.exportState}
-        onImport={store.importState}
         onConcludeStrategy={() => {
           if (confirm('Conclude this strategy? This will end the current session.')) {
             store.concludeStrategy(store.currentTeam);
