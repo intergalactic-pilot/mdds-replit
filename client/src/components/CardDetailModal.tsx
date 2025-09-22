@@ -111,13 +111,13 @@ export default function CardDetailModal({
               <div className="space-y-2">
                 <h5 className="font-medium text-sm">Effects</h5>
                 {card.effects.map((effect, index) => (
-                  <div key={index} className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                  <div key={index} className="flex items-center gap-2 p-2 bg-white border border-border rounded-md">
                     {effect.delta > 0 ? (
                       <TrendingUp className="w-4 h-4 text-green-600" />
                     ) : (
                       <TrendingDown className="w-4 h-4 text-red-600" />
                     )}
-                    <span className="text-sm">
+                    <span className="text-sm text-foreground">
                       {effect.target === 'self' ? 'Self' : 'Opponent'} {effect.domain}: 
                       <span className={effect.delta > 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
                         {effect.delta > 0 ? '+' : ''}{effect.delta}
