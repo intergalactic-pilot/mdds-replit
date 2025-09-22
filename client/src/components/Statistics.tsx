@@ -14,6 +14,7 @@ export default function TurnBasedLogs() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isPurchaseLogsExpanded, setIsPurchaseLogsExpanded] = useState(false);
   const [isStatisticsExpanded, setIsStatisticsExpanded] = useState(false);
+  const [isDomainBreakdownExpanded, setIsDomainBreakdownExpanded] = useState(false);
   const turnStatistics = useMDDSStore(state => state.turnStatistics);
   const strategyLog = useMDDSStore(state => state.strategyLog);
 
@@ -159,43 +160,60 @@ export default function TurnBasedLogs() {
               {/* Domain Breakdown for Latest Turn */}
               {turnStatistics.length > 0 && (
                 <div className="space-y-3">
-                  <h3 className="font-semibold flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4" />
-                    Latest Turn Domain Breakdown
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-                    {Object.entries(turnStatistics[turnStatistics.length - 1].natoDeterrence).map(([domain, natoValue]) => {
-                      const russiaValue = turnStatistics[turnStatistics.length - 1].russiaDeterrence[domain as keyof typeof turnStatistics[number]['russiaDeterrence']];
-                      const domainAdvantage = natoValue - russiaValue;
-                      
-                      return (
-                        <div key={domain} className="glass-panel p-3 text-center" data-testid={`domain-breakdown-${domain}`}>
-                          <h4 className={`font-medium capitalize text-xs mb-2 ${domainColors[domain as keyof typeof domainColors]}`}>
-                            {domain}
-                          </h4>
-                          <div className="space-y-1 text-xs">
-                            <div className="flex justify-between">
-                              <span className="text-blue-400">NATO:</span>
-                              <span className="font-semibold">{natoValue}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-red-400">Russia:</span>
-                              <span className="font-semibold">{russiaValue}</span>
-                            </div>
-                            <div className="pt-1 border-t border-border/30">
-                              <div className={`font-semibold ${
-                                domainAdvantage > 0 ? 'text-blue-400' : 
-                                domainAdvantage < 0 ? 'text-red-400' : 
-                                'text-muted-foreground'
-                              }`}>
-                                {domainAdvantage > 0 ? `+${domainAdvantage}` : domainAdvantage}
+                  <button
+                    onClick={() => setIsDomainBreakdownExpanded(!isDomainBreakdownExpanded)}
+                    className="w-full flex items-center justify-between p-3 glass-panel hover-elevate transition-all duration-300 text-left"
+                    data-testid="button-toggle-domain-breakdown"
+                  >
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4" />
+                      <h3 className="font-semibold">Latest Turn Domain Breakdown</h3>
+                      <span className="text-sm text-muted-foreground">
+                        (5 domains)
+                      </span>
+                    </div>
+                    {isDomainBreakdownExpanded ? (
+                      <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                    )}
+                  </button>
+                  
+                  {isDomainBreakdownExpanded && (
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+                      {Object.entries(turnStatistics[turnStatistics.length - 1].natoDeterrence).map(([domain, natoValue]) => {
+                        const russiaValue = turnStatistics[turnStatistics.length - 1].russiaDeterrence[domain as keyof typeof turnStatistics[number]['russiaDeterrence']];
+                        const domainAdvantage = natoValue - russiaValue;
+                        
+                        return (
+                          <div key={domain} className="glass-panel p-3 text-center" data-testid={`domain-breakdown-${domain}`}>
+                            <h4 className={`font-medium capitalize text-xs mb-2 ${domainColors[domain as keyof typeof domainColors]}`}>
+                              {domain}
+                            </h4>
+                            <div className="space-y-1 text-xs">
+                              <div className="flex justify-between">
+                                <span className="text-blue-400">NATO:</span>
+                                <span className="font-semibold">{natoValue}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-red-400">Russia:</span>
+                                <span className="font-semibold">{russiaValue}</span>
+                              </div>
+                              <div className="pt-1 border-t border-border/30">
+                                <div className={`font-semibold ${
+                                  domainAdvantage > 0 ? 'text-blue-400' : 
+                                  domainAdvantage < 0 ? 'text-red-400' : 
+                                  'text-muted-foreground'
+                                }`}>
+                                  {domainAdvantage > 0 ? `+${domainAdvantage}` : domainAdvantage}
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
