@@ -9,23 +9,15 @@ import CardDisplay from './CardDisplay';
 import DomainBadge from './DomainBadge';
 import { sanitizeText } from '../logic/guards';
 import { formatCurrency } from '../logic/pricing';
-import { Search, Filter, ShoppingCart, Info, Zap, Clock } from 'lucide-react';
+import { Search, Filter, Info, ShoppingCart } from 'lucide-react';
 
-const cardTypeIcons = {
-  asset: <Zap className="w-4 h-4" />,
-  permanent: <ShoppingCart className="w-4 h-4" />,
-  expert: <Clock className="w-4 h-4" />
-};
-
-const cardTypeLabels = {
-  asset: "Asset",
-  permanent: "Permanent", 
-  expert: "Expert"
-};
+// Removed card type icons and labels since we now display card ID instead
 
 interface CardListItemProps {
   card: CardType;
   discountedPrice?: number;
+  natoPrice?: number;
+  russiaPrice?: number;
   onViewDetails?: () => void;
   onAddToNATOCart?: () => void;
   onAddToRussiaCart?: () => void;
@@ -36,6 +28,8 @@ interface CardListItemProps {
 function CardListItem({ 
   card, 
   discountedPrice, 
+  natoPrice,
+  russiaPrice,
   onViewDetails,
   onAddToNATOCart,
   onAddToRussiaCart,
@@ -54,9 +48,8 @@ function CardListItem({
         {/* Left side - Card info */}
         <div className="flex items-center gap-4 flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-xs">
-              {cardTypeIcons[card.type]}
-              <span className="ml-1">{sanitizeText(cardTypeLabels[card.type])}</span>
+            <Badge variant="outline" className="text-xs font-mono">
+              {card.id}
             </Badge>
           </div>
           
@@ -67,9 +60,6 @@ function CardListItem({
               </h3>
               <DomainBadge domain={card.domain} className="text-xs shrink-0" />
             </div>
-            <p className="text-xs text-muted-foreground font-mono" data-testid={`text-card-id-${card.id}`}>
-              {card.id}
-            </p>
           </div>
 
           <div className="text-right">
@@ -97,29 +87,39 @@ function CardListItem({
           </Button>
           
           {onAddToNATOCart && (
-            <Button
-              size="sm"
-              onClick={onAddToNATOCart}
-              disabled={disabled || inCart}
-              variant="default"
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-              data-testid={`button-add-nato-${card.id}`}
-            >
-              NATO
-            </Button>
+            <div className="flex flex-col items-center gap-1">
+              <div className="text-xs text-blue-600 font-semibold">
+                {natoPrice ? formatCurrency(natoPrice) : formatCurrency(card.baseCostK)}
+              </div>
+              <Button
+                size="sm"
+                onClick={onAddToNATOCart}
+                disabled={disabled || inCart}
+                variant="default"
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+                data-testid={`button-add-nato-${card.id}`}
+              >
+                NATO
+              </Button>
+            </div>
           )}
           
           {onAddToRussiaCart && (
-            <Button
-              size="sm"
-              onClick={onAddToRussiaCart}
-              disabled={disabled || inCart}
-              variant="default" 
-              className="bg-red-600 hover:bg-red-700 text-white"
-              data-testid={`button-add-russia-${card.id}`}
-            >
-              Russia
-            </Button>
+            <div className="flex flex-col items-center gap-1">
+              <div className="text-xs text-red-600 font-semibold">
+                {russiaPrice ? formatCurrency(russiaPrice) : formatCurrency(card.baseCostK)}
+              </div>
+              <Button
+                size="sm"
+                onClick={onAddToRussiaCart}
+                disabled={disabled || inCart}
+                variant="default" 
+                className="bg-red-600 hover:bg-red-700 text-white"
+                data-testid={`button-add-russia-${card.id}`}
+              >
+                Russia
+              </Button>
+            </div>
           )}
         </div>
       </div>
@@ -133,6 +133,8 @@ interface CardShopProps {
   onViewDetails: (card: CardType) => void;
   cartItems: CardType[];
   getDiscountedPrice: (card: CardType) => number;
+  getNATOPrice?: (card: CardType) => number;
+  getRussiaPrice?: (card: CardType) => number;
   disabled?: boolean;
   onAddToNATOCart?: (card: CardType) => void;
   onAddToRussiaCart?: (card: CardType) => void;
@@ -144,6 +146,8 @@ export default function CardShop({
   onViewDetails, 
   cartItems,
   getDiscountedPrice,
+  getNATOPrice,
+  getRussiaPrice,
   disabled = false,
   onAddToNATOCart,
   onAddToRussiaCart
@@ -253,6 +257,8 @@ export default function CardShop({
                 key={card.id}
                 card={card}
                 discountedPrice={getDiscountedPrice(card)}
+                natoPrice={getNATOPrice?.(card)}
+                russiaPrice={getRussiaPrice?.(card)}
                 onViewDetails={() => onViewDetails(card)}
                 onAddToNATOCart={onAddToNATOCart ? () => onAddToNATOCart(card) : undefined}
                 onAddToRussiaCart={onAddToRussiaCart ? () => onAddToRussiaCart(card) : undefined}
