@@ -119,6 +119,8 @@ export default function MDDSStrategy() {
                     onAddToCart={(card) => store.addToCart(store.currentTeam, card)}
                     onViewDetails={(card) => store.setSelectedCard(card)}
                     cartItems={currentTeamState.cart}
+                    natoCartItems={natoState.cart}
+                    russiaCartItems={russiaState.cart}
                     getDiscountedPrice={getDiscountedPrice}
                     getNATOPrice={priceForNATO}
                     getRussiaPrice={priceForRussia}

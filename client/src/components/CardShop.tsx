@@ -21,6 +21,8 @@ interface CardListItemProps {
   onAddToNATOCart?: () => void;
   onAddToRussiaCart?: () => void;
   inCart?: boolean;
+  natoInCart?: boolean;
+  russiaInCart?: boolean;
   disabled?: boolean;
 }
 
@@ -32,6 +34,8 @@ function CardListItem({
   onAddToNATOCart,
   onAddToRussiaCart,
   inCart = false,
+  natoInCart = false,
+  russiaInCart = false,
   disabled = false 
 }: CardListItemProps) {
   // Main price always shows base cost, team-specific prices shown on buttons
@@ -88,7 +92,7 @@ function CardListItem({
               <Button
                 size="sm"
                 onClick={onAddToNATOCart}
-                disabled={disabled || inCart}
+                disabled={disabled || natoInCart}
                 variant="default"
                 className="bg-blue-600 hover:bg-blue-700 text-white"
                 data-testid={`button-add-nato-${card.id}`}
@@ -106,7 +110,7 @@ function CardListItem({
               <Button
                 size="sm"
                 onClick={onAddToRussiaCart}
-                disabled={disabled || inCart}
+                disabled={disabled || russiaInCart}
                 variant="default" 
                 className="bg-red-600 hover:bg-red-700 text-white"
                 data-testid={`button-add-russia-${card.id}`}
@@ -126,6 +130,8 @@ interface CardShopProps {
   onAddToCart: (card: CardType) => void;
   onViewDetails: (card: CardType) => void;
   cartItems: CardType[];
+  natoCartItems?: CardType[];
+  russiaCartItems?: CardType[];
   getDiscountedPrice: (card: CardType) => number;
   getNATOPrice?: (card: CardType) => number;
   getRussiaPrice?: (card: CardType) => number;
@@ -139,6 +145,8 @@ export default function CardShop({
   onAddToCart, 
   onViewDetails, 
   cartItems,
+  natoCartItems = [],
+  russiaCartItems = [],
   getDiscountedPrice,
   getNATOPrice,
   getRussiaPrice,
@@ -179,6 +187,8 @@ export default function CardShop({
   }, [cards, searchTerm, domainFilter, typeFilter, maxCost, getDiscountedPrice]);
 
   const cartItemIds = new Set(cartItems.map(item => item.id));
+  const natoCartItemIds = new Set(natoCartItems.map(item => item.id));
+  const russiaCartItemIds = new Set(russiaCartItems.map(item => item.id));
 
   return (
     <Card data-testid="card-shop">
@@ -256,6 +266,8 @@ export default function CardShop({
                 onAddToNATOCart={onAddToNATOCart ? () => onAddToNATOCart(card) : undefined}
                 onAddToRussiaCart={onAddToRussiaCart ? () => onAddToRussiaCart(card) : undefined}
                 inCart={cartItemIds.has(card.id)}
+                natoInCart={natoCartItemIds.has(card.id)}
+                russiaInCart={russiaCartItemIds.has(card.id)}
                 disabled={disabled}
               />
             ))}
