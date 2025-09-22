@@ -58,6 +58,16 @@ export function commitPurchases(
   
   // Process each card in cart
   for (const card of teamState.cart) {
+    const cardPrice = calculateDiscountedPrice(card, teamState.ownedPermanents);
+    
+    // Log individual card purchase
+    newGameState.strategyLog.push({
+      turn: gameState.turn,
+      team,
+      action: `${team} purchased ${card.name} (${card.id}) for ${cardPrice}K`,
+      timestamp: new Date()
+    });
+    
     switch (card.type) {
       case 'asset':
         // Apply immediate effects
