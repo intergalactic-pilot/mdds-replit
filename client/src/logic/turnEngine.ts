@@ -77,8 +77,11 @@ export function commitPurchases(
         break;
         
       case 'permanent':
-        // Add to owned permanents
-        teamState.ownedPermanents.push(card);
+        // Queue for next turn (permanent discounts activate next turn)
+        teamState.permanentsQueue.push({
+          card,
+          availableTurn: gameState.turn + 1
+        });
         break;
         
       case 'expert':
@@ -112,9 +115,27 @@ export function advanceTurn(gameState: GameState): GameState {
   // Increment turn
   newGameState.turn += 1;
   
-  // Activate experts that are now available
+  // Activate permanents and experts that are now available
   for (const team of ['NATO', 'Russia'] as Team[]) {
     const teamState = newGameState.teams[team];
+    
+    // Activate permanents
+    teamState.permanentsQueue = teamState.permanentsQueue.filter(permanent => {
+      if (permanent.availableTurn <= newGameState.turn) {
+        // Permanent becomes active (provides discounts)
+        teamState.ownedPermanents.push(permanent.card);
+        newGameState.strategyLog.push({
+          turn: newGameState.turn,
+          team,
+          action: `Permanent activated: ${permanent.card.name} (${permanent.card.id}) - discounts now available`,
+          timestamp: new Date()
+        });
+        return false; // Remove from queue
+      }
+      return true; // Keep in queue
+    });
+    
+    // Activate experts
     teamState.expertsQueue = teamState.expertsQueue.filter(expert => {
       if (expert.availableTurn <= newGameState.turn) {
         // Expert becomes active (informational only)
@@ -130,14 +151,13 @@ export function advanceTurn(gameState: GameState): GameState {
     });
   }
   
-  // Reset budgets for turn 2+
+  // Provide fresh budget only for turn 2 (transition from domain-restricted to pooled budget)
   if (newGameState.turn === 2) {
-    newGameState.teams.NATO.budget = 1000;
-    newGameState.teams.Russia.budget = 1000;
-  } else if (newGameState.turn > 2) {
+    // Turn 2: Give fresh 1000K pooled budget to both teams
     newGameState.teams.NATO.budget = 1000;
     newGameState.teams.Russia.budget = 1000;
   }
+  // Turn 3+: Teams keep whatever budget they have remaining (no reset)
   
   return newGameState;
 }

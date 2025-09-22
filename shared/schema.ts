@@ -32,6 +32,7 @@ export interface TeamState {
   totalDeterrence: number;
   budget: number;
   ownedPermanents: Card[];
+  permanentsQueue: Array<{ card: Card; availableTurn: number }>;
   expertsQueue: Array<{ card: Card; availableTurn: number }>;
   cart: Card[];
 }
