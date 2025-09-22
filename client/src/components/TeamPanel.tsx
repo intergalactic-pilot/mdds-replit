@@ -83,10 +83,10 @@ export default function TeamPanel({ team, teamState, isActive = false }: TeamPan
           ))}
         </div>
 
-        {/* Owned Permanents */}
+        {/* Active Permanents */}
         {teamState.ownedPermanents.length > 0 && (
           <div className="space-y-2">
-            <h4 className="text-sm font-medium text-muted-foreground">Owned Permanents</h4>
+            <h4 className="text-sm font-medium text-muted-foreground">Active Permanents</h4>
             <div className="flex flex-wrap gap-1">
               {teamState.ownedPermanents.map((permanent, index) => (
                 <Badge 
@@ -97,6 +97,30 @@ export default function TeamPanel({ team, teamState, isActive = false }: TeamPan
                 >
                   {permanent.id}
                 </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Permanent Queue */}
+        {teamState.permanentsQueue && teamState.permanentsQueue.length > 0 && (
+          <div className="space-y-2">
+            <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              Permanent Queue
+            </h4>
+            <div className="space-y-1">
+              {(teamState.permanentsQueue || []).map((permanent, index) => (
+                <div 
+                  key={`permanent-queue-${permanent.card.id}-${index}`}
+                  className="flex items-center justify-between text-xs"
+                  data-testid={`permanent-queue-${permanent.card.id}`}
+                >
+                  <span>{permanent.card.name}</span>
+                  <Badge variant="outline" className="text-xs">
+                    T+{permanent.availableTurn}
+                  </Badge>
+                </div>
               ))}
             </div>
           </div>

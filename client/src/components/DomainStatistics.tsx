@@ -24,24 +24,25 @@ export default function DomainStatistics() {
     return null;
   }
 
-  // Prepare chart data
+  // Prepare chart data with 100 as baseline reference
   const chartData = turnStatistics.map(stat => {
     const differences: any = { turn: stat.turn };
     Object.keys(stat.natoDeterrence).forEach(domain => {
       const natoValue = stat.natoDeterrence[domain as keyof typeof stat.natoDeterrence];
       const russiaValue = stat.russiaDeterrence[domain as keyof typeof stat.russiaDeterrence];
-      differences[domain] = natoValue - russiaValue;
+      // Calculate difference from 100 baseline: (NATO - 100) - (Russia - 100) = NATO - Russia
+      differences[domain] = (natoValue - 100) - (russiaValue - 100);
     });
     return differences;
   });
 
-  // Get domain-specific data for selected domain
+  // Get domain-specific data for selected domain with 100 baseline reference
   const getDomainSpecificData = (domain: Domain) => {
     return turnStatistics.map(stat => ({
       turn: stat.turn,
-      natoValue: stat.natoDeterrence[domain],
-      russiaValue: stat.russiaDeterrence[domain],
-      difference: stat.natoDeterrence[domain] - stat.russiaDeterrence[domain]
+      natoValue: stat.natoDeterrence[domain] - 100,
+      russiaValue: stat.russiaDeterrence[domain] - 100,
+      difference: (stat.natoDeterrence[domain] - 100) - (stat.russiaDeterrence[domain] - 100)
     }));
   };
 
@@ -95,7 +96,7 @@ export default function DomainStatistics() {
           <div className="space-y-6">
             {/* Line Chart showing domain differences over time */}
             <div className="glass-panel p-4">
-              <h4 className="text-sm font-semibold mb-3">Domain Deterrence Differences (NATO - Russia)</h4>
+              <h4 className="text-sm font-semibold mb-3">Domain Deterrence Differences (Baseline: 100)</h4>
               <ResponsiveContainer width="100%" height={300}>
                 <RechartsLineChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -155,36 +156,6 @@ export default function DomainStatistics() {
               </ResponsiveContainer>
             </div>
 
-            {/* Bar Chart showing latest turn comparison */}
-            <div className="glass-panel p-4">
-              <h4 className="text-sm font-semibold mb-3">Current Turn Domain Comparison</h4>
-              <ResponsiveContainer width="100%" height={250}>
-                <RechartsBarChart data={chartData.slice(-1)}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis 
-                    dataKey="turn" 
-                    stroke="hsl(var(--muted-foreground))"
-                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                  />
-                  <YAxis 
-                    stroke="hsl(var(--muted-foreground))"
-                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                  />
-                  <Tooltip 
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px'
-                    }}
-                  />
-                  <Bar dataKey="joint" fill={domainColors.joint.color} name="Joint" />
-                  <Bar dataKey="economy" fill={domainColors.economy.color} name="Economy" />
-                  <Bar dataKey="cognitive" fill={domainColors.cognitive.color} name="Cognitive" />
-                  <Bar dataKey="space" fill={domainColors.space.color} name="Space" />
-                  <Bar dataKey="cyber" fill={domainColors.cyber.color} name="Cyber" />
-                </RechartsBarChart>
-              </ResponsiveContainer>
-            </div>
           </div>
 
           {/* Domain-Specific Analysis */}
@@ -220,14 +191,14 @@ export default function DomainStatistics() {
                       type="monotone" 
                       dataKey="natoValue" 
                       stroke="#3B82F6" 
-                      name="NATO"
+                      name="NATO (vs 100)"
                       strokeWidth={2}
                     />
                     <Line 
                       type="monotone" 
                       dataKey="russiaValue" 
                       stroke="#EF4444" 
-                      name="Russia"
+                      name="Russia (vs 100)"
                       strokeWidth={2}
                     />
                     <Line 

@@ -43,6 +43,7 @@ const createInitialTeamState = (): TeamState => ({
   totalDeterrence: 500, // 100 per domain * 5 domains
   budget: 1000, // Turn 1 will be restricted to 200K per domain
   ownedPermanents: [],
+  permanentsQueue: [],
   expertsQueue: [],
   cart: []
 });
@@ -173,6 +174,14 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
       const saved = localStorage.getItem('mdds-strategy');
       if (saved) {
         const data = JSON.parse(saved);
+        // Migrate older save states that don't have permanentsQueue
+        if (data.teams) {
+          Object.keys(data.teams).forEach(team => {
+            if (!data.teams[team].permanentsQueue) {
+              data.teams[team].permanentsQueue = [];
+            }
+          });
+        }
         set(data);
         return true;
       }
@@ -200,6 +209,14 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
   importState: (jsonState) => {
     try {
       const data = JSON.parse(jsonState);
+      // Migrate older save states that don't have permanentsQueue
+      if (data.teams) {
+        Object.keys(data.teams).forEach(team => {
+          if (!data.teams[team].permanentsQueue) {
+            data.teams[team].permanentsQueue = [];
+          }
+        });
+      }
       set({
         turn: data.turn,
         maxTurns: data.maxTurns,
