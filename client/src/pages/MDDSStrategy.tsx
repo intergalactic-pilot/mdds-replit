@@ -11,6 +11,7 @@ import { SkipForward } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import DeterrenceChart from '../components/DeterrenceChart';
 import CartDisplay from '../components/CartDisplay';
+import MobileFooter from '../components/MobileFooter';
 import cardsData from '../data/cards.json';
 import { Card } from '@shared/schema';
 
@@ -60,7 +61,7 @@ export default function MDDSStrategy() {
   const russiaCartTotal = calculateCartTotal(russiaState.cart, russiaState.ownedPermanents);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pb-20 md:pb-0">
       <AppHeader
         currentTurn={store.turn}
         maxTurns={store.maxTurns}
@@ -107,14 +108,14 @@ export default function MDDSStrategy() {
             {/* Left Sidebar - Team Panels */}
             <div className="lg:col-span-2 order-2 lg:order-1">
               <div className="space-y-4 lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)]">
-                <div className="glass-panel p-4">
+                <div className="glass-panel p-3 lg:p-4">
                   <TeamPanel
                     team={store.currentTeam}
                     teamState={currentTeamState}
                     isActive={true}
                   />
                 </div>
-                <div className="glass-panel p-4">
+                <div className="glass-panel p-3 lg:p-4">
                   <TeamPanel
                     team={opponentTeam}
                     teamState={opponentTeamState}
@@ -126,10 +127,10 @@ export default function MDDSStrategy() {
             {/* Main Content - Wider */}
             <div className="lg:col-span-6 order-1 lg:order-2">
               <div className="space-y-4 lg:space-y-6">
-                {/* Budget Summary */}
-                <div className="glass-card p-4 lg:p-6">
+                {/* Budget Summary - Mobile Optimized */}
+                <div className="glass-card p-3 lg:p-6">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-                    <h3 className="font-semibold text-lg">Current Budget Status</h3>
+                    <h3 className="font-semibold text-base lg:text-lg">Current Budget Status</h3>
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-sm text-muted-foreground">Cart Total:</span>
                       <span className={`font-mono font-bold text-lg ${canAfford ? 'text-green-600' : 'text-red-600'}`}>
@@ -148,7 +149,7 @@ export default function MDDSStrategy() {
                 </div>
 
                 {/* Card Shop */}
-                <div className="glass-card p-4 lg:p-6">
+                <div className="glass-card p-3 lg:p-6">
                   <CardShop
                     cards={availableCards}
                     onAddToCart={(card) => store.addToCart(store.currentTeam, card)}
@@ -166,7 +167,7 @@ export default function MDDSStrategy() {
             {/* Right Sidebar - NATO and Russia Carts */}
             <div className="lg:col-span-2 order-3">
               <div className="lg:sticky lg:top-24 space-y-4">
-                <div className="glass-panel p-4">
+                <div className="glass-panel p-3 lg:p-4">
                   <CartDisplay
                     team="NATO"
                     cartItems={natoState.cart}
@@ -182,7 +183,7 @@ export default function MDDSStrategy() {
                   />
                 </div>
 
-                <div className="glass-panel p-4">
+                <div className="glass-panel p-3 lg:p-4">
                   <CartDisplay
                     team="Russia"
                     cartItems={russiaState.cart}
@@ -198,8 +199,8 @@ export default function MDDSStrategy() {
                   />
                 </div>
 
-                {/* Finish Turn Button */}
-                <div className="glass-panel p-4">
+                {/* Finish Turn Button - Hidden on Mobile */}
+                <div className="glass-panel p-3 lg:p-4 hidden md:block">
                   <Button
                     onClick={() => {
                       store.advanceGameTurn();
@@ -235,6 +236,9 @@ export default function MDDSStrategy() {
         inCart={store.selectedCard ? currentTeamState.cart.some(c => c.id === store.selectedCard?.id) : false}
         disabled={store.phase !== 'purchase'}
       />
+      
+      {/* Mobile Footer Navigation */}
+      <MobileFooter />
     </div>
   );
 }
