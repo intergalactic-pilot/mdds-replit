@@ -13,6 +13,7 @@ import DeterrenceChart from '../components/DeterrenceChart';
 import CartDisplay from '../components/CartDisplay';
 import MobileFooter from '../components/MobileFooter';
 import TurnBasedLogs from '../components/Statistics';
+import DomainStatistics from '../components/DomainStatistics';
 import cardsData from '../data/cards.json';
 import { Card } from '@shared/schema';
 
@@ -191,6 +192,11 @@ export default function MDDSStrategy() {
         {/* Turn-based logs Section */}
         <div className="mt-6">
           <TurnBasedLogs />
+        </div>
+        
+        {/* Statistics Section */}
+        <div className="mt-6">
+          <DomainStatistics />
         </div>
       </div>
 
