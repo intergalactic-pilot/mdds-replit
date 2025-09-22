@@ -88,9 +88,9 @@ export default function TeamPanel({ team, teamState, isActive = false }: TeamPan
           <div className="space-y-2">
             <h4 className="text-sm font-medium text-muted-foreground">Owned Permanents</h4>
             <div className="flex flex-wrap gap-1">
-              {teamState.ownedPermanents.map(permanent => (
+              {teamState.ownedPermanents.map((permanent, index) => (
                 <Badge 
-                  key={permanent.id} 
+                  key={`permanent-${permanent.id}-${index}`} 
                   variant="secondary" 
                   className="text-xs"
                   data-testid={`badge-permanent-${permanent.id}`}
@@ -112,7 +112,7 @@ export default function TeamPanel({ team, teamState, isActive = false }: TeamPan
             <div className="space-y-1">
               {teamState.expertsQueue.map((expert, index) => (
                 <div 
-                  key={index}
+                  key={`expert-${expert.card.id}-${index}`}
                   className="flex items-center justify-between text-xs"
                   data-testid={`expert-queue-${expert.card.id}`}
                 >
@@ -131,9 +131,9 @@ export default function TeamPanel({ team, teamState, isActive = false }: TeamPan
           <div className="space-y-2">
             <h4 className="text-sm font-medium text-muted-foreground">Cart ({teamState.cart.length})</h4>
             <div className="flex flex-wrap gap-1">
-              {teamState.cart.map(card => (
+              {teamState.cart.map((card, index) => (
                 <Badge 
-                  key={card.id} 
+                  key={`cart-${card.id}-${index}`} 
                   variant="outline" 
                   className="text-xs"
                   data-testid={`badge-cart-${card.id}`}

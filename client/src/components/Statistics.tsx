@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, BarChart3, TrendingUp, LineChart } from 'lucide-react';
+import { ChevronDown, ChevronUp, BarChart3, TrendingUp } from 'lucide-react';
 import { useMDDSStore } from '@/state/store';
-import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart as RechartsBarChart, Bar } from 'recharts';
 
 const domainColors = {
   joint: 'text-gray-500',
@@ -16,7 +15,6 @@ export default function TurnBasedLogs() {
   const [isPurchaseLogsExpanded, setIsPurchaseLogsExpanded] = useState(false);
   const [isStatisticsExpanded, setIsStatisticsExpanded] = useState(false);
   const [isDomainBreakdownExpanded, setIsDomainBreakdownExpanded] = useState(false);
-  const [isDomainChartsExpanded, setIsDomainChartsExpanded] = useState(false);
   const turnStatistics = useMDDSStore(state => state.turnStatistics);
   const strategyLog = useMDDSStore(state => state.strategyLog);
 
@@ -158,143 +156,6 @@ export default function TurnBasedLogs() {
                 </div>
               )}
 
-              {/* Statistics - Domain-based Differences Charts */}
-              {turnStatistics.length > 1 && (
-                <div className="space-y-3">
-                  <button
-                    onClick={() => setIsDomainChartsExpanded(!isDomainChartsExpanded)}
-                    className="w-full flex items-center justify-between p-3 glass-panel hover-elevate transition-all duration-300 text-left"
-                    data-testid="button-toggle-domain-charts"
-                  >
-                    <div className="flex items-center gap-2">
-                      <LineChart className="w-4 h-4" />
-                      <h3 className="font-semibold">Statistics</h3>
-                      <span className="text-sm text-muted-foreground">
-                        (Domain-based differences per turn)
-                      </span>
-                    </div>
-                    {isDomainChartsExpanded ? (
-                      <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                    )}
-                  </button>
-                  
-                  {isDomainChartsExpanded && (
-                    <div className="space-y-6" data-testid="domain-charts">
-                      {/* Prepare chart data */}
-                      {(() => {
-                        const chartData = turnStatistics.map(stat => {
-                          const differences: any = { turn: stat.turn };
-                          Object.keys(stat.natoDeterrence).forEach(domain => {
-                            const natoValue = stat.natoDeterrence[domain as keyof typeof stat.natoDeterrence];
-                            const russiaValue = stat.russiaDeterrence[domain as keyof typeof stat.russiaDeterrence];
-                            differences[domain] = natoValue - russiaValue;
-                          });
-                          return differences;
-                        });
-
-                        return (
-                          <>
-                            {/* Line Chart showing domain differences over time */}
-                            <div className="glass-panel p-4">
-                              <h4 className="text-sm font-semibold mb-3">Domain Deterrence Differences (NATO - Russia)</h4>
-                              <ResponsiveContainer width="100%" height={300}>
-                                <RechartsLineChart data={chartData}>
-                                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                                  <XAxis 
-                                    dataKey="turn" 
-                                    stroke="hsl(var(--muted-foreground))"
-                                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                                  />
-                                  <YAxis 
-                                    stroke="hsl(var(--muted-foreground))"
-                                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                                  />
-                                  <Tooltip 
-                                    contentStyle={{
-                                      backgroundColor: 'hsl(var(--card))',
-                                      border: '1px solid hsl(var(--border))',
-                                      borderRadius: '8px'
-                                    }}
-                                  />
-                                  <Legend />
-                                  <Line 
-                                    type="monotone" 
-                                    dataKey="joint" 
-                                    stroke="#9CA3AF" 
-                                    name="Joint"
-                                    strokeWidth={2}
-                                  />
-                                  <Line 
-                                    type="monotone" 
-                                    dataKey="economy" 
-                                    stroke="#10B981" 
-                                    name="Economy"
-                                    strokeWidth={2}
-                                  />
-                                  <Line 
-                                    type="monotone" 
-                                    dataKey="cognitive" 
-                                    stroke="#8B5CF6" 
-                                    name="Cognitive"
-                                    strokeWidth={2}
-                                  />
-                                  <Line 
-                                    type="monotone" 
-                                    dataKey="space" 
-                                    stroke="#3B82F6" 
-                                    name="Space"
-                                    strokeWidth={2}
-                                  />
-                                  <Line 
-                                    type="monotone" 
-                                    dataKey="cyber" 
-                                    stroke="#F59E0B" 
-                                    name="Cyber"
-                                    strokeWidth={2}
-                                  />
-                                </RechartsLineChart>
-                              </ResponsiveContainer>
-                            </div>
-
-                            {/* Bar Chart showing latest turn comparison */}
-                            <div className="glass-panel p-4">
-                              <h4 className="text-sm font-semibold mb-3">Current Turn Domain Comparison</h4>
-                              <ResponsiveContainer width="100%" height={250}>
-                                <RechartsBarChart data={chartData.slice(-1)}>
-                                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                                  <XAxis 
-                                    dataKey="turn" 
-                                    stroke="hsl(var(--muted-foreground))"
-                                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                                  />
-                                  <YAxis 
-                                    stroke="hsl(var(--muted-foreground))"
-                                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                                  />
-                                  <Tooltip 
-                                    contentStyle={{
-                                      backgroundColor: 'hsl(var(--card))',
-                                      border: '1px solid hsl(var(--border))',
-                                      borderRadius: '8px'
-                                    }}
-                                  />
-                                  <Bar dataKey="joint" fill="#9CA3AF" name="Joint" />
-                                  <Bar dataKey="economy" fill="#10B981" name="Economy" />
-                                  <Bar dataKey="cognitive" fill="#8B5CF6" name="Cognitive" />
-                                  <Bar dataKey="space" fill="#3B82F6" name="Space" />
-                                  <Bar dataKey="cyber" fill="#F59E0B" name="Cyber" />
-                                </RechartsBarChart>
-                              </ResponsiveContainer>
-                            </div>
-                          </>
-                        );
-                      })()}
-                    </div>
-                  )}
-                </div>
-              )}
               
               {/* Domain Breakdown for Latest Turn */}
               {turnStatistics.length > 0 && (
