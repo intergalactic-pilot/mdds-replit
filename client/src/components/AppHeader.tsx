@@ -3,10 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { sanitizeText } from '../logic/guards';
 import { 
   HelpCircle, 
-  RotateCcw, 
   Save, 
   Settings,
   Moon,
@@ -18,18 +18,14 @@ import { useTheme } from "next-themes";
 interface AppHeaderProps {
   currentTurn: number;
   maxTurns: number;
-  onNewStrategy: () => void;
   onSave: () => void;
-  onConcludeStrategy: () => void;
   onSetMaxTurns: (turns: number) => void;
 }
 
 export default function AppHeader({
   currentTurn,
   maxTurns,
-  onNewStrategy,
   onSave,
-  onConcludeStrategy,
   onSetMaxTurns
 }: AppHeaderProps) {
   const { theme, setTheme } = useTheme();
@@ -147,24 +143,6 @@ export default function AppHeader({
             {/* Save */}
             <Button variant="ghost" size="icon" onClick={onSave} data-testid="button-save">
               <Save className="w-4 h-4" />
-            </Button>
-
-            {/* New Strategy */}
-            <Button 
-              variant="outline" 
-              onClick={onNewStrategy}
-              data-testid="button-new-strategy"
-            >
-              <RotateCcw className="w-4 h-4 mr-2" />
-              {sanitizeText('New Strategy')}
-            </Button>
-
-            {/* Conclude Strategy */}
-            <Button 
-              onClick={onConcludeStrategy}
-              data-testid="button-conclude-strategy"
-            >
-              {sanitizeText('Conclude Strategy')}
             </Button>
           </div>
         </div>

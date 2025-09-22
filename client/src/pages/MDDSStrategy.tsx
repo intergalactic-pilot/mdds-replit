@@ -65,19 +65,9 @@ export default function MDDSStrategy() {
       <AppHeader
         currentTurn={store.turn}
         maxTurns={store.maxTurns}
-        onNewStrategy={() => {
-          if (confirm('Reset all progress and start a new strategy?')) {
-            store.resetStrategy();
-          }
-        }}
         onSave={() => {
           store.saveToLocalStorage();
           alert('Strategy saved to local storage!');
-        }}
-        onConcludeStrategy={() => {
-          if (confirm('Conclude this strategy? This will end the current session.')) {
-            store.concludeStrategy(store.currentTeam);
-          }
         }}
         onSetMaxTurns={(turns) => {
           // Note: This could be enhanced to update the store
