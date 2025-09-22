@@ -96,7 +96,7 @@ export default function MDDSStrategy() {
         }}
       />
 
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
+      <div className="container mx-auto px-4 py-6 max-w-full">
         <div className="space-y-6">
           {/* Deterrence Chart - Full Width */}
           <DeterrenceChart 
@@ -239,7 +239,7 @@ export default function MDDSStrategy() {
       
       {/* Motto Container */}
       <div className="w-full border-t border-border bg-background/50 backdrop-blur">
-        <div className="container mx-auto px-4 py-4 max-w-7xl">
+        <div className="container mx-auto px-4 py-4 max-w-full">
           <p className="text-center text-muted-foreground italic text-sm">
             Link your visions with reality.
           </p>
