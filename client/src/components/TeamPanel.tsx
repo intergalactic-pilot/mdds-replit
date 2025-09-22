@@ -18,12 +18,17 @@ const teamColors = {
   Russia: "bg-red-600 text-white"
 };
 
+const teamBorders = {
+  NATO: "ring-2 ring-blue-500",
+  Russia: "ring-2 ring-red-500"
+};
+
 export default function TeamPanel({ team, teamState, isActive = false }: TeamPanelProps) {
   const domainOrder: Domain[] = ['joint', 'economy', 'cognitive', 'space', 'cyber'];
 
   return (
     <Card 
-      className={`${isActive ? 'ring-2 ring-primary' : ''} transition-all`}
+      className={`${teamBorders[team]} ${isActive ? 'ring-offset-2' : ''} transition-all`}
       data-testid={`panel-team-${team.toLowerCase()}`}
     >
       <CardHeader className="pb-3">
