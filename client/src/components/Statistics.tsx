@@ -12,6 +12,8 @@ const domainColors = {
 
 export default function TurnBasedLogs() {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isPurchaseLogsExpanded, setIsPurchaseLogsExpanded] = useState(false);
+  const [isStatisticsExpanded, setIsStatisticsExpanded] = useState(false);
   const turnStatistics = useMDDSStore(state => state.turnStatistics);
   const strategyLog = useMDDSStore(state => state.strategyLog);
 
@@ -49,80 +51,107 @@ export default function TurnBasedLogs() {
               {/* Purchase Logs */}
               {strategyLog.length > 0 && (
                 <div className="space-y-3">
-                  <h3 className="font-semibold flex items-center gap-2">
-                    <BarChart3 className="w-4 h-4" />
-                    Card Purchase Logs
-                  </h3>
-                  <div className="max-h-60 overflow-y-auto space-y-2" data-testid="purchase-logs">
-                    {strategyLog
-                      .filter(log => log.action.includes('purchased'))
-                      .map((log, index) => {
-                        const teamColor = log.team === 'NATO' ? 'text-blue-400' : 'text-red-400';
-                        
-                        return (
-                          <div key={index} className="glass-panel p-3 text-sm" data-testid={`purchase-log-${index}`}>
-                            <div className="flex items-center justify-between gap-4">
-                              <div className="flex items-center gap-2">
-                                <span className={`font-semibold ${teamColor}`}>{log.team}</span>
-                                <span className="text-muted-foreground">Turn {log.turn}:</span>
+                  <button
+                    onClick={() => setIsPurchaseLogsExpanded(!isPurchaseLogsExpanded)}
+                    className="w-full flex items-center justify-between p-3 glass-panel hover-elevate transition-all duration-300 text-left"
+                    data-testid="button-toggle-purchase-logs"
+                  >
+                    <div className="flex items-center gap-2">
+                      <BarChart3 className="w-4 h-4" />
+                      <h3 className="font-semibold">Card Purchase Logs</h3>
+                      <span className="text-sm text-muted-foreground">
+                        ({strategyLog.filter(log => log.action.includes('purchased')).length})
+                      </span>
+                    </div>
+                    {isPurchaseLogsExpanded ? (
+                      <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                    )}
+                  </button>
+                  
+                  {isPurchaseLogsExpanded && (
+                    <div className="max-h-60 overflow-y-auto space-y-2" data-testid="purchase-logs">
+                      {strategyLog
+                        .filter(log => log.action.includes('purchased'))
+                        .map((log, index) => {
+                          const teamColor = log.team === 'NATO' ? 'text-blue-400' : 'text-red-400';
+                          
+                          return (
+                            <div key={index} className="glass-panel p-3 text-sm" data-testid={`purchase-log-${index}`}>
+                              <div className="flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-2">
+                                  <span className={`font-semibold ${teamColor}`}>{log.team}</span>
+                                  <span className="text-muted-foreground">Turn {log.turn}:</span>
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {log.timestamp.toLocaleTimeString()}
+                                </div>
                               </div>
-                              <div className="text-xs text-muted-foreground">
-                                {log.timestamp.toLocaleTimeString()}
+                              <div className="mt-1">
+                                {log.action.replace(`${log.team} purchased `, '')}
                               </div>
                             </div>
-                            <div className="mt-1">
-                              {log.action.replace(`${log.team} purchased `, '')}
-                            </div>
-                          </div>
-                        );
-                      })
-                    }
-                  </div>
+                          );
+                        })
+                      }
+                    </div>
+                  )}
                 </div>
               )}
               
               {/* Deterrence Statistics Table */}
               {turnStatistics.length > 0 && (
                 <div className="space-y-3">
-                  <h3 className="font-semibold flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4" />
-                    Deterrence Statistics
-                  </h3>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-border/50">
-                          <th className="text-left py-2 px-3 font-medium">Turn</th>
-                          <th className="text-center py-2 px-3 font-medium text-blue-400">NATO Total</th>
-                          <th className="text-center py-2 px-3 font-medium text-red-400">Russia Total</th>
-                          <th className="text-center py-2 px-3 font-medium">Advantage</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {turnStatistics.map((stat, index) => {
-                          const advantage = stat.natoTotalDeterrence - stat.russiaTotalDeterrence;
-                          const advantageColor = advantage > 0 ? 'text-blue-400' : advantage < 0 ? 'text-red-400' : 'text-muted-foreground';
-                          
-                          return (
-                            <tr key={index} className="border-b border-border/20">
-                              <td className="py-2 px-3 font-medium" data-testid={`turn-${stat.turn}`}>
-                                Turn {stat.turn}
-                              </td>
-                              <td className="text-center py-2 px-3 text-blue-400 font-semibold" data-testid={`nato-total-${stat.turn}`}>
-                                {stat.natoTotalDeterrence}
-                              </td>
-                              <td className="text-center py-2 px-3 text-red-400 font-semibold" data-testid={`russia-total-${stat.turn}`}>
-                                {stat.russiaTotalDeterrence}
-                              </td>
-                              <td className={`text-center py-2 px-3 font-semibold ${advantageColor}`} data-testid={`advantage-${stat.turn}`}>
-                                {advantage > 0 ? `+${advantage}` : advantage}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                  <button
+                    onClick={() => setIsStatisticsExpanded(!isStatisticsExpanded)}
+                    className="w-full flex items-center justify-between p-3 glass-panel hover-elevate transition-all duration-300 text-left"
+                    data-testid="button-toggle-statistics"
+                  >
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4" />
+                      <h3 className="font-semibold">Deterrence Statistics</h3>
+                      <span className="text-sm text-muted-foreground">
+                        ({turnStatistics.length})
+                      </span>
+                    </div>
+                    {isStatisticsExpanded ? (
+                      <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                    )}
+                  </button>
+                  
+                  {isStatisticsExpanded && (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-border/50">
+                            <th className="text-left py-2 px-3 font-medium">Turn</th>
+                            <th className="text-center py-2 px-3 font-medium text-blue-400">NATO Total</th>
+                            <th className="text-center py-2 px-3 font-medium text-red-400">Russia Total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {turnStatistics.map((stat, index) => {
+                            return (
+                              <tr key={index} className="border-b border-border/20">
+                                <td className="py-2 px-3 font-medium" data-testid={`turn-${stat.turn}`}>
+                                  Turn {stat.turn}
+                                </td>
+                                <td className="text-center py-2 px-3 text-blue-400 font-semibold" data-testid={`nato-total-${stat.turn}`}>
+                                  {stat.natoTotalDeterrence}
+                                </td>
+                                <td className="text-center py-2 px-3 text-red-400 font-semibold" data-testid={`russia-total-${stat.turn}`}>
+                                  {stat.russiaTotalDeterrence}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
               )}
 
