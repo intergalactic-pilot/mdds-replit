@@ -8,7 +8,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { sanitizeText } from '../logic/guards';
 import { 
-  Shield, 
   HelpCircle, 
   RotateCcw, 
   Save, 
@@ -18,6 +17,7 @@ import {
   Moon,
   Sun
 } from 'lucide-react';
+import logoUrl from '@assets/Logo_1758524556759.png';
 import { useTheme } from "next-themes";
 
 interface AppHeaderProps {
@@ -95,7 +95,7 @@ export default function AppHeader({
         <div className="flex items-center justify-between">
           {/* Logo and Title */}
           <div className="flex items-center gap-3">
-            <Shield className="w-8 h-8 text-primary" />
+            <img src={logoUrl} alt="MDDS Logo" className="w-8 h-8" />
             <div>
               <h1 className="text-xl font-bold" data-testid="text-app-title">
                 {sanitizeText('MDDS - Multi Domain Deterrence Strategy')}
