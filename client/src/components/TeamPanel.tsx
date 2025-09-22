@@ -28,7 +28,7 @@ export default function TeamPanel({ team, teamState, isActive = false }: TeamPan
 
   return (
     <Card 
-      className={`${teamBorders[team]} ${isActive ? 'ring-offset-2' : ''} transition-all`}
+      className={`${teamBorders[team]} transition-all`}
       data-testid={`panel-team-${team.toLowerCase()}`}
     >
       <CardHeader className="pb-3">
