@@ -131,9 +131,9 @@ export default function AppHeader({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {[4, 6, 8, 10, 12].map(turns => (
+                        {[1, 2, 3, 4, 5, 6, 7].map(turns => (
                           <SelectItem key={turns} value={turns.toString()}>
-                            {turns} turns
+                            {turns} turn{turns === 1 ? '' : 's'}
                           </SelectItem>
                         ))}
                       </SelectContent>
