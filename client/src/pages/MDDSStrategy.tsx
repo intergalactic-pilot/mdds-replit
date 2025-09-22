@@ -127,27 +127,6 @@ export default function MDDSStrategy() {
             {/* Main Content - Wider */}
             <div className="lg:col-span-5 order-1 lg:order-2">
               <div className="space-y-4 lg:space-y-6">
-                {/* Budget Summary - Mobile Optimized */}
-                <div className="glass-card p-3 lg:p-6">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-                    <h3 className="font-semibold text-base lg:text-lg">Current Budget Status</h3>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm text-muted-foreground">Cart Total:</span>
-                      <span className={`font-mono font-bold text-lg ${canAfford ? 'text-green-600' : 'text-red-600'}`}>
-                        {cartTotal}K
-                      </span>
-                      <span className="text-sm text-muted-foreground">/ {currentTeamState.budget}K</span>
-                    </div>
-                  </div>
-                  {!canAfford && (
-                    <div className="bg-destructive/10 border border-destructive/20 rounded-md p-3">
-                      <p className="text-sm text-destructive font-medium">
-                        ⚠️ Cart total exceeds available budget
-                      </p>
-                    </div>
-                  )}
-                </div>
-
                 {/* Card Shop */}
                 <div className="glass-card p-3 lg:p-6">
                   <CardShop
