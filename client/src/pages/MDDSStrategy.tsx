@@ -107,7 +107,7 @@ export default function MDDSStrategy() {
           <div className="grid grid-cols-1 lg:grid-cols-10 gap-4 lg:gap-6">
             {/* Left Sidebar - Team Panels */}
             <div className="lg:col-span-2 order-2 lg:order-1">
-              <div className="space-y-4 lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)]">
+              <div className="space-y-4 lg:sticky lg:top-24 lg:max-h-[calc(100vh-10rem)] overflow-y-auto">
                 <div className="glass-panel p-3 lg:p-4">
                   <TeamPanel
                     team={store.currentTeam}
