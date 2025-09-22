@@ -106,8 +106,8 @@ export default function MDDSStrategy() {
 
           <div className="grid grid-cols-1 lg:grid-cols-10 gap-4 lg:gap-6">
             {/* Left Sidebar - Team Panels */}
-            <div className="lg:col-span-2 order-2 lg:order-1">
-              <div className="space-y-4 lg:sticky lg:top-24 lg:max-h-[calc(100vh-10rem)] overflow-y-auto">
+            <div className="lg:col-span-3 order-2 lg:order-1">
+              <div className="space-y-4">
                 <div className="glass-panel p-3 lg:p-4">
                   <TeamPanel
                     team={store.currentTeam}
@@ -125,7 +125,7 @@ export default function MDDSStrategy() {
             </div>
 
             {/* Main Content - Wider */}
-            <div className="lg:col-span-6 order-1 lg:order-2">
+            <div className="lg:col-span-5 order-1 lg:order-2">
               <div className="space-y-4 lg:space-y-6">
                 {/* Budget Summary - Mobile Optimized */}
                 <div className="glass-card p-3 lg:p-6">
