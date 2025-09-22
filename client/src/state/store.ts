@@ -1,10 +1,23 @@
 import { create } from 'zustand';
-import { GameState, Team, Card, TeamState } from '@shared/schema';
+import { GameState, Team, Card, TeamState, Domain } from '@shared/schema';
 import { getInitialDeterrence, calculateTotalDeterrence } from '../logic/scoring';
 import { commitPurchases, advanceTurn } from '../logic/turnEngine';
 import { sanitizeText } from '../logic/guards';
 
+// Statistics tracking interface
+interface TurnStatistics {
+  turn: number;
+  natoTotalDeterrence: number;
+  russiaTotalDeterrence: number;
+  natoDeterrence: Record<Domain, number>;
+  russiaDeterrence: Record<Domain, number>;
+  timestamp: Date;
+}
+
 interface MDDSStore extends GameState {
+  // Statistics tracking
+  turnStatistics: TurnStatistics[];
+  
   // Actions
   addToCart: (team: Team, card: Card) => void;
   removeFromCart: (team: Team, cardId: string) => void;
@@ -34,22 +47,35 @@ const createInitialTeamState = (): TeamState => ({
   cart: []
 });
 
-const createInitialState = (): Omit<GameState, 'teams'> & { teams: Record<Team, TeamState> } => ({
-  turn: 1,
-  maxTurns: 6,
-  currentTeam: 'NATO',
-  teams: {
-    NATO: createInitialTeamState(),
-    Russia: createInitialTeamState()
-  },
-  phase: 'purchase',
-  strategyLog: [{
+const createInitialState = (): Omit<GameState, 'teams'> & { teams: Record<Team, TeamState>; turnStatistics: TurnStatistics[] } => {
+  const natoTeam = createInitialTeamState();
+  const russiaTeam = createInitialTeamState();
+  
+  return {
     turn: 1,
-    team: 'NATO',
-    action: sanitizeText('Strategy initiated - Turn 1 begins'),
-    timestamp: new Date()
-  }]
-});
+    maxTurns: 6,
+    currentTeam: 'NATO',
+    teams: {
+      NATO: natoTeam,
+      Russia: russiaTeam
+    },
+    phase: 'purchase',
+    strategyLog: [{
+      turn: 1,
+      team: 'NATO',
+      action: sanitizeText('Strategy initiated - Turn 1 begins'),
+      timestamp: new Date()
+    }],
+    turnStatistics: [{
+      turn: 1,
+      natoTotalDeterrence: natoTeam.totalDeterrence,
+      russiaTotalDeterrence: russiaTeam.totalDeterrence,
+      natoDeterrence: { ...natoTeam.deterrence },
+      russiaDeterrence: { ...russiaTeam.deterrence },
+      timestamp: new Date()
+    }]
+  };
+};
 
 export const useMDDSStore = create<MDDSStore>((set, get) => ({
   ...createInitialState(),
@@ -91,7 +117,21 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
   advanceGameTurn: () => {
     set((state) => {
       const newState = advanceTurn(state);
-      return { ...newState };
+      
+      // Save deterrence statistics after turn advance
+      const newStatistics: TurnStatistics = {
+        turn: newState.turn,
+        natoTotalDeterrence: newState.teams.NATO.totalDeterrence,
+        russiaTotalDeterrence: newState.teams.Russia.totalDeterrence,
+        natoDeterrence: { ...newState.teams.NATO.deterrence },
+        russiaDeterrence: { ...newState.teams.Russia.deterrence },
+        timestamp: new Date()
+      };
+      
+      return { 
+        ...newState, 
+        turnStatistics: [...state.turnStatistics, newStatistics]
+      };
     });
   },
 
@@ -122,7 +162,8 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
       currentTeam: state.currentTeam,
       teams: state.teams,
       phase: state.phase,
-      strategyLog: state.strategyLog
+      strategyLog: state.strategyLog,
+      turnStatistics: state.turnStatistics
     };
     localStorage.setItem('mdds-strategy', JSON.stringify(saveData));
   },
@@ -150,6 +191,7 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
       teams: state.teams,
       phase: state.phase,
       strategyLog: state.strategyLog,
+      turnStatistics: state.turnStatistics,
       exportedAt: new Date().toISOString()
     };
     return JSON.stringify(exportData, null, 2);
@@ -164,7 +206,8 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
         currentTeam: data.currentTeam,
         teams: data.teams,
         phase: data.phase,
-        strategyLog: data.strategyLog
+        strategyLog: data.strategyLog,
+        turnStatistics: data.turnStatistics || []
       });
       return true;
     } catch {
