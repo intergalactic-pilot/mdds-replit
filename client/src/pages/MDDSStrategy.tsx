@@ -95,7 +95,7 @@ export default function MDDSStrategy() {
         }}
       />
 
-      <div className="container mx-auto px-4 py-6 max-w-full">
+      <div className="container mx-auto px-4 py-6 max-w-6xl">
         <div className="space-y-6">
           {/* Deterrence Chart - Full Width */}
           <DeterrenceChart 
