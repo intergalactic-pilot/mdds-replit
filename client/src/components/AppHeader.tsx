@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { sanitizeText } from '../logic/guards';
 import { 
   HelpCircle, 
+  RotateCcw,
   Save, 
   Settings,
   Moon,
@@ -19,6 +20,7 @@ interface AppHeaderProps {
   currentTurn: number;
   maxTurns: number;
   onSave: () => void;
+  onResetProgress: () => void;
   onSetMaxTurns: (turns: number) => void;
 }
 
@@ -26,6 +28,7 @@ export default function AppHeader({
   currentTurn,
   maxTurns,
   onSave,
+  onResetProgress,
   onSetMaxTurns
 }: AppHeaderProps) {
   const { theme, setTheme } = useTheme();
@@ -143,6 +146,16 @@ export default function AppHeader({
             {/* Save */}
             <Button variant="ghost" size="icon" onClick={onSave} data-testid="button-save">
               <Save className="w-4 h-4" />
+            </Button>
+
+            {/* Reset Progress */}
+            <Button 
+              variant="outline" 
+              onClick={onResetProgress}
+              data-testid="button-reset-progress"
+            >
+              <RotateCcw className="w-4 h-4 mr-2" />
+              {sanitizeText('Reset Progress')}
             </Button>
           </div>
         </div>
