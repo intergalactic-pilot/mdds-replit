@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, LineChart } from 'lucide-react';
+import { ChevronDown, ChevronUp, LineChart, BarChart3, TrendingUp } from 'lucide-react';
 import { useMDDSStore } from '@/state/store';
-import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart as RechartsBarChart, Bar } from 'recharts';
+import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Domain } from '@shared/schema';
 
 const domainColors = {
@@ -14,6 +14,8 @@ const domainColors = {
 
 export default function DomainStatistics() {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isOverallStatsExpanded, setIsOverallStatsExpanded] = useState(false);
+  const [isDomainBasedStatsExpanded, setIsDomainBasedStatsExpanded] = useState(false);
   const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
   const turnStatistics = useMDDSStore(state => state.turnStatistics);
 
@@ -26,7 +28,7 @@ export default function DomainStatistics() {
 
   // Prepare chart data with 100 as baseline reference
   const chartData = turnStatistics.map(stat => {
-    const differences: any = { turn: stat.turn };
+    const differences: Record<string, number> = { turn: stat.turn };
     Object.keys(stat.natoDeterrence).forEach(domain => {
       const natoValue = stat.natoDeterrence[domain as keyof typeof stat.natoDeterrence];
       const russiaValue = stat.russiaDeterrence[domain as keyof typeof stat.russiaDeterrence];
@@ -34,6 +36,17 @@ export default function DomainStatistics() {
       differences[domain] = (natoValue - 100) - (russiaValue - 100);
     });
     return differences;
+  });
+
+  // Prepare overall chart data showing all domains for each turn
+  const overallChartData = turnStatistics.map(stat => {
+    const data: Record<string, number> = { turn: stat.turn };
+    // Add NATO and Russia values for all domains
+    Object.keys(stat.natoDeterrence).forEach(domain => {
+      data[`nato_${domain}`] = stat.natoDeterrence[domain as keyof typeof stat.natoDeterrence];
+      data[`russia_${domain}`] = stat.russiaDeterrence[domain as keyof typeof stat.russiaDeterrence];
+    });
+    return data;
   });
 
   // Get domain-specific data for selected domain with 100 baseline reference
@@ -58,7 +71,7 @@ export default function DomainStatistics() {
           <LineChart className="w-5 h-5 text-primary" />
           <h2 className="text-lg font-semibold">Statistics</h2>
           <span className="text-sm text-muted-foreground">
-            (Domain-based differences per turn)
+            (Overall and domain-based analysis)
           </span>
         </div>
         {isExpanded ? (
@@ -70,8 +83,182 @@ export default function DomainStatistics() {
 
       {/* Content */}
       {isExpanded && (
-        <div className="border-t border-border/50 p-4 space-y-6" data-testid="domain-statistics-content">
-          {/* Domain Selector */}
+        <div className="border-t border-border/50 p-4 space-y-4" data-testid="domain-statistics-content">
+          
+          {/* Overall Statistics */}
+          <div className="space-y-3">
+            <button
+              onClick={() => setIsOverallStatsExpanded(!isOverallStatsExpanded)}
+              className="w-full flex items-center justify-between p-3 glass-panel hover-elevate transition-all duration-300 text-left"
+              data-testid="button-toggle-overall-stats"
+            >
+              <div className="flex items-center gap-2">
+                <BarChart3 className="w-4 h-4" />
+                <h3 className="font-semibold">Overall Statistics</h3>
+                <span className="text-sm text-muted-foreground">
+                  (All domains per turn)
+                </span>
+              </div>
+              {isOverallStatsExpanded ? (
+                <ChevronUp className="w-4 h-4 text-muted-foreground" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-muted-foreground" />
+              )}
+            </button>
+            
+            {isOverallStatsExpanded && (
+              <div className="space-y-4" data-testid="overall-stats-content">
+                {/* NATO Overall Chart */}
+                <div className="glass-panel p-4">
+                  <h4 className="text-sm font-semibold mb-3">NATO - All Domains Over Time</h4>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <RechartsLineChart data={overallChartData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis 
+                        dataKey="turn" 
+                        stroke="hsl(var(--muted-foreground))"
+                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                      />
+                      <YAxis 
+                        stroke="hsl(var(--muted-foreground))"
+                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                      />
+                      <Tooltip 
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px'
+                        }}
+                      />
+                      <Legend />
+                      <Line 
+                        type="monotone" 
+                        dataKey="nato_joint" 
+                        stroke={domainColors.joint.color} 
+                        name="Joint"
+                        strokeWidth={2}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="nato_economy" 
+                        stroke={domainColors.economy.color} 
+                        name="Economy"
+                        strokeWidth={2}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="nato_cognitive" 
+                        stroke={domainColors.cognitive.color} 
+                        name="Cognitive"
+                        strokeWidth={2}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="nato_space" 
+                        stroke={domainColors.space.color} 
+                        name="Space"
+                        strokeWidth={2}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="nato_cyber" 
+                        stroke={domainColors.cyber.color} 
+                        name="Cyber"
+                        strokeWidth={2}
+                      />
+                    </RechartsLineChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Russia Overall Chart */}
+                <div className="glass-panel p-4">
+                  <h4 className="text-sm font-semibold mb-3">Russia - All Domains Over Time</h4>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <RechartsLineChart data={overallChartData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis 
+                        dataKey="turn" 
+                        stroke="hsl(var(--muted-foreground))"
+                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                      />
+                      <YAxis 
+                        stroke="hsl(var(--muted-foreground))"
+                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                      />
+                      <Tooltip 
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px'
+                        }}
+                      />
+                      <Legend />
+                      <Line 
+                        type="monotone" 
+                        dataKey="russia_joint" 
+                        stroke={domainColors.joint.color} 
+                        name="Joint"
+                        strokeWidth={2}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="russia_economy" 
+                        stroke={domainColors.economy.color} 
+                        name="Economy"
+                        strokeWidth={2}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="russia_cognitive" 
+                        stroke={domainColors.cognitive.color} 
+                        name="Cognitive"
+                        strokeWidth={2}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="russia_space" 
+                        stroke={domainColors.space.color} 
+                        name="Space"
+                        strokeWidth={2}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="russia_cyber" 
+                        stroke={domainColors.cyber.color} 
+                        name="Cyber"
+                        strokeWidth={2}
+                      />
+                    </RechartsLineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Domain-based Statistics */}
+          <div className="space-y-3">
+            <button
+              onClick={() => setIsDomainBasedStatsExpanded(!isDomainBasedStatsExpanded)}
+              className="w-full flex items-center justify-between p-3 glass-panel hover-elevate transition-all duration-300 text-left"
+              data-testid="button-toggle-domain-based-stats"
+            >
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-4 h-4" />
+                <h3 className="font-semibold">Domain-based Statistics</h3>
+                <span className="text-sm text-muted-foreground">
+                  (Interactive domain analysis)
+                </span>
+              </div>
+              {isDomainBasedStatsExpanded ? (
+                <ChevronUp className="w-4 h-4 text-muted-foreground" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-muted-foreground" />
+              )}
+            </button>
+            
+            {isDomainBasedStatsExpanded && (
+              <div className="space-y-6" data-testid="domain-based-stats-content">
+                {/* Domain Selector */}
           <div className="space-y-3">
             <h3 className="text-sm font-semibold">Select Domain for Detailed Analysis</h3>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
@@ -92,7 +279,7 @@ export default function DomainStatistics() {
             </div>
           </div>
 
-          {/* Overall Charts */}
+                {/* Domain Differences Chart */}
           <div className="space-y-6">
             {/* Line Chart showing domain differences over time */}
             <div className="glass-panel p-4">
@@ -158,8 +345,8 @@ export default function DomainStatistics() {
 
           </div>
 
-          {/* Domain-Specific Analysis */}
-          {selectedDomain && (
+                {/* Domain-Specific Analysis */}
+                {selectedDomain && (
             <div className="space-y-4" data-testid={`domain-analysis-${selectedDomain}`}>
               <div className="glass-panel p-4">
                 <h4 className={`text-sm font-semibold mb-3 capitalize ${domainColors[selectedDomain].textClass}`}>
@@ -251,8 +438,11 @@ export default function DomainStatistics() {
                   </table>
                 </div>
               </div>
-            </div>
-          )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
