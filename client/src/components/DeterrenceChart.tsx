@@ -42,18 +42,25 @@ export default function DeterrenceChart({ natoTeam, russiaTeam }: DeterrenceChar
           const russiaValue = russiaTeam.deterrence[domain.key];
           
           return (
-            <div key={domain.key} className="text-center" data-testid={`domain-${domain.key}`}>
-              <h3 className="font-semibold mb-3 capitalize">{domain.label}</h3>
+            <div 
+              key={domain.key} 
+              className="glass-panel p-4 text-center border border-border/50 hover-elevate transition-all duration-300" 
+              data-testid={`domain-${domain.key}`}
+            >
+              <div className="mb-4">
+                <div className={`inline-block w-3 h-3 rounded-full ${domain.color} mb-2`}></div>
+                <h3 className="font-semibold text-sm capitalize">{domain.label}</h3>
+              </div>
               
               {/* NATO Bar */}
-              <div className="mb-2">
+              <div className="mb-3">
                 <div className="flex justify-between text-xs mb-1">
-                  <span className="text-blue-400">NATO</span>
-                  <span className="font-mono" data-testid={`nato-${domain.key}-value`}>{natoValue}</span>
+                  <span className="text-blue-400 font-medium">NATO</span>
+                  <span className="font-mono font-semibold" data-testid={`nato-${domain.key}-value`}>{natoValue}</span>
                 </div>
-                <div className="h-4 bg-secondary/30 rounded-full overflow-hidden">
+                <div className="h-3 bg-secondary/20 rounded-full overflow-hidden border border-secondary/30">
                   <div 
-                    className="h-full bg-blue-500 transition-all duration-500"
+                    className="h-full bg-gradient-to-r from-blue-600 to-blue-400 transition-all duration-700 ease-out"
                     style={{ width: `${(natoValue / 200) * 100}%` }}
                   />
                 </div>
@@ -62,12 +69,12 @@ export default function DeterrenceChart({ natoTeam, russiaTeam }: DeterrenceChar
               {/* Russia Bar */}
               <div>
                 <div className="flex justify-between text-xs mb-1">
-                  <span className="text-red-400">Russia</span>
-                  <span className="font-mono" data-testid={`russia-${domain.key}-value`}>{russiaValue}</span>
+                  <span className="text-red-400 font-medium">Russia</span>
+                  <span className="font-mono font-semibold" data-testid={`russia-${domain.key}-value`}>{russiaValue}</span>
                 </div>
-                <div className="h-4 bg-secondary/30 rounded-full overflow-hidden">
+                <div className="h-3 bg-secondary/20 rounded-full overflow-hidden border border-secondary/30">
                   <div 
-                    className="h-full bg-red-500 transition-all duration-500"
+                    className="h-full bg-gradient-to-r from-red-600 to-red-400 transition-all duration-700 ease-out"
                     style={{ width: `${(russiaValue / 200) * 100}%` }}
                   />
                 </div>
