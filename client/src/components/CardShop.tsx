@@ -15,7 +15,6 @@ import { Search, Filter, Info, ShoppingCart } from 'lucide-react';
 
 interface CardListItemProps {
   card: CardType;
-  discountedPrice?: number;
   natoPrice?: number;
   russiaPrice?: number;
   onViewDetails?: () => void;
@@ -27,7 +26,6 @@ interface CardListItemProps {
 
 function CardListItem({ 
   card, 
-  discountedPrice, 
   natoPrice,
   russiaPrice,
   onViewDetails,
@@ -147,7 +145,7 @@ export default function CardShop({
   onAddToRussiaCart
 }: CardShopProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [domainFilter, setDomainFilter] = useState<Domain | 'all'>('economy');
+  const [domainFilter, setDomainFilter] = useState<Domain | 'all'>('all');
   const [typeFilter, setTypeFilter] = useState<CardTypeEnum | 'all'>('all');
   const [maxCost, setMaxCost] = useState<string>('');
 
@@ -250,7 +248,6 @@ export default function CardShop({
               <CardListItem
                 key={card.id}
                 card={card}
-                discountedPrice={getDiscountedPrice(card)}
                 natoPrice={getNATOPrice?.(card)}
                 russiaPrice={getRussiaPrice?.(card)}
                 onViewDetails={() => onViewDetails(card)}
