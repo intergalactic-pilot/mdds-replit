@@ -51,11 +51,13 @@ function CardListItem({
           </div>
           
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
+            <div className="mb-1">
               <h3 className="font-semibold text-sm truncate" data-testid={`text-card-name-${card.id}`}>
                 {sanitizeText(card.name)}
               </h3>
-              <DomainBadge domain={card.domain} className="text-xs shrink-0" />
+              <div className="mt-1">
+                <DomainBadge domain={card.domain} className="text-xs" />
+              </div>
             </div>
           </div>
 
