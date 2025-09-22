@@ -7,11 +7,11 @@ interface DeterrenceChartProps {
 
 export default function DeterrenceChart({ natoTeam, russiaTeam }: DeterrenceChartProps) {
   const domains = [
-    { key: 'joint' as const, label: 'Joint', color: 'bg-blue-500' },
+    { key: 'joint' as const, label: 'Joint', color: 'bg-gray-500' },
     { key: 'economy' as const, label: 'Economy', color: 'bg-green-500' },
     { key: 'cognitive' as const, label: 'Cognitive', color: 'bg-purple-500' },
-    { key: 'space' as const, label: 'Space', color: 'bg-indigo-500' },
-    { key: 'cyber' as const, label: 'Cyber', color: 'bg-orange-500' }
+    { key: 'space' as const, label: 'Space', color: 'bg-blue-500' },
+    { key: 'cyber' as const, label: 'Cyber', color: 'bg-yellow-500' }
   ];
 
   const maxDeterrence = Math.max(natoTeam.totalDeterrence, russiaTeam.totalDeterrence, 500);
