@@ -36,8 +36,7 @@ function CardListItem({
   inCart = false,
   disabled = false 
 }: CardListItemProps) {
-  const finalPrice = discountedPrice ?? card.baseCostK;
-  const hasDiscount = discountedPrice !== undefined && discountedPrice < card.baseCostK;
+  // Main price always shows base cost, team-specific prices shown on buttons
 
   return (
     <div 
@@ -63,13 +62,8 @@ function CardListItem({
           </div>
 
           <div className="text-right">
-            {hasDiscount && (
-              <div className="text-xs text-muted-foreground line-through">
-                {formatCurrency(card.baseCostK)}
-              </div>
-            )}
-            <div className={`font-semibold ${hasDiscount ? 'text-green-600' : ''}`} data-testid={`text-price-${card.id}`}>
-              {formatCurrency(finalPrice)}
+            <div className="font-semibold" data-testid={`text-price-${card.id}`}>
+              {formatCurrency(card.baseCostK)}
             </div>
           </div>
         </div>
