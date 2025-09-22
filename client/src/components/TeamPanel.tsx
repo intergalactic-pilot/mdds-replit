@@ -11,6 +11,7 @@ interface TeamPanelProps {
   team: Team;
   teamState: TeamState;
   isActive?: boolean;
+  currentTurn?: number;
 }
 
 const teamColors = {
@@ -23,7 +24,7 @@ const teamBorders = {
   Russia: "ring-2 ring-red-500"
 };
 
-export default function TeamPanel({ team, teamState, isActive = false }: TeamPanelProps) {
+export default function TeamPanel({ team, teamState, isActive = false, currentTurn = 1 }: TeamPanelProps) {
   const domainOrder: Domain[] = ['joint', 'economy', 'cognitive', 'space', 'cyber'];
 
   return (
@@ -43,14 +44,21 @@ export default function TeamPanel({ team, teamState, isActive = false }: TeamPan
       
       <CardContent className="space-y-4">
         {/* Budget */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Coins className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Budget</span>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Coins className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-medium">Budget</span>
+            </div>
+            <span className="font-mono font-semibold" data-testid={`text-budget-${team.toLowerCase()}`}>
+              {formatCurrency(teamState.budget)}
+            </span>
           </div>
-          <span className="font-mono font-semibold" data-testid={`text-budget-${team.toLowerCase()}`}>
-            {formatCurrency(teamState.budget)}
-          </span>
+          {currentTurn === 1 && (
+            <div className="text-xs text-muted-foreground">
+              Turn 1: Must spend exactly 200K per domain
+            </div>
+          )}
         </div>
 
         {/* Total Deterrence */}

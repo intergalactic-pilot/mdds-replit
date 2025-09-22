@@ -99,12 +99,14 @@ export default function MDDSStrategy() {
                     team={store.currentTeam}
                     teamState={currentTeamState}
                     isActive={true}
+                    currentTurn={store.turn}
                   />
                 </div>
                 <div className="glass-panel p-3 lg:p-4">
                   <TeamPanel
                     team={opponentTeam}
                     teamState={opponentTeamState}
+                    currentTurn={store.turn}
                   />
                 </div>
               </div>
@@ -144,10 +146,30 @@ export default function MDDSStrategy() {
                     getDiscountedPrice={priceForNATO}
                     cartTotal={natoCartTotal}
                     onConfirmPurchases={() => {
+                      // Validate before committing NATO purchases
+                      const natoValidation = store.turn === 1 
+                        ? validateTurn1Restrictions(natoState.cart, natoState)
+                        : validatePooledBudget(natoState.cart, natoState);
+                      
+                      if (!natoValidation.valid) {
+                        // Don't commit if validation fails - errors will be visible in validation display
+                        return;
+                      }
+                      
                       store.commitTeamPurchases('NATO');
                       store.saveToLocalStorage();
                     }}
-                    canConfirm={natoState.cart.length > 0 && natoCartTotal <= natoState.budget}
+                    canConfirm={(() => {
+                      if (natoState.cart.length === 0) return false;
+                      if (natoCartTotal > natoState.budget) return false;
+                      
+                      // Check team-specific validation
+                      const natoValidation = store.turn === 1 
+                        ? validateTurn1Restrictions(natoState.cart, natoState)
+                        : validatePooledBudget(natoState.cart, natoState);
+                      
+                      return natoValidation.valid;
+                    })()}
                     budget={natoState.budget}
                   />
                 </div>
@@ -160,10 +182,30 @@ export default function MDDSStrategy() {
                     getDiscountedPrice={priceForRussia}
                     cartTotal={russiaCartTotal}
                     onConfirmPurchases={() => {
+                      // Validate before committing Russia purchases
+                      const russiaValidation = store.turn === 1 
+                        ? validateTurn1Restrictions(russiaState.cart, russiaState)
+                        : validatePooledBudget(russiaState.cart, russiaState);
+                      
+                      if (!russiaValidation.valid) {
+                        // Don't commit if validation fails - errors will be visible in validation display
+                        return;
+                      }
+                      
                       store.commitTeamPurchases('Russia');
                       store.saveToLocalStorage();
                     }}
-                    canConfirm={russiaState.cart.length > 0 && russiaCartTotal <= russiaState.budget}
+                    canConfirm={(() => {
+                      if (russiaState.cart.length === 0) return false;
+                      if (russiaCartTotal > russiaState.budget) return false;
+                      
+                      // Check team-specific validation
+                      const russiaValidation = store.turn === 1 
+                        ? validateTurn1Restrictions(russiaState.cart, russiaState)
+                        : validatePooledBudget(russiaState.cart, russiaState);
+                      
+                      return russiaValidation.valid;
+                    })()}
                     budget={russiaState.budget}
                   />
                 </div>
