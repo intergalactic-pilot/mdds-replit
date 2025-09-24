@@ -11,7 +11,8 @@ import {
   Save, 
   Settings,
   Moon,
-  Sun
+  Sun,
+  Download
 } from 'lucide-react';
 import logoUrl from '@assets/Logo_1758524556759.png';
 import { useTheme } from "./ThemeProvider";
@@ -22,6 +23,7 @@ interface AppHeaderProps {
   onSave: () => void;
   onResetProgress: () => void;
   onSetMaxTurns: (turns: number) => void;
+  onDownloadPDF: () => void;
 }
 
 export default function AppHeader({
@@ -29,7 +31,8 @@ export default function AppHeader({
   maxTurns,
   onSave,
   onResetProgress,
-  onSetMaxTurns
+  onSetMaxTurns,
+  onDownloadPDF
 }: AppHeaderProps) {
   const { theme, setTheme } = useTheme();
   const [showRules, setShowRules] = useState(false);
@@ -70,6 +73,16 @@ export default function AppHeader({
             >
               <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
               <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            </Button>
+
+            {/* Download PDF */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={onDownloadPDF}
+              data-testid="button-download-pdf"
+            >
+              <Download className="w-4 h-4" />
             </Button>
 
             {/* Rules Modal */}
