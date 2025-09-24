@@ -175,13 +175,27 @@ export function advanceTurn(gameState: GameState): GameState {
     });
   }
   
-  // Provide fresh budget only for turn 2 (transition from domain-restricted to pooled budget)
-  if (newGameState.turn === 2) {
-    // Turn 2: Give fresh 1000K pooled budget to both teams
+  // Refresh budget to 1000K for the new turn (Turn 2+)
+  // Turn 1 starts with 1000K from initial state, subsequent turns get fresh budget
+  if (newGameState.turn >= 2) {
     newGameState.teams.NATO.budget = 1000;
     newGameState.teams.Russia.budget = 1000;
+    
+    // Log budget refresh
+    newGameState.strategyLog.push({
+      turn: newGameState.turn,
+      team: 'NATO',
+      action: `Budget refreshed to 1000K for Turn ${newGameState.turn}`,
+      timestamp: new Date()
+    });
+    
+    newGameState.strategyLog.push({
+      turn: newGameState.turn,
+      team: 'Russia', 
+      action: `Budget refreshed to 1000K for Turn ${newGameState.turn}`,
+      timestamp: new Date()
+    });
   }
-  // Turn 3+: Teams keep whatever budget they have remaining (no reset)
   
   return newGameState;
 }
