@@ -41,14 +41,14 @@ export default function DefenseOffenseStatistics() {
         data[`russia_defense_${domain}`] = stat.russiaDeterrence[domain as keyof typeof stat.russiaDeterrence] / 100;
       });
       
-      // Add NATO offensive data (impact on Russia, normalized positive damage)
+      // Add NATO offensive data (impact on Russia, shown as negative values as in reference image)
       Object.keys(stat.russiaDeterrence).forEach(domain => {
-        data[`nato_offense_${domain}`] = (100 - stat.russiaDeterrence[domain as keyof typeof stat.russiaDeterrence]) / 100;
+        data[`nato_offense_${domain}`] = -(100 - stat.russiaDeterrence[domain as keyof typeof stat.russiaDeterrence]);
       });
       
-      // Add Russia offensive data (impact on NATO, normalized positive damage)
+      // Add Russia offensive data (impact on NATO, shown as negative values as in reference image)
       Object.keys(stat.natoDeterrence).forEach(domain => {
-        data[`russia_offense_${domain}`] = (100 - stat.natoDeterrence[domain as keyof typeof stat.natoDeterrence]) / 100;
+        data[`russia_offense_${domain}`] = -(100 - stat.natoDeterrence[domain as keyof typeof stat.natoDeterrence]);
       });
       
       return data;
@@ -182,7 +182,8 @@ export default function DefenseOffenseStatistics() {
                     stroke="#64748b"
                     tick={{ fill: '#64748b', fontSize: 12 }}
                     tickLine={{ stroke: '#64748b' }}
-                    domain={['dataMin - 0.1', 'dataMax + 0.1']}
+                    domain={[-45, 0]}
+                    ticks={[0, -5, -10, -15, -20, -25, -30, -35, -40, -45]}
                   />
                   <Tooltip 
                     contentStyle={{
@@ -279,7 +280,8 @@ export default function DefenseOffenseStatistics() {
                     stroke="#64748b"
                     tick={{ fill: '#64748b', fontSize: 12 }}
                     tickLine={{ stroke: '#64748b' }}
-                    domain={['dataMin - 0.1', 'dataMax + 0.1']}
+                    domain={[-45, 0]}
+                    ticks={[0, -5, -10, -15, -20, -25, -30, -35, -40, -45]}
                   />
                   <Tooltip 
                     contentStyle={{
