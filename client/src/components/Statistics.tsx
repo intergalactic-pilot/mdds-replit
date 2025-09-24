@@ -128,23 +128,58 @@ export default function TurnBasedLogs() {
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="border-b border-border/50">
-                            <th className="text-left py-2 px-3 font-medium">Turn</th>
-                            <th className="text-center py-2 px-3 font-medium text-blue-400">NATO Total</th>
-                            <th className="text-center py-2 px-3 font-medium text-red-400">Russia Total</th>
+                            <th className="text-left py-2 px-1 font-medium">Turn</th>
+                            <th className="text-center py-2 px-1 font-medium text-blue-400">NATO Total</th>
+                            <th className="text-center py-2 px-1 font-medium text-red-400">Russia Total</th>
+                            <th className="text-center py-2 px-1 font-medium text-gray-500">Joint</th>
+                            <th className="text-center py-2 px-1 font-medium text-green-500">Economy</th>
+                            <th className="text-center py-2 px-1 font-medium text-purple-500">Cognitive</th>
+                            <th className="text-center py-2 px-1 font-medium text-blue-500">Space</th>
+                            <th className="text-center py-2 px-1 font-medium text-yellow-500">Cyber</th>
                           </tr>
                         </thead>
                         <tbody>
                           {turnStatistics.map((stat, index) => {
                             return (
                               <tr key={index} className="border-b border-border/20">
-                                <td className="py-2 px-3 font-medium" data-testid={`turn-${stat.turn}`}>
+                                <td className="py-2 px-1 font-medium" data-testid={`turn-${stat.turn}`}>
                                   Turn {stat.turn}
                                 </td>
-                                <td className="text-center py-2 px-3 text-blue-400 font-semibold" data-testid={`nato-total-${stat.turn}`}>
+                                <td className="text-center py-2 px-1 text-blue-400 font-semibold" data-testid={`nato-total-${stat.turn}`}>
                                   {stat.natoTotalDeterrence}
                                 </td>
-                                <td className="text-center py-2 px-3 text-red-400 font-semibold" data-testid={`russia-total-${stat.turn}`}>
+                                <td className="text-center py-2 px-1 text-red-400 font-semibold" data-testid={`russia-total-${stat.turn}`}>
                                   {stat.russiaTotalDeterrence}
+                                </td>
+                                <td className="text-center py-2 px-1" data-testid={`joint-${stat.turn}`}>
+                                  <div className="space-y-1 text-xs">
+                                    <div className="text-blue-400 font-medium">{stat.natoDeterrence.joint}</div>
+                                    <div className="text-red-400 font-medium">{stat.russiaDeterrence.joint}</div>
+                                  </div>
+                                </td>
+                                <td className="text-center py-2 px-1" data-testid={`economy-${stat.turn}`}>
+                                  <div className="space-y-1 text-xs">
+                                    <div className="text-blue-400 font-medium">{stat.natoDeterrence.economy}</div>
+                                    <div className="text-red-400 font-medium">{stat.russiaDeterrence.economy}</div>
+                                  </div>
+                                </td>
+                                <td className="text-center py-2 px-1" data-testid={`cognitive-${stat.turn}`}>
+                                  <div className="space-y-1 text-xs">
+                                    <div className="text-blue-400 font-medium">{stat.natoDeterrence.cognitive}</div>
+                                    <div className="text-red-400 font-medium">{stat.russiaDeterrence.cognitive}</div>
+                                  </div>
+                                </td>
+                                <td className="text-center py-2 px-1" data-testid={`space-${stat.turn}`}>
+                                  <div className="space-y-1 text-xs">
+                                    <div className="text-blue-400 font-medium">{stat.natoDeterrence.space}</div>
+                                    <div className="text-red-400 font-medium">{stat.russiaDeterrence.space}</div>
+                                  </div>
+                                </td>
+                                <td className="text-center py-2 px-1" data-testid={`cyber-${stat.turn}`}>
+                                  <div className="space-y-1 text-xs">
+                                    <div className="text-blue-400 font-medium">{stat.natoDeterrence.cyber}</div>
+                                    <div className="text-red-400 font-medium">{stat.russiaDeterrence.cyber}</div>
+                                  </div>
                                 </td>
                               </tr>
                             );

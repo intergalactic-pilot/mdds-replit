@@ -17,9 +17,27 @@ export default function DomainStatistics() {
   const [isOverallStatsExpanded, setIsOverallStatsExpanded] = useState(false);
   const [isDomainBasedStatsExpanded, setIsDomainBasedStatsExpanded] = useState(false);
   const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
+  
+  // Interactive controls for Overall Statistics
+  const [showRussia, setShowRussia] = useState(true);
+  const [visibleDomains, setVisibleDomains] = useState<Record<Domain, boolean>>({
+    joint: true,
+    economy: true,
+    cognitive: true,
+    space: true,
+    cyber: true
+  });
+  
   const turnStatistics = useMDDSStore(state => state.turnStatistics);
 
   const toggleExpanded = () => setIsExpanded(!isExpanded);
+  
+  const toggleDomainVisibility = (domain: Domain) => {
+    setVisibleDomains(prev => ({
+      ...prev,
+      [domain]: !prev[domain]
+    }));
+  };
 
   // Only show if we have 2+ turns of data
   if (turnStatistics.length < 2) {
@@ -108,72 +126,60 @@ export default function DomainStatistics() {
             
             {isOverallStatsExpanded && (
               <div className="space-y-4" data-testid="overall-stats-content">
-                {/* NATO Overall Chart */}
-                <div className="glass-panel p-4">
-                  <h4 className="text-sm font-semibold mb-3">NATO - All Domains Over Time</h4>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <RechartsLineChart data={overallChartData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis 
-                        dataKey="turn" 
-                        stroke="hsl(var(--muted-foreground))"
-                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                      />
-                      <YAxis 
-                        stroke="hsl(var(--muted-foreground))"
-                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                      />
-                      <Tooltip 
-                        contentStyle={{
-                          backgroundColor: 'hsl(var(--card))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px'
-                        }}
-                      />
-                      <Legend />
-                      <Line 
-                        type="monotone" 
-                        dataKey="nato_joint" 
-                        stroke={domainColors.joint.color} 
-                        name="Joint"
-                        strokeWidth={2}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="nato_economy" 
-                        stroke={domainColors.economy.color} 
-                        name="Economy"
-                        strokeWidth={2}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="nato_cognitive" 
-                        stroke={domainColors.cognitive.color} 
-                        name="Cognitive"
-                        strokeWidth={2}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="nato_space" 
-                        stroke={domainColors.space.color} 
-                        name="Space"
-                        strokeWidth={2}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="nato_cyber" 
-                        stroke={domainColors.cyber.color} 
-                        name="Cyber"
-                        strokeWidth={2}
-                      />
-                    </RechartsLineChart>
-                  </ResponsiveContainer>
+                {/* Interactive Controls */}
+                <div className="glass-panel p-4 space-y-4">
+                  <h4 className="text-sm font-semibold">Chart Controls</h4>
+                  
+                  {/* Team Toggle */}
+                  <div className="space-y-2">
+                    <h5 className="text-xs font-medium text-muted-foreground">Teams</h5>
+                    <div className="flex gap-2">
+                      <button
+                        className={`px-3 py-2 rounded-md text-xs font-medium transition-all hover-elevate ${
+                          true ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50' : 'border border-border/50 text-muted-foreground'
+                        }`}
+                        data-testid="toggle-nato"
+                      >
+                        NATO (Always Visible)
+                      </button>
+                      <button
+                        onClick={() => setShowRussia(!showRussia)}
+                        className={`px-3 py-2 rounded-md text-xs font-medium transition-all hover-elevate ${
+                          showRussia ? 'bg-red-500/20 text-red-400 border border-red-500/50' : 'border border-border/50 text-muted-foreground'
+                        }`}
+                        data-testid="toggle-russia"
+                      >
+                        Russia {showRussia ? '(Visible)' : '(Hidden)'}
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Domain Toggles */}
+                  <div className="space-y-2">
+                    <h5 className="text-xs font-medium text-muted-foreground">Domains</h5>
+                    <div className="flex flex-wrap gap-2">
+                      {Object.entries(domainColors).map(([domain, config]) => (
+                        <button
+                          key={domain}
+                          onClick={() => toggleDomainVisibility(domain as Domain)}
+                          className={`px-3 py-2 rounded-md text-xs font-medium transition-all hover-elevate capitalize ${
+                            visibleDomains[domain as Domain] 
+                              ? `${config.bgClass} ${config.textClass} border border-current` 
+                              : 'border border-border/50 text-muted-foreground'
+                          }`}
+                          data-testid={`toggle-domain-${domain}`}
+                        >
+                          {domain} {visibleDomains[domain as Domain] ? '(Visible)' : '(Hidden)'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
-                {/* Russia Overall Chart */}
+                {/* Combined Chart */}
                 <div className="glass-panel p-4">
-                  <h4 className="text-sm font-semibold mb-3">Russia - All Domains Over Time</h4>
-                  <ResponsiveContainer width="100%" height={300}>
+                  <h4 className="text-sm font-semibold mb-3">Combined NATO vs Russia - All Domains Over Time</h4>
+                  <ResponsiveContainer width="100%" height={400}>
                     <RechartsLineChart data={overallChartData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                       <XAxis 
@@ -193,41 +199,105 @@ export default function DomainStatistics() {
                         }}
                       />
                       <Legend />
-                      <Line 
-                        type="monotone" 
-                        dataKey="russia_joint" 
-                        stroke={domainColors.joint.color} 
-                        name="Joint"
-                        strokeWidth={2}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="russia_economy" 
-                        stroke={domainColors.economy.color} 
-                        name="Economy"
-                        strokeWidth={2}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="russia_cognitive" 
-                        stroke={domainColors.cognitive.color} 
-                        name="Cognitive"
-                        strokeWidth={2}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="russia_space" 
-                        stroke={domainColors.space.color} 
-                        name="Space"
-                        strokeWidth={2}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="russia_cyber" 
-                        stroke={domainColors.cyber.color} 
-                        name="Cyber"
-                        strokeWidth={2}
-                      />
+                      
+                      {/* NATO Lines - Always visible */}
+                      {visibleDomains.joint && (
+                        <Line 
+                          type="monotone" 
+                          dataKey="nato_joint" 
+                          stroke={domainColors.joint.color} 
+                          name="NATO Joint"
+                          strokeWidth={2}
+                        />
+                      )}
+                      {visibleDomains.economy && (
+                        <Line 
+                          type="monotone" 
+                          dataKey="nato_economy" 
+                          stroke={domainColors.economy.color} 
+                          name="NATO Economy"
+                          strokeWidth={2}
+                        />
+                      )}
+                      {visibleDomains.cognitive && (
+                        <Line 
+                          type="monotone" 
+                          dataKey="nato_cognitive" 
+                          stroke={domainColors.cognitive.color} 
+                          name="NATO Cognitive"
+                          strokeWidth={2}
+                        />
+                      )}
+                      {visibleDomains.space && (
+                        <Line 
+                          type="monotone" 
+                          dataKey="nato_space" 
+                          stroke={domainColors.space.color} 
+                          name="NATO Space"
+                          strokeWidth={2}
+                        />
+                      )}
+                      {visibleDomains.cyber && (
+                        <Line 
+                          type="monotone" 
+                          dataKey="nato_cyber" 
+                          stroke={domainColors.cyber.color} 
+                          name="NATO Cyber"
+                          strokeWidth={2}
+                        />
+                      )}
+                      
+                      {/* Russia Lines - Togglable */}
+                      {showRussia && visibleDomains.joint && (
+                        <Line 
+                          type="monotone" 
+                          dataKey="russia_joint" 
+                          stroke={domainColors.joint.color} 
+                          name="Russia Joint"
+                          strokeWidth={2}
+                          strokeDasharray="5 5"
+                        />
+                      )}
+                      {showRussia && visibleDomains.economy && (
+                        <Line 
+                          type="monotone" 
+                          dataKey="russia_economy" 
+                          stroke={domainColors.economy.color} 
+                          name="Russia Economy"
+                          strokeWidth={2}
+                          strokeDasharray="5 5"
+                        />
+                      )}
+                      {showRussia && visibleDomains.cognitive && (
+                        <Line 
+                          type="monotone" 
+                          dataKey="russia_cognitive" 
+                          stroke={domainColors.cognitive.color} 
+                          name="Russia Cognitive"
+                          strokeWidth={2}
+                          strokeDasharray="5 5"
+                        />
+                      )}
+                      {showRussia && visibleDomains.space && (
+                        <Line 
+                          type="monotone" 
+                          dataKey="russia_space" 
+                          stroke={domainColors.space.color} 
+                          name="Russia Space"
+                          strokeWidth={2}
+                          strokeDasharray="5 5"
+                        />
+                      )}
+                      {showRussia && visibleDomains.cyber && (
+                        <Line 
+                          type="monotone" 
+                          dataKey="russia_cyber" 
+                          stroke={domainColors.cyber.color} 
+                          name="Russia Cyber"
+                          strokeWidth={2}
+                          strokeDasharray="5 5"
+                        />
+                      )}
                     </RechartsLineChart>
                   </ResponsiveContainer>
                 </div>
