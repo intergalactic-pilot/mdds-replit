@@ -14,6 +14,7 @@ import CartDisplay from '../components/CartDisplay';
 import MobileFooter from '../components/MobileFooter';
 import TurnBasedLogs from '../components/Statistics';
 import DomainStatistics from '../components/DomainStatistics';
+import DefenseOffenseStatistics from '../components/DefenseOffenseStatistics';
 import cardsData from '../data/cards.json';
 import { Card } from '@shared/schema';
 
@@ -242,6 +243,11 @@ export default function MDDSStrategy() {
         {/* Statistics Section */}
         <div className="mt-6">
           <DomainStatistics />
+        </div>
+        
+        {/* Defense/Offense Statistics Section */}
+        <div className="mt-6">
+          <DefenseOffenseStatistics />
         </div>
       </div>
 
