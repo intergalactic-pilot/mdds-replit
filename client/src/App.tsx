@@ -18,7 +18,7 @@ function Router() {
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="light" storageKey="mdds-theme">
+    <ThemeProvider defaultTheme="dark" storageKey="mdds-theme">
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
