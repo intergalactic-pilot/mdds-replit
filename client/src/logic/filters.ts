@@ -5,7 +5,7 @@ export function applyDomainQuotas(cards: Card[]): Card[] {
   const quotas: Record<Domain, number> = {
     economy: 10,
     cyber: 11, 
-    joint: 9,
+    joint: 11,
     space: 10,
     cognitive: 13
   };
