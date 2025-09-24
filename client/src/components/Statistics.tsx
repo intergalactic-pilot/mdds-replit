@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, BarChart3, TrendingUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, BarChart3, TrendingUp, Shield, Sword } from 'lucide-react';
 import { useMDDSStore } from '@/state/store';
 
 const domainColors = {
@@ -15,6 +15,7 @@ export default function TurnBasedLogs() {
   const [isPurchaseLogsExpanded, setIsPurchaseLogsExpanded] = useState(false);
   const [isStatisticsExpanded, setIsStatisticsExpanded] = useState(false);
   const [isDomainBreakdownExpanded, setIsDomainBreakdownExpanded] = useState(false);
+  const [isDefenseOffenseExpanded, setIsDefenseOffenseExpanded] = useState(false);
   const turnStatistics = useMDDSStore(state => state.turnStatistics);
   const strategyLog = useMDDSStore(state => state.strategyLog);
 
@@ -247,6 +248,172 @@ export default function TurnBasedLogs() {
                           </div>
                         );
                       })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Defensive/Offensive Statistics */}
+              {turnStatistics.length > 0 && (
+                <div className="space-y-3">
+                  <button
+                    onClick={() => setIsDefenseOffenseExpanded(!isDefenseOffenseExpanded)}
+                    className="w-full flex items-center justify-between p-3 glass-panel hover-elevate transition-all duration-300 text-left"
+                    data-testid="button-toggle-defense-offense"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
+                        <Shield className="w-4 h-4 text-blue-500" />
+                        <Sword className="w-4 h-4 text-red-500" />
+                      </div>
+                      <h3 className="font-semibold">Defensive/Offensive Statistics</h3>
+                      <span className="text-sm text-muted-foreground">
+                        (Domain-based analysis)
+                      </span>
+                    </div>
+                    {isDefenseOffenseExpanded ? (
+                      <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                    )}
+                  </button>
+                  
+                  {isDefenseOffenseExpanded && (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-border/50">
+                            <th className="text-left py-2 px-1 font-medium">Turn</th>
+                            <th className="text-center py-2 px-1 font-medium">Team</th>
+                            <th className="text-center py-2 px-1 font-medium text-gray-500">
+                              <div className="flex flex-col items-center gap-1">
+                                <span>Joint</span>
+                                <div className="flex gap-1 text-xs">
+                                  <span className="text-blue-500">Def</span>
+                                  <span className="text-red-500">Off</span>
+                                </div>
+                              </div>
+                            </th>
+                            <th className="text-center py-2 px-1 font-medium text-green-500">
+                              <div className="flex flex-col items-center gap-1">
+                                <span>Economy</span>
+                                <div className="flex gap-1 text-xs">
+                                  <span className="text-blue-500">Def</span>
+                                  <span className="text-red-500">Off</span>
+                                </div>
+                              </div>
+                            </th>
+                            <th className="text-center py-2 px-1 font-medium text-purple-500">
+                              <div className="flex flex-col items-center gap-1">
+                                <span>Cognitive</span>
+                                <div className="flex gap-1 text-xs">
+                                  <span className="text-blue-500">Def</span>
+                                  <span className="text-red-500">Off</span>
+                                </div>
+                              </div>
+                            </th>
+                            <th className="text-center py-2 px-1 font-medium text-blue-500">
+                              <div className="flex flex-col items-center gap-1">
+                                <span>Space</span>
+                                <div className="flex gap-1 text-xs">
+                                  <span className="text-blue-500">Def</span>
+                                  <span className="text-red-500">Off</span>
+                                </div>
+                              </div>
+                            </th>
+                            <th className="text-center py-2 px-1 font-medium text-yellow-500">
+                              <div className="flex flex-col items-center gap-1">
+                                <span>Cyber</span>
+                                <div className="flex gap-1 text-xs">
+                                  <span className="text-blue-500">Def</span>
+                                  <span className="text-red-500">Off</span>
+                                </div>
+                              </div>
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {turnStatistics.flatMap((stat, index) => [
+                            // NATO row
+                            <tr key={`nato-${index}`} className="border-b border-border/20">
+                              <td className="py-2 px-1 font-medium" data-testid={`defense-offense-nato-${stat.turn}`}>
+                                Turn {stat.turn}
+                              </td>
+                              <td className="text-center py-2 px-1 text-blue-400 font-semibold">
+                                NATO
+                              </td>
+                              <td className="text-center py-2 px-1" data-testid={`nato-joint-def-off-${stat.turn}`}>
+                                <div className="space-y-1 text-xs">
+                                  <div className="text-blue-500 font-medium">{stat.natoDeterrence.joint}</div>
+                                  <div className="text-red-500 font-medium">{100 - stat.russiaDeterrence.joint}</div>
+                                </div>
+                              </td>
+                              <td className="text-center py-2 px-1" data-testid={`nato-economy-def-off-${stat.turn}`}>
+                                <div className="space-y-1 text-xs">
+                                  <div className="text-blue-500 font-medium">{stat.natoDeterrence.economy}</div>
+                                  <div className="text-red-500 font-medium">{100 - stat.russiaDeterrence.economy}</div>
+                                </div>
+                              </td>
+                              <td className="text-center py-2 px-1" data-testid={`nato-cognitive-def-off-${stat.turn}`}>
+                                <div className="space-y-1 text-xs">
+                                  <div className="text-blue-500 font-medium">{stat.natoDeterrence.cognitive}</div>
+                                  <div className="text-red-500 font-medium">{100 - stat.russiaDeterrence.cognitive}</div>
+                                </div>
+                              </td>
+                              <td className="text-center py-2 px-1" data-testid={`nato-space-def-off-${stat.turn}`}>
+                                <div className="space-y-1 text-xs">
+                                  <div className="text-blue-500 font-medium">{stat.natoDeterrence.space}</div>
+                                  <div className="text-red-500 font-medium">{100 - stat.russiaDeterrence.space}</div>
+                                </div>
+                              </td>
+                              <td className="text-center py-2 px-1" data-testid={`nato-cyber-def-off-${stat.turn}`}>
+                                <div className="space-y-1 text-xs">
+                                  <div className="text-blue-500 font-medium">{stat.natoDeterrence.cyber}</div>
+                                  <div className="text-red-500 font-medium">{100 - stat.russiaDeterrence.cyber}</div>
+                                </div>
+                              </td>
+                            </tr>,
+                            // Russia row
+                            <tr key={`russia-${index}`} className="border-b border-border/20">
+                              <td className="py-2 px-1 font-medium">
+                              </td>
+                              <td className="text-center py-2 px-1 text-red-400 font-semibold">
+                                Russia
+                              </td>
+                              <td className="text-center py-2 px-1" data-testid={`russia-joint-def-off-${stat.turn}`}>
+                                <div className="space-y-1 text-xs">
+                                  <div className="text-blue-500 font-medium">{stat.russiaDeterrence.joint}</div>
+                                  <div className="text-red-500 font-medium">{100 - stat.natoDeterrence.joint}</div>
+                                </div>
+                              </td>
+                              <td className="text-center py-2 px-1" data-testid={`russia-economy-def-off-${stat.turn}`}>
+                                <div className="space-y-1 text-xs">
+                                  <div className="text-blue-500 font-medium">{stat.russiaDeterrence.economy}</div>
+                                  <div className="text-red-500 font-medium">{100 - stat.natoDeterrence.economy}</div>
+                                </div>
+                              </td>
+                              <td className="text-center py-2 px-1" data-testid={`russia-cognitive-def-off-${stat.turn}`}>
+                                <div className="space-y-1 text-xs">
+                                  <div className="text-blue-500 font-medium">{stat.russiaDeterrence.cognitive}</div>
+                                  <div className="text-red-500 font-medium">{100 - stat.natoDeterrence.cognitive}</div>
+                                </div>
+                              </td>
+                              <td className="text-center py-2 px-1" data-testid={`russia-space-def-off-${stat.turn}`}>
+                                <div className="space-y-1 text-xs">
+                                  <div className="text-blue-500 font-medium">{stat.russiaDeterrence.space}</div>
+                                  <div className="text-red-500 font-medium">{100 - stat.natoDeterrence.space}</div>
+                                </div>
+                              </td>
+                              <td className="text-center py-2 px-1" data-testid={`russia-cyber-def-off-${stat.turn}`}>
+                                <div className="space-y-1 text-xs">
+                                  <div className="text-blue-500 font-medium">{stat.russiaDeterrence.cyber}</div>
+                                  <div className="text-red-500 font-medium">{100 - stat.natoDeterrence.cyber}</div>
+                                </div>
+                              </td>
+                            </tr>
+                          ])}
+                        </tbody>
+                      </table>
                     </div>
                   )}
                 </div>
