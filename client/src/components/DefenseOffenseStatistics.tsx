@@ -31,14 +31,14 @@ export default function DefenseOffenseStatistics() {
     return turnStatistics.map(stat => {
       const data: any = { turn: stat.turn };
       
-      // Add NATO defensive data (scaled to 0-0.9 range as shown in reference image)
+      // Add NATO defensive data (normalized as percentage of baseline 100)
       Object.keys(stat.natoDeterrence).forEach(domain => {
-        data[`nato_defense_${domain}`] = stat.natoDeterrence[domain as keyof typeof stat.natoDeterrence] / 120;
+        data[`nato_defense_${domain}`] = stat.natoDeterrence[domain as keyof typeof stat.natoDeterrence] / 100;
       });
       
-      // Add Russia defensive data (scaled to 0-0.9 range as shown in reference image)
+      // Add Russia defensive data (normalized as percentage of baseline 100)
       Object.keys(stat.russiaDeterrence).forEach(domain => {
-        data[`russia_defense_${domain}`] = stat.russiaDeterrence[domain as keyof typeof stat.russiaDeterrence] / 120;
+        data[`russia_defense_${domain}`] = stat.russiaDeterrence[domain as keyof typeof stat.russiaDeterrence] / 100;
       });
       
       // Add NATO offensive data (impact on Russia, normalized positive damage)
@@ -133,8 +133,8 @@ export default function DefenseOffenseStatistics() {
                     stroke="#64748b"
                     tick={{ fill: '#64748b', fontSize: 12 }}
                     tickLine={{ stroke: '#64748b' }}
-                    domain={[0, 0.9]}
-                    ticks={[0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]}
+                    domain={['dataMin - 0.05', 'dataMax + 0.05']}
+                    tickFormatter={(value) => value.toFixed(1)}
                   />
                   <Tooltip 
                     contentStyle={{
@@ -230,8 +230,8 @@ export default function DefenseOffenseStatistics() {
                     stroke="#64748b"
                     tick={{ fill: '#64748b', fontSize: 12 }}
                     tickLine={{ stroke: '#64748b' }}
-                    domain={[0, 0.9]}
-                    ticks={[0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]}
+                    domain={['dataMin - 0.05', 'dataMax + 0.05']}
+                    tickFormatter={(value) => value.toFixed(1)}
                   />
                   <Tooltip 
                     contentStyle={{
