@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, Shield, Sword, Eye, EyeOff, Activity, Target } from 'lucide-react';
+import { ChevronDown, ChevronUp, Shield, Sword, Eye, EyeOff } from 'lucide-react';
 import { useMDDSStore } from '@/state/store';
-import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Domain } from '@shared/schema';
 
 const domainColors = {
@@ -12,11 +12,98 @@ const domainColors = {
   cyber: { color: '#F59E0B', textClass: 'text-yellow-500' }
 } as const;
 
+interface IndividualChartProps {
+  title: string;
+  team: 'NATO' | 'Russia';
+  type: 'Defense' | 'Offense';
+  data: any[];
+  visibleDomains: Record<Domain, boolean>;
+  onToggleDomain: (domain: Domain) => void;
+  bgClass: string;
+}
+
+function IndividualChart({ title, team, type, data, visibleDomains, onToggleDomain, bgClass }: IndividualChartProps) {
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="glass-panel p-3 border border-border/50">
+          <p className="font-semibold mb-2">{`Turn ${label}`}</p>
+          {payload.map((entry: any, index: number) => {
+            const domain = entry.dataKey;
+            const color = domainColors[domain as Domain]?.color || '#666';
+            const Icon = type === 'Defense' ? Shield : Sword;
+            return (
+              <p key={index} style={{ color }} className="flex items-center gap-1">
+                <Icon className="w-3 h-3" />
+                {domain}: {entry.value}
+              </p>
+            );
+          })}
+        </div>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <div className={`${bgClass} p-4 rounded-lg border border-border/50`}>
+      <div className="flex items-center justify-between mb-3">
+        <h4 className="font-semibold text-sm">{title}</h4>
+        <div className="flex gap-1">
+          {(Object.keys(domainColors) as Domain[]).map(domain => (
+            <button
+              key={domain}
+              onClick={() => onToggleDomain(domain)}
+              className={`w-3 h-3 rounded-full transition-opacity ${
+                visibleDomains[domain] ? 'opacity-100' : 'opacity-30'
+              }`}
+              style={{ backgroundColor: domainColors[domain].color }}
+              title={`Toggle ${domain}`}
+              data-testid={`toggle-${team.toLowerCase()}-${type.toLowerCase()}-${domain}`}
+            />
+          ))}
+        </div>
+      </div>
+      
+      <div className="h-48">
+        <ResponsiveContainer width="100%" height="100%">
+          <RechartsLineChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+            <XAxis 
+              dataKey="turn" 
+              stroke="rgba(255,255,255,0.7)"
+              fontSize={10}
+            />
+            <YAxis 
+              stroke="rgba(255,255,255,0.7)"
+              fontSize={10}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            
+            {(Object.keys(domainColors) as Domain[]).map(domain => {
+              if (!visibleDomains[domain]) return null;
+              const color = domainColors[domain].color;
+              return (
+                <Line
+                  key={domain}
+                  type="monotone"
+                  dataKey={domain}
+                  stroke={color}
+                  strokeWidth={2}
+                  dot={{ fill: color, strokeWidth: 1, r: 2 }}
+                  name={domain}
+                />
+              );
+            })}
+          </RechartsLineChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
 export default function DefenseOffenseChart() {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [showNATO, setShowNATO] = useState(true);
-  const [showRussia, setShowRussia] = useState(true);
-  const [selectedView, setSelectedView] = useState<'defense' | 'offense' | 'both'>('both');
   const [visibleDomains, setVisibleDomains] = useState<Record<Domain, boolean>>({
     joint: true,
     economy: true,
@@ -41,65 +128,45 @@ export default function DefenseOffenseChart() {
     return null;
   }
 
-  // Prepare chart data for defense and offense
-  const chartData = turnStatistics.map(stat => {
-    const dataPoint: any = { turn: stat.turn };
-    
-    // Add defense data (each team's own deterrence)
-    if (selectedView === 'defense' || selectedView === 'both') {
-      Object.keys(stat.natoDeterrence).forEach(domain => {
-        const domainKey = domain as Domain;
-        if (visibleDomains[domainKey]) {
-          if (showNATO) {
-            dataPoint[`NATO_Defense_${domain}`] = stat.natoDeterrence[domainKey];
-          }
-          if (showRussia) {
-            dataPoint[`Russia_Defense_${domain}`] = stat.russiaDeterrence[domainKey];
-          }
-        }
-      });
-    }
-    
-    // Add offense data (impact on opponent: 100 - opponent's deterrence)
-    if (selectedView === 'offense' || selectedView === 'both') {
-      Object.keys(stat.natoDeterrence).forEach(domain => {
-        const domainKey = domain as Domain;
-        if (visibleDomains[domainKey]) {
-          if (showNATO) {
-            dataPoint[`NATO_Offense_${domain}`] = 100 - stat.russiaDeterrence[domainKey];
-          }
-          if (showRussia) {
-            dataPoint[`Russia_Offense_${domain}`] = 100 - stat.natoDeterrence[domainKey];
-          }
-        }
-      });
-    }
-    
-    return dataPoint;
-  });
+  // Prepare data for NATO Defense chart
+  const natoDefenseData = turnStatistics.map(stat => ({
+    turn: stat.turn,
+    joint: stat.natoDeterrence.joint,
+    economy: stat.natoDeterrence.economy,
+    cognitive: stat.natoDeterrence.cognitive,
+    space: stat.natoDeterrence.space,
+    cyber: stat.natoDeterrence.cyber
+  }));
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="glass-panel p-3 border border-border/50">
-          <p className="font-semibold mb-2">{`Turn ${label}`}</p>
-          {payload.map((entry: any, index: number) => {
-            const [team, type, domain] = entry.dataKey.split('_');
-            const Icon = type === 'Defense' ? Shield : Sword;
-            // Use team colors for tooltip
-            const teamColor = team === 'NATO' ? '#3B82F6' : '#EF4444'; // blue for NATO, red for Russia
-            return (
-              <p key={index} style={{ color: teamColor }} className="flex items-center gap-1">
-                <Icon className="w-3 h-3" />
-                {team} {type} ({domain}): {entry.value}
-              </p>
-            );
-          })}
-        </div>
-      );
-    }
-    return null;
-  };
+  // Prepare data for NATO Offense chart
+  const natoOffenseData = turnStatistics.map(stat => ({
+    turn: stat.turn,
+    joint: 100 - stat.russiaDeterrence.joint,
+    economy: 100 - stat.russiaDeterrence.economy,
+    cognitive: 100 - stat.russiaDeterrence.cognitive,
+    space: 100 - stat.russiaDeterrence.space,
+    cyber: 100 - stat.russiaDeterrence.cyber
+  }));
+
+  // Prepare data for Russia Defense chart
+  const russiaDefenseData = turnStatistics.map(stat => ({
+    turn: stat.turn,
+    joint: stat.russiaDeterrence.joint,
+    economy: stat.russiaDeterrence.economy,
+    cognitive: stat.russiaDeterrence.cognitive,
+    space: stat.russiaDeterrence.space,
+    cyber: stat.russiaDeterrence.cyber
+  }));
+
+  // Prepare data for Russia Offense chart
+  const russiaOffenseData = turnStatistics.map(stat => ({
+    turn: stat.turn,
+    joint: 100 - stat.natoDeterrence.joint,
+    economy: 100 - stat.natoDeterrence.economy,
+    cognitive: 100 - stat.natoDeterrence.cognitive,
+    space: 100 - stat.natoDeterrence.space,
+    cyber: 100 - stat.natoDeterrence.cyber
+  }));
 
   return (
     <div className="space-y-3">
@@ -115,7 +182,7 @@ export default function DefenseOffenseChart() {
           </div>
           <h3 className="font-semibold">Defensive/Offensive Statistics Chart</h3>
           <span className="text-sm text-muted-foreground">
-            (Interactive trends)
+            (Four interactive domain charts)
           </span>
         </div>
         {isExpanded ? (
@@ -127,65 +194,10 @@ export default function DefenseOffenseChart() {
       
       {isExpanded && (
         <div className="space-y-4">
-          {/* Interactive Controls */}
-          <div className="flex flex-wrap gap-4 p-3 glass-panel">
-            {/* View Selection */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">View:</span>
-              <div className="flex gap-1">
-                {(['defense', 'offense', 'both'] as const).map(view => (
-                  <button
-                    key={view}
-                    onClick={() => setSelectedView(view)}
-                    className={`px-3 py-1 text-xs rounded-md transition-colors ${
-                      selectedView === view
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-secondary/50 hover:bg-secondary'
-                    }`}
-                    data-testid={`button-view-${view}`}
-                  >
-                    {view === 'defense' ? (
-                      <><Shield className="w-3 h-3" /> Defense</>
-                    ) : view === 'offense' ? (
-                      <><Sword className="w-3 h-3" /> Offense</>
-                    ) : (
-                      <><Activity className="w-3 h-3" /> Both</>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Team Visibility */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Teams:</span>
-              <button
-                onClick={() => setShowNATO(!showNATO)}
-                className={`flex items-center gap-1 px-3 py-1 text-xs rounded-md transition-colors ${
-                  showNATO ? 'bg-blue-500/20 text-blue-400' : 'bg-secondary/50'
-                }`}
-                data-testid="button-toggle-nato"
-              >
-                {showNATO ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-                NATO
-              </button>
-              <button
-                onClick={() => setShowRussia(!showRussia)}
-                className={`flex items-center gap-1 px-3 py-1 text-xs rounded-md transition-colors ${
-                  showRussia ? 'bg-red-500/20 text-red-400' : 'bg-secondary/50'
-                }`}
-                data-testid="button-toggle-russia"
-              >
-                {showRussia ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-                Russia
-              </button>
-            </div>
-          </div>
-
-          {/* Domain Filter Controls */}
+          {/* Global Domain Controls */}
           <div className="p-3 glass-panel">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm font-medium">Domains:</span>
+              <span className="text-sm font-medium">Domain Visibility (Global):</span>
             </div>
             <div className="flex flex-wrap gap-2">
               {(Object.keys(domainColors) as Domain[]).map(domain => (
@@ -197,7 +209,7 @@ export default function DefenseOffenseChart() {
                       ? `${domainColors[domain].textClass} bg-current/20`
                       : 'bg-secondary/50 text-muted-foreground'
                   }`}
-                  data-testid={`button-toggle-domain-${domain}`}
+                  data-testid={`button-toggle-global-domain-${domain}`}
                 >
                   {visibleDomains[domain] ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
                   {domain.charAt(0).toUpperCase() + domain.slice(1)}
@@ -206,115 +218,68 @@ export default function DefenseOffenseChart() {
             </div>
           </div>
 
-          {/* Chart */}
-          <div className="h-80 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <RechartsLineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                <XAxis 
-                  dataKey="turn" 
-                  stroke="rgba(255,255,255,0.7)"
-                  fontSize={12}
-                />
-                <YAxis 
-                  stroke="rgba(255,255,255,0.7)"
-                  fontSize={12}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                
-                {/* Defense Lines */}
-                {(selectedView === 'defense' || selectedView === 'both') && 
-                  Object.keys(domainColors).map(domain => {
-                    if (!visibleDomains[domain as Domain]) return null;
-                    return [
-                      showNATO && (
-                        <Line
-                          key={`NATO_Defense_${domain}`}
-                          type="monotone"
-                          dataKey={`NATO_Defense_${domain}`}
-                          stroke="#3B82F6" // NATO blue
-                          strokeWidth={2}
-                          strokeDasharray="none"
-                          dot={{ fill: "#3B82F6", strokeWidth: 1, r: 3 }}
-                          name={`NATO Defense (${domain})`}
-                        />
-                      ),
-                      showRussia && (
-                        <Line
-                          key={`Russia_Defense_${domain}`}
-                          type="monotone"
-                          dataKey={`Russia_Defense_${domain}`}
-                          stroke="#EF4444" // Russia red
-                          strokeWidth={2}
-                          strokeDasharray="5 5"
-                          dot={{ fill: "#EF4444", strokeWidth: 1, r: 3 }}
-                          name={`Russia Defense (${domain})`}
-                        />
-                      )
-                    ];
-                  }).flat()}
-
-                {/* Offense Lines */}
-                {(selectedView === 'offense' || selectedView === 'both') && 
-                  Object.keys(domainColors).map(domain => {
-                    if (!visibleDomains[domain as Domain]) return null;
-                    return [
-                      showNATO && (
-                        <Line
-                          key={`NATO_Offense_${domain}`}
-                          type="monotone"
-                          dataKey={`NATO_Offense_${domain}`}
-                          stroke="#60A5FA" // Lighter NATO blue for offense
-                          strokeWidth={2}
-                          strokeDasharray="3 3"
-                          dot={{ fill: "#60A5FA", strokeWidth: 1, r: 3 }}
-                          name={`NATO Offense (${domain})`}
-                        />
-                      ),
-                      showRussia && (
-                        <Line
-                          key={`Russia_Offense_${domain}`}
-                          type="monotone"
-                          dataKey={`Russia_Offense_${domain}`}
-                          stroke="#F87171" // Lighter Russia red for offense
-                          strokeWidth={2}
-                          strokeDasharray="8 2"
-                          dot={{ fill: "#F87171", strokeWidth: 1, r: 3 }}
-                          name={`Russia Offense (${domain})`}
-                        />
-                      )
-                    ];
-                  }).flat()}
-              </RechartsLineChart>
-            </ResponsiveContainer>
+          {/* Four Chart Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* NATO Defense Chart */}
+            <IndividualChart
+              title="NATO Defensive Strategy"
+              team="NATO"
+              type="Defense"
+              data={natoDefenseData}
+              visibleDomains={visibleDomains}
+              onToggleDomain={toggleDomainVisibility}
+              bgClass="bg-blue-50/5 dark:bg-blue-950/20"
+            />
+            
+            {/* NATO Offense Chart */}
+            <IndividualChart
+              title="NATO Offensive Strategy"
+              team="NATO"
+              type="Offense"
+              data={natoOffenseData}
+              visibleDomains={visibleDomains}
+              onToggleDomain={toggleDomainVisibility}
+              bgClass="bg-blue-50/5 dark:bg-blue-950/20"
+            />
+            
+            {/* Russia Defense Chart */}
+            <IndividualChart
+              title="Russia Defensive Strategy"
+              team="Russia"
+              type="Defense"
+              data={russiaDefenseData}
+              visibleDomains={visibleDomains}
+              onToggleDomain={toggleDomainVisibility}
+              bgClass="bg-red-50/5 dark:bg-red-950/20"
+            />
+            
+            {/* Russia Offense Chart */}
+            <IndividualChart
+              title="Russia Offensive Strategy"
+              team="Russia"
+              type="Offense"
+              data={russiaOffenseData}
+              visibleDomains={visibleDomains}
+              onToggleDomain={toggleDomainVisibility}
+              bgClass="bg-red-50/5 dark:bg-red-950/20"
+            />
           </div>
           
-          {/* Legend Explanation */}
+          {/* Legend */}
           <div className="text-xs text-muted-foreground p-3 glass-panel">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <h5 className="font-semibold text-foreground">NATO (Blue)</h5>
-                <div className="flex items-center gap-1">
-                  <Shield className="w-3 h-3 text-blue-500" />
-                  <span className="text-blue-500">Defense: Solid lines</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Sword className="w-3 h-3 text-blue-400" />
-                  <span className="text-blue-400">Offense: Dashed lines</span>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <div className="text-center">
+                <h5 className="font-semibold text-foreground mb-1">Domain Colors</h5>
               </div>
-              <div className="space-y-2">
-                <h5 className="font-semibold text-foreground">Russia (Red)</h5>
-                <div className="flex items-center gap-1">
-                  <Shield className="w-3 h-3 text-red-500" />
-                  <span className="text-red-500">Defense: Dashed lines</span>
+              {(Object.entries(domainColors) as [Domain, typeof domainColors[Domain]][]).map(([domain, config]) => (
+                <div key={domain} className="flex items-center justify-center gap-1">
+                  <div 
+                    className="w-3 h-3 rounded-full" 
+                    style={{ backgroundColor: config.color }}
+                  />
+                  <span className={config.textClass}>{domain.charAt(0).toUpperCase() + domain.slice(1)}</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Sword className="w-3 h-3 text-red-400" />
-                  <span className="text-red-400">Offense: Dash-dot lines</span>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
