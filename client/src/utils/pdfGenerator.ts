@@ -209,7 +209,7 @@ export const generateMDDSReport = async (data: PDFReportData) => {
       checkPage(8);
       pdf.setFontSize(8);
       pdf.setFont('helvetica', 'normal');
-      const timeStr = entry.timestamp.toLocaleTimeString();
+      const timeStr = new Date(entry.timestamp).toLocaleTimeString();
       const logText = `[${entry.team}] ${timeStr}: ${entry.action}`;
       
       // Split long text into multiple lines
