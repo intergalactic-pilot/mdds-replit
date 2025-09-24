@@ -2,127 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-/* DARK FUTURISTIC MODE */
+/* DARK FUTURISTIC MODE (DEFAULT) */
 :root {
-  --button-outline: rgba(0,0,0, .10);
-  --badge-outline: rgba(0,0,0, .05);
-
-  /* Automatic computation of border around primary / danger buttons */
-  --opaque-button-border-intensity: -8; /* In terms of percentages */
-
-  /* Backgrounds applied on top of other backgrounds when hovered/active */
-  --elevate-1: rgba(0,0,0, .03);
-  --elevate-2: rgba(0,0,0, .08);
-
-  --background: 220 25% 4%;
-
-  --foreground: 210 40% 88%;
-
-  --border: 220 15% 18%;
-
-  --card: 220 20% 8%;
-
-  --card-foreground: 210 40% 90%;
-
-  --card-border: 220 25% 20%;
-
-  --sidebar: 0 0% 94%;
-
-  --sidebar-foreground: 220 15% 12%;
-
-  --sidebar-border: 0 0% 90%;
-
-  --sidebar-primary: 63 91% 23%;
-
-  --sidebar-primary-foreground: 0 0% 98%;
-
-  --sidebar-accent: 0 0% 90%;
-
-  --sidebar-accent-foreground: 220 15% 15%;
-
-  --sidebar-ring: 63 91% 23%;
-
-  --popover: 0 0% 92%;
-
-  --popover-foreground: 220 15% 12%;
-
-  --popover-border: 0 0% 88%;
-
-  --primary: 200 100% 45%;
-
-  --primary-foreground: 0 0% 98%;
-
-  --secondary: 220 15% 16%;
-
-  --secondary-foreground: 210 40% 85%;
-
-  --muted: 0 0% 92%;
-
-  --muted-foreground: 220 15% 45%;
-
-  --accent: 0 5% 90%;
-
-  --accent-foreground: 220 15% 15%;
-
-  --destructive: 0 84% 35%;
-
-  --destructive-foreground: 0 0% 98%;
-
-  --input: 0 0% 82%;
-  --ring: 63 91% 23%;
-  --chart-1: 240 75% 45%;
-  --chart-2: 120 60% 35%;
-  --chart-3: 280 65% 45%;
-  --chart-4: 200 70% 40%;
-  --chart-5: 15 85% 50%;
-
-  --font-sans: Inter, sans-serif;
-  --font-serif: Georgia, serif;
-  --font-mono: JetBrains Mono, monospace;
-  --radius: .5rem; /* 8px */
-  --shadow-2xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.02);
-  --shadow-xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.05);
-  --shadow-sm: 0px 2px 0px 0px hsl(0 0% 0% / 0.05), 0px 1px 2px -1px hsl(0 0% 0% / 0.10);
-  --shadow: 0px 2px 0px 0px hsl(0 0% 0% / 0.05), 0px 1px 2px -1px hsl(0 0% 0% / 0.10);
-  --shadow-md: 0px 2px 0px 0px hsl(0 0% 0% / 0.05), 0px 2px 4px -1px hsl(0 0% 0% / 0.10);
-  --shadow-lg: 0px 2px 0px 0px hsl(0 0% 0% / 0.05), 0px 4px 6px -1px hsl(0 0% 0% / 0.10);
-  --shadow-xl: 0px 2px 0px 0px hsl(0 0% 0% / 0.05), 0px 8px 10px -1px hsl(0 0% 0% / 0.10);
-  --shadow-2xl: 0px 2px 0px 0px hsl(0 0% 0% / 0.25);
-  --tracking-normal: 0em;
-  --spacing: 0.25rem;
-
-  /* Automatically computed borders - intensity can be controlled by the user by the --opaque-button-border-intensity setting */
-
-  /* Fallback for older browsers */
-  --sidebar-primary-border: hsl(var(--sidebar-primary));
-  --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-
-  /* Fallback for older browsers */
-  --sidebar-accent-border: hsl(var(--sidebar-accent));
-  --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-
-  /* Fallback for older browsers */
-  --primary-border: hsl(var(--primary));
-  --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-
-  /* Fallback for older browsers */
-  --secondary-border: hsl(var(--secondary));
-  --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-
-  /* Fallback for older browsers */
-  --muted-border: hsl(var(--muted));
-  --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-
-  /* Fallback for older browsers */
-  --accent-border: hsl(var(--accent));
-  --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-
-  /* Fallback for older browsers */
-  --destructive-border: hsl(var(--destructive));
-  --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-}
-
-.dark {
   --button-outline: rgba(255,255,255, .10);
   --badge-outline: rgba(255,255,255, .05);
 
@@ -194,6 +75,10 @@
   --chart-4: 200 70% 60%;
   --chart-5: 15 85% 70%;
 
+  --font-sans: Inter, sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: JetBrains Mono, monospace;
+  --radius: .5rem; /* 8px */
   --shadow-2xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.05);
   --shadow-xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.10);
   --shadow-sm: 0px 2px 0px 0px hsl(0 0% 0% / 0.10), 0px 1px 2px -1px hsl(0 0% 0% / 0.20);
@@ -202,6 +87,121 @@
   --shadow-lg: 0px 2px 0px 0px hsl(0 0% 0% / 0.10), 0px 4px 6px -1px hsl(0 0% 0% / 0.20);
   --shadow-xl: 0px 2px 0px 0px hsl(0 0% 0% / 0.10), 0px 8px 10px -1px hsl(0 0% 0% / 0.20);
   --shadow-2xl: 0px 2px 0px 0px hsl(0 0% 0% / 0.50);
+  --tracking-normal: 0em;
+  --spacing: 0.25rem;
+
+  /* Automatically computed borders - intensity can be controlled by the user by the --opaque-button-border-intensity setting */
+
+  /* Fallback for older browsers */
+  --sidebar-primary-border: hsl(var(--sidebar-primary));
+  --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --sidebar-accent-border: hsl(var(--sidebar-accent));
+  --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --primary-border: hsl(var(--primary));
+  --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --secondary-border: hsl(var(--secondary));
+  --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --muted-border: hsl(var(--muted));
+  --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --accent-border: hsl(var(--accent));
+  --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
+  --destructive-border: hsl(var(--destructive));
+  --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+}
+
+.light {
+  --button-outline: rgba(0,0,0, .08);
+  --badge-outline: rgba(0,0,0, .04);
+
+  /* Automatic computation of border around primary / danger buttons */
+  --opaque-button-border-intensity: -12; /* In terms of percentages */
+
+  /* Backgrounds applied on top of other backgrounds when hovered/active */
+  --elevate-1: rgba(0,0,0, .02);
+  --elevate-2: rgba(0,0,0, .05);
+
+  --background: 220 20% 98%;
+
+  --foreground: 220 25% 15%;
+
+  --border: 220 15% 85%;
+
+  --card: 0 0% 100%;
+
+  --card-foreground: 220 25% 15%;
+
+  --card-border: 220 15% 92%;
+
+  --sidebar: 220 20% 96%;
+
+  --sidebar-foreground: 220 25% 15%;
+
+  --sidebar-border: 220 15% 90%;
+
+  --sidebar-primary: 220 85% 55%;
+
+  --sidebar-primary-foreground: 0 0% 98%;
+
+  --sidebar-accent: 220 15% 92%;
+
+  --sidebar-accent-foreground: 220 25% 20%;
+
+  --sidebar-ring: 220 85% 55%;
+
+  --popover: 0 0% 100%;
+
+  --popover-foreground: 220 25% 15%;
+
+  --popover-border: 220 15% 88%;
+
+  --primary: 220 85% 55%;
+
+  --primary-foreground: 0 0% 98%;
+
+  --secondary: 220 15% 95%;
+
+  --secondary-foreground: 220 25% 20%;
+
+  --muted: 220 15% 96%;
+
+  --muted-foreground: 220 15% 45%;
+
+  --accent: 220 15% 94%;
+
+  --accent-foreground: 220 25% 20%;
+
+  --destructive: 0 84% 50%;
+
+  --destructive-foreground: 0 0% 98%;
+
+  --input: 220 15% 90%;
+  --ring: 220 85% 55%;
+  --chart-1: 240 75% 45%;
+  --chart-2: 120 60% 35%;
+  --chart-3: 280 65% 45%;
+  --chart-4: 200 70% 40%;
+  --chart-5: 15 85% 50%;
+
+  --shadow-2xs: 0px 2px 0px 0px hsl(220 15% 0% / 0.02);
+  --shadow-xs: 0px 2px 0px 0px hsl(220 15% 0% / 0.04);
+  --shadow-sm: 0px 2px 0px 0px hsl(220 15% 0% / 0.04), 0px 1px 2px -1px hsl(220 15% 0% / 0.08);
+  --shadow: 0px 2px 0px 0px hsl(220 15% 0% / 0.04), 0px 1px 2px -1px hsl(220 15% 0% / 0.08);
+  --shadow-md: 0px 2px 0px 0px hsl(220 15% 0% / 0.04), 0px 2px 4px -1px hsl(220 15% 0% / 0.08);
+  --shadow-lg: 0px 2px 0px 0px hsl(220 15% 0% / 0.04), 0px 4px 6px -1px hsl(220 15% 0% / 0.08);
+  --shadow-xl: 0px 2px 0px 0px hsl(220 15% 0% / 0.04), 0px 8px 10px -1px hsl(220 15% 0% / 0.08);
+  --shadow-2xl: 0px 2px 0px 0px hsl(220 15% 0% / 0.15);
 }
 
 @layer base {
@@ -220,6 +220,17 @@
     background-attachment: fixed;
     min-height: 100vh;
   }
+
+  .light body {
+    background: 
+      linear-gradient(135deg, rgba(240, 248, 255, 0.95) 0%, rgba(248, 250, 255, 0.98) 100%),
+      radial-gradient(circle at 20% 20%, rgba(100, 180, 255, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(180, 120, 255, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, rgba(120, 160, 255, 0.08) 0%, transparent 70%),
+      linear-gradient(90deg, rgba(200, 220, 255, 0.05) 0%, rgba(220, 200, 255, 0.05) 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
 }
 
 @layer utilities {
@@ -234,6 +245,17 @@
       inset 0 1px 0 0 rgba(255, 255, 255, 0.08),
       0 0 20px 0 rgba(100, 200, 255, 0.1);
   }
+
+  .light .glass-card {
+    background: 
+      linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.65) 100%),
+      rgba(240, 248, 255, 0.4);
+    backdrop-filter: blur(20px) saturate(130%);
+    box-shadow: 
+      0 20px 50px 0 rgba(100, 150, 255, 0.15),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
+      0 0 30px 0 rgba(120, 180, 255, 0.2);
+  }
   
   .glass-header {
     @apply border-b border-border/30;
@@ -244,6 +266,16 @@
     box-shadow: 
       0 2px 8px 0 rgba(0, 0, 0, 0.25),
       inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+  }
+
+  .light .glass-header {
+    background: 
+      linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.80) 100%),
+      rgba(240, 248, 255, 0.6);
+    backdrop-filter: blur(25px) saturate(140%);
+    box-shadow: 
+      0 4px 12px 0 rgba(100, 150, 255, 0.12),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.95);
   }
   
   .glass-panel {
@@ -256,6 +288,17 @@
       0 8px 24px 0 rgba(0, 0, 0, 0.25),
       inset 0 1px 0 0 rgba(255, 255, 255, 0.06),
       0 0 12px 0 rgba(80, 160, 255, 0.08);
+  }
+
+  .light .glass-panel {
+    background: 
+      linear-gradient(135deg, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0.55) 100%),
+      rgba(240, 248, 255, 0.3);
+    backdrop-filter: blur(16px) saturate(120%);
+    box-shadow: 
+      0 12px 32px 0 rgba(100, 150, 255, 0.12),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.85),
+      0 0 20px 0 rgba(120, 180, 255, 0.15);
   }
 
   .frosted-bg {

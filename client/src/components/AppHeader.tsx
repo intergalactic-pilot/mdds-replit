@@ -14,7 +14,7 @@ import {
   Sun
 } from 'lucide-react';
 import logoUrl from '@assets/Logo_1758524556759.png';
-import { useTheme } from "next-themes";
+import { useTheme } from "./ThemeProvider";
 
 interface AppHeaderProps {
   currentTurn: number;
