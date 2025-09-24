@@ -130,6 +130,9 @@ export default function MDDSStrategy() {
                     disabled={store.phase !== 'purchase'}
                     onAddToNATOCart={(card) => store.addToCart('NATO', card)}
                     onAddToRussiaCart={(card) => store.addToCart('Russia', card)}
+                    currentTurn={store.turn}
+                    natoTeamState={natoState}
+                    russiaTeamState={russiaState}
                   />
                 </div>
               </div>

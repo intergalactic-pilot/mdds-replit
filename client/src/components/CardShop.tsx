@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Card as CardType, Domain, CardType as CardTypeEnum } from '@shared/schema';
+import { Card as CardType, Domain, CardType as CardTypeEnum, TeamState } from '@shared/schema';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import CardDisplay from './CardDisplay';
 import DomainBadge from './DomainBadge';
 import { sanitizeText } from '../logic/guards';
 import { formatCurrency } from '../logic/pricing';
+import { isCardAvailable } from '../logic/turnEngine';
 import { Search, Filter, Info, ShoppingCart } from 'lucide-react';
 
 // Removed card type icons and labels since we now display card ID instead
@@ -24,6 +25,8 @@ interface CardListItemProps {
   natoInCart?: boolean;
   russiaInCart?: boolean;
   disabled?: boolean;
+  natoAvailable?: boolean;
+  russiaAvailable?: boolean;
 }
 
 function CardListItem({ 
@@ -36,7 +39,9 @@ function CardListItem({
   inCart = false,
   natoInCart = false,
   russiaInCart = false,
-  disabled = false 
+  disabled = false,
+  natoAvailable = true,
+  russiaAvailable = true
 }: CardListItemProps) {
   // Main price always shows base cost, team-specific prices shown on buttons
 
@@ -92,10 +97,11 @@ function CardListItem({
               <Button
                 size="sm"
                 onClick={onAddToNATOCart}
-                disabled={disabled || natoInCart}
+                disabled={disabled || natoInCart || !natoAvailable}
                 variant="default"
                 className="bg-blue-600 hover:bg-blue-700 text-white"
                 data-testid={`button-add-nato-${card.id}`}
+                title={!natoAvailable ? "Card not available (purchased last turn)" : ""}
               >
                 NATO
               </Button>
@@ -110,10 +116,11 @@ function CardListItem({
               <Button
                 size="sm"
                 onClick={onAddToRussiaCart}
-                disabled={disabled || russiaInCart}
+                disabled={disabled || russiaInCart || !russiaAvailable}
                 variant="default" 
                 className="bg-red-600 hover:bg-red-700 text-white"
                 data-testid={`button-add-russia-${card.id}`}
+                title={!russiaAvailable ? "Card not available (purchased last turn)" : ""}
               >
                 Russia
               </Button>
@@ -138,6 +145,9 @@ interface CardShopProps {
   disabled?: boolean;
   onAddToNATOCart?: (card: CardType) => void;
   onAddToRussiaCart?: (card: CardType) => void;
+  currentTurn?: number;
+  natoTeamState?: TeamState;
+  russiaTeamState?: TeamState;
 }
 
 export default function CardShop({ 
@@ -152,7 +162,10 @@ export default function CardShop({
   getRussiaPrice,
   disabled = false,
   onAddToNATOCart,
-  onAddToRussiaCart
+  onAddToRussiaCart,
+  currentTurn = 1,
+  natoTeamState,
+  russiaTeamState
 }: CardShopProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [domainFilter, setDomainFilter] = useState<Domain | 'all'>('joint');
@@ -256,21 +269,29 @@ export default function CardShop({
           </div>
         ) : (
           <div className="space-y-3">
-            {filteredCards.map(card => (
-              <CardListItem
-                key={card.id}
-                card={card}
-                natoPrice={getNATOPrice?.(card)}
-                russiaPrice={getRussiaPrice?.(card)}
-                onViewDetails={() => onViewDetails(card)}
-                onAddToNATOCart={onAddToNATOCart ? () => onAddToNATOCart(card) : undefined}
-                onAddToRussiaCart={onAddToRussiaCart ? () => onAddToRussiaCart(card) : undefined}
-                inCart={cartItemIds.has(card.id)}
-                natoInCart={natoCartItemIds.has(card.id)}
-                russiaInCart={russiaCartItemIds.has(card.id)}
-                disabled={disabled}
-              />
-            ))}
+            {filteredCards.map(card => {
+              // Check card availability for each team
+              const natoAvailable = natoTeamState ? isCardAvailable(card.id, 'NATO', currentTurn, natoTeamState) : true;
+              const russiaAvailable = russiaTeamState ? isCardAvailable(card.id, 'Russia', currentTurn, russiaTeamState) : true;
+              
+              return (
+                <CardListItem
+                  key={card.id}
+                  card={card}
+                  natoPrice={getNATOPrice?.(card)}
+                  russiaPrice={getRussiaPrice?.(card)}
+                  onViewDetails={() => onViewDetails(card)}
+                  onAddToNATOCart={onAddToNATOCart ? () => onAddToNATOCart(card) : undefined}
+                  onAddToRussiaCart={onAddToRussiaCart ? () => onAddToRussiaCart(card) : undefined}
+                  inCart={cartItemIds.has(card.id)}
+                  natoInCart={natoCartItemIds.has(card.id)}
+                  russiaInCart={russiaCartItemIds.has(card.id)}
+                  disabled={disabled}
+                  natoAvailable={natoAvailable}
+                  russiaAvailable={russiaAvailable}
+                />
+              );
+            })}
           </div>
         )}
       </CardContent>
