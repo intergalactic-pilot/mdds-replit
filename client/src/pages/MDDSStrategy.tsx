@@ -243,7 +243,6 @@ export default function MDDSStrategy() {
         <div className="mt-6">
           <DomainStatistics />
         </div>
-        
       </div>
 
       {/* Card Detail Modal */}
