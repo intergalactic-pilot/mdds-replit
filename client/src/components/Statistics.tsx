@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, BarChart3, TrendingUp, Shield, Sword } from 'lucide-react';
 import { useMDDSStore } from '@/state/store';
+import DefenseOffenseChart from './DefenseOffenseChart';
 
 const domainColors = {
   joint: 'text-gray-500',
@@ -253,7 +254,10 @@ export default function TurnBasedLogs() {
                 </div>
               )}
 
-              {/* Defensive/Offensive Statistics */}
+              {/* Defensive/Offensive Statistics Chart */}
+              <DefenseOffenseChart />
+
+              {/* Defensive/Offensive Statistics Table */}
               {turnStatistics.length > 0 && (
                 <div className="space-y-3">
                   <button
