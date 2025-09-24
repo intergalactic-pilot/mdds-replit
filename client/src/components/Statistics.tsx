@@ -257,8 +257,8 @@ export default function TurnBasedLogs() {
               {/* Defensive/Offensive Statistics Chart */}
               <DefenseOffenseChart />
 
-              {/* Defensive/Offensive Statistics Table */}
-              {turnStatistics.length > 0 && (
+              {/* Defensive/Offensive Statistics Table - HIDDEN */}
+              {false && turnStatistics.length > 0 && (
                 <div className="space-y-3">
                   <button
                     onClick={() => setIsDefenseOffenseExpanded(!isDefenseOffenseExpanded)}
