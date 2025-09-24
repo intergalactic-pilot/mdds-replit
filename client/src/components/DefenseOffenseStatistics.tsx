@@ -1,87 +1,61 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, Shield, Sword, BarChart3 } from 'lucide-react';
 import { useMDDSStore } from '@/state/store';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Domain } from '@shared/schema';
 
 const domainColors = {
-  joint: { color: '#9CA3AF', bgClass: 'bg-gray-500/20', textClass: 'text-gray-500' },
-  economy: { color: '#10B981', bgClass: 'bg-green-500/20', textClass: 'text-green-500' },
-  cognitive: { color: '#8B5CF6', bgClass: 'bg-purple-500/20', textClass: 'text-purple-500' },
-  space: { color: '#3B82F6', bgClass: 'bg-blue-500/20', textClass: 'text-blue-500' },
-  cyber: { color: '#F59E0B', bgClass: 'bg-yellow-500/20', textClass: 'text-yellow-500' }
+  joint: { color: '#1F2937', label: 'JOINT' },
+  space: { color: '#3B82F6', label: 'SPACE' },
+  cyber: { color: '#F59E0B', label: 'CYBER' },
+  cognitive: { color: '#8B5CF6', label: 'COGNITIVE' },
+  economy: { color: '#10B981', label: 'ECONOMY' }
 } as const;
-
-type StatisticMode = 'defense' | 'offense' | 'both';
-type TeamFilter = 'NATO' | 'Russia' | 'both';
 
 export default function DefenseOffenseStatistics() {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [selectedMode, setSelectedMode] = useState<StatisticMode>('both');
-  const [selectedTeam, setSelectedTeam] = useState<TeamFilter>('both');
   const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
   
   const store = useMDDSStore();
-  const { teams } = store;
+  const { turnStatistics } = store;
 
   const toggleExpanded = () => setIsExpanded(!isExpanded);
 
-  // Calculate defense and offense statistics
-  const getDefenseOffenseData = () => {
-    const domains: Domain[] = ['joint', 'economy', 'cognitive', 'space', 'cyber'];
-    
-    return domains.map(domain => {
-      const natoDefense = teams.NATO.deterrence[domain];
-      const russiaDefense = teams.Russia.deterrence[domain];
+  // Only show if we have data
+  if (turnStatistics.length === 0) {
+    return null;
+  }
+
+  // Prepare chart data for each team's defense and offense over time
+  const getChartData = () => {
+    return turnStatistics.map(stat => {
+      const data: any = { turn: stat.turn };
       
-      // Offense = How much damage dealt to opponent (100 - opponent's current deterrence)
-      const natoOffense = 100 - russiaDefense;
-      const russiaOffense = 100 - natoDefense;
+      // Add NATO defensive data (scaled to 0-0.9 range as shown in reference image)
+      Object.keys(stat.natoDeterrence).forEach(domain => {
+        data[`nato_defense_${domain}`] = stat.natoDeterrence[domain as keyof typeof stat.natoDeterrence] / 120;
+      });
       
-      return {
-        domain,
-        natoDefense,
-        russiaDefense,
-        natoOffense,
-        russiaOffense,
-        domainCapitalized: domain.charAt(0).toUpperCase() + domain.slice(1)
-      };
+      // Add Russia defensive data (scaled to 0-0.9 range as shown in reference image)
+      Object.keys(stat.russiaDeterrence).forEach(domain => {
+        data[`russia_defense_${domain}`] = stat.russiaDeterrence[domain as keyof typeof stat.russiaDeterrence] / 120;
+      });
+      
+      // Add NATO offensive data (impact on Russia, normalized positive damage)
+      Object.keys(stat.russiaDeterrence).forEach(domain => {
+        data[`nato_offense_${domain}`] = (100 - stat.russiaDeterrence[domain as keyof typeof stat.russiaDeterrence]) / 100;
+      });
+      
+      // Add Russia offensive data (impact on NATO, normalized positive damage)
+      Object.keys(stat.natoDeterrence).forEach(domain => {
+        data[`russia_offense_${domain}`] = (100 - stat.natoDeterrence[domain as keyof typeof stat.natoDeterrence]) / 100;
+      });
+      
+      return data;
     });
   };
 
-  const chartData = getDefenseOffenseData();
-
-  // Filter data based on selected domain
-  const filteredData = selectedDomain 
-    ? chartData.filter(item => item.domain === selectedDomain)
-    : chartData;
-
-  // Get data keys based on selected mode and team
-  const getDataKeys = () => {
-    const keys = [];
-    
-    if (selectedMode === 'defense' || selectedMode === 'both') {
-      if (selectedTeam === 'NATO' || selectedTeam === 'both') {
-        keys.push({ key: 'natoDefense', name: 'NATO Defense', color: '#3B82F6' });
-      }
-      if (selectedTeam === 'Russia' || selectedTeam === 'both') {
-        keys.push({ key: 'russiaDefense', name: 'Russia Defense', color: '#EF4444' });
-      }
-    }
-    
-    if (selectedMode === 'offense' || selectedMode === 'both') {
-      if (selectedTeam === 'NATO' || selectedTeam === 'both') {
-        keys.push({ key: 'natoOffense', name: 'NATO Offense', color: '#06B6D4' });
-      }
-      if (selectedTeam === 'Russia' || selectedTeam === 'both') {
-        keys.push({ key: 'russiaOffense', name: 'Russia Offense', color: '#F97316' });
-      }
-    }
-    
-    return keys;
-  };
-
-  const dataKeys = getDataKeys();
+  const chartData = getChartData();
 
   return (
     <div className="glass-card border border-border/50">
@@ -109,211 +83,243 @@ export default function DefenseOffenseStatistics() {
       {isExpanded && (
         <div className="border-t border-border/50 p-4 space-y-6" data-testid="defense-offense-statistics-content">
           
-          {/* Control Panel */}
-          <div className="space-y-4">
-            {/* Mode Selection */}
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold">Statistics Mode</h3>
-              <div className="flex gap-2">
-                {[
-                  { mode: 'defense' as StatisticMode, icon: Shield, label: 'Defense Only' },
-                  { mode: 'offense' as StatisticMode, icon: Sword, label: 'Offense Only' },
-                  { mode: 'both' as StatisticMode, icon: BarChart3, label: 'Both' }
-                ].map(({ mode, icon: Icon, label }) => (
-                  <button
-                    key={mode}
-                    onClick={() => setSelectedMode(mode)}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-md border text-sm font-medium transition-all duration-200 hover-elevate ${
-                      selectedMode === mode
-                        ? 'bg-primary/20 border-primary text-primary'
-                        : 'border-border/50 hover:border-border text-muted-foreground'
-                    }`}
-                    data-testid={`button-mode-${mode}`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Team Selection */}
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold">Team Filter</h3>
-              <div className="flex gap-2">
-                {[
-                  { team: 'NATO' as TeamFilter, label: 'NATO Only', color: 'text-blue-400' },
-                  { team: 'Russia' as TeamFilter, label: 'Russia Only', color: 'text-red-400' },
-                  { team: 'both' as TeamFilter, label: 'Both Teams', color: 'text-muted-foreground' }
-                ].map(({ team, label, color }) => (
-                  <button
-                    key={team}
-                    onClick={() => setSelectedTeam(team)}
-                    className={`px-3 py-2 rounded-md border text-sm font-medium transition-all duration-200 hover-elevate ${
-                      selectedTeam === team
-                        ? 'bg-primary/20 border-primary text-primary'
-                        : 'border-border/50 hover:border-border text-muted-foreground'
-                    }`}
-                    data-testid={`button-team-${team}`}
-                  >
-                    <span className={selectedTeam !== team ? '' : color}>{label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Domain Selection */}
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold">Domain Filter</h3>
-              <div className="flex flex-wrap gap-2">
+          {/* Domain Filter */}
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold">Domain Filter</h3>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSelectedDomain(null)}
+                className={`px-3 py-2 rounded-md border text-sm font-medium transition-all duration-200 hover-elevate ${
+                  selectedDomain === null
+                    ? 'bg-primary/20 border-primary text-primary'
+                    : 'border-border/50 hover:border-border text-muted-foreground'
+                }`}
+                data-testid="button-domain-all"
+              >
+                All Domains
+              </button>
+              {Object.entries(domainColors).map(([domain, config]) => (
                 <button
-                  onClick={() => setSelectedDomain(null)}
+                  key={domain}
+                  onClick={() => setSelectedDomain(selectedDomain === domain ? null : domain as Domain)}
                   className={`px-3 py-2 rounded-md border text-sm font-medium transition-all duration-200 hover-elevate ${
-                    selectedDomain === null
+                    selectedDomain === domain
                       ? 'bg-primary/20 border-primary text-primary'
                       : 'border-border/50 hover:border-border text-muted-foreground'
                   }`}
-                  data-testid="button-domain-all"
+                  data-testid={`button-domain-${domain}`}
                 >
-                  All Domains
+                  <span className="capitalize">{domain}</span>
                 </button>
-                {Object.entries(domainColors).map(([domain, config]) => (
-                  <button
-                    key={domain}
-                    onClick={() => setSelectedDomain(selectedDomain === domain ? null : domain as Domain)}
-                    className={`px-3 py-2 rounded-md border text-sm font-medium transition-all duration-200 hover-elevate ${
-                      selectedDomain === domain
-                        ? `${config.bgClass} border-current ${config.textClass}`
-                        : 'border-border/50 hover:border-border text-muted-foreground'
-                    }`}
-                    data-testid={`button-domain-${domain}`}
-                  >
-                    <span className="capitalize">{domain}</span>
-                  </button>
-                ))}
-              </div>
+              ))}
             </div>
           </div>
 
-          {/* Statistics Chart */}
-          <div className="glass-panel p-4">
-            <h4 className="text-sm font-semibold mb-4">
-              {selectedMode === 'defense' ? 'Defense Statistics' : 
-               selectedMode === 'offense' ? 'Offense Statistics' : 
-               'Defense & Offense Statistics'}
-              {selectedDomain && ` - ${selectedDomain.charAt(0).toUpperCase() + selectedDomain.slice(1)} Domain`}
-            </h4>
-            
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart data={filteredData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis 
-                  dataKey="domainCapitalized" 
-                  stroke="hsl(var(--muted-foreground))"
-                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                />
-                <YAxis 
-                  stroke="hsl(var(--muted-foreground))"
-                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                />
-                <Tooltip 
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px'
-                  }}
-                />
-                <Legend />
-                {dataKeys.map(({ key, name, color }) => (
-                  <Bar 
-                    key={key}
-                    dataKey={key} 
-                    fill={color} 
-                    name={name}
+          {/* Modern 2x2 Grid Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* NATO Defensive Strategy */}
+            <div className="bg-slate-50 dark:bg-slate-900/30 p-6 rounded-lg border">
+              <h4 className="text-lg font-semibold mb-4 text-blue-600">NATO Defensive Strategy</h4>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis 
+                    dataKey="turn" 
+                    stroke="#64748b"
+                    tick={{ fill: '#64748b', fontSize: 12 }}
+                    tickLine={{ stroke: '#64748b' }}
                   />
-                ))}
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Summary Table */}
-          <div className="glass-panel p-4">
-            <h4 className="text-sm font-semibold mb-3">Detailed Statistics</h4>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border/50">
-                    <th className="text-left py-2 px-3 font-medium">Domain</th>
-                    {(selectedTeam === 'NATO' || selectedTeam === 'both') && (
-                      <>
-                        {(selectedMode === 'defense' || selectedMode === 'both') && (
-                          <th className="text-center py-2 px-3 font-medium text-blue-400">NATO Defense</th>
-                        )}
-                        {(selectedMode === 'offense' || selectedMode === 'both') && (
-                          <th className="text-center py-2 px-3 font-medium text-cyan-400">NATO Offense</th>
-                        )}
-                      </>
-                    )}
-                    {(selectedTeam === 'Russia' || selectedTeam === 'both') && (
-                      <>
-                        {(selectedMode === 'defense' || selectedMode === 'both') && (
-                          <th className="text-center py-2 px-3 font-medium text-red-400">Russia Defense</th>
-                        )}
-                        {(selectedMode === 'offense' || selectedMode === 'both') && (
-                          <th className="text-center py-2 px-3 font-medium text-orange-400">Russia Offense</th>
-                        )}
-                      </>
-                    )}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredData.map((data) => (
-                    <tr key={data.domain} className="border-b border-border/20">
-                      <td className={`py-2 px-3 font-medium capitalize ${domainColors[data.domain].textClass}`}>
-                        {data.domain}
-                      </td>
-                      {(selectedTeam === 'NATO' || selectedTeam === 'both') && (
-                        <>
-                          {(selectedMode === 'defense' || selectedMode === 'both') && (
-                            <td className="text-center py-2 px-3 text-blue-400 font-semibold">
-                              {data.natoDefense}
-                            </td>
-                          )}
-                          {(selectedMode === 'offense' || selectedMode === 'both') && (
-                            <td className="text-center py-2 px-3 text-cyan-400 font-semibold">
-                              {data.natoOffense}
-                            </td>
-                          )}
-                        </>
-                      )}
-                      {(selectedTeam === 'Russia' || selectedTeam === 'both') && (
-                        <>
-                          {(selectedMode === 'defense' || selectedMode === 'both') && (
-                            <td className="text-center py-2 px-3 text-red-400 font-semibold">
-                              {data.russiaDefense}
-                            </td>
-                          )}
-                          {(selectedMode === 'offense' || selectedMode === 'both') && (
-                            <td className="text-center py-2 px-3 text-orange-400 font-semibold">
-                              {data.russiaOffense}
-                            </td>
-                          )}
-                        </>
-                      )}
-                    </tr>
+                  <YAxis 
+                    stroke="#64748b"
+                    tick={{ fill: '#64748b', fontSize: 12 }}
+                    tickLine={{ stroke: '#64748b' }}
+                    domain={[0, 0.9]}
+                    ticks={[0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]}
+                  />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: '12px'
+                    }}
+                  />
+                  {Object.entries(domainColors).map(([domain, config]) => (
+                    (!selectedDomain || selectedDomain === domain) && (
+                      <Line 
+                        key={domain}
+                        type="monotone" 
+                        dataKey={`nato_defense_${domain}`}
+                        stroke={config.color} 
+                        strokeWidth={3}
+                        name={`${config.label}`}
+                        connectNulls={false}
+                        dot={{ fill: config.color, strokeWidth: 2, r: 4 }}
+                      />
+                    )
                   ))}
-                </tbody>
-              </table>
+                  <Legend 
+                    wrapperStyle={{ paddingTop: '20px', fontSize: '12px' }}
+                    iconType="line"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* NATO Offensive Strategy */}
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-lg border">
+              <h4 className="text-lg font-semibold mb-4 text-blue-600">NATO Offensive Strategy</h4>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis 
+                    dataKey="turn" 
+                    stroke="#64748b"
+                    tick={{ fill: '#64748b', fontSize: 12 }}
+                    tickLine={{ stroke: '#64748b' }}
+                  />
+                  <YAxis 
+                    stroke="#64748b"
+                    tick={{ fill: '#64748b', fontSize: 12 }}
+                    tickLine={{ stroke: '#64748b' }}
+                    domain={['dataMin - 0.1', 'dataMax + 0.1']}
+                  />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: '12px'
+                    }}
+                  />
+                  {Object.entries(domainColors).map(([domain, config]) => (
+                    (!selectedDomain || selectedDomain === domain) && (
+                      <Line 
+                        key={domain}
+                        type="monotone" 
+                        dataKey={`nato_offense_${domain}`}
+                        stroke={config.color} 
+                        strokeWidth={3}
+                        name={`${config.label}`}
+                        connectNulls={false}
+                        dot={{ fill: config.color, strokeWidth: 2, r: 4 }}
+                      />
+                    )
+                  ))}
+                  <Legend 
+                    wrapperStyle={{ paddingTop: '20px', fontSize: '12px' }}
+                    iconType="line"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Russia Defensive Strategy */}
+            <div className="bg-orange-50 dark:bg-orange-900/20 p-6 rounded-lg border">
+              <h4 className="text-lg font-semibold mb-4 text-red-600">Russia Defensive Strategy</h4>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis 
+                    dataKey="turn" 
+                    stroke="#64748b"
+                    tick={{ fill: '#64748b', fontSize: 12 }}
+                    tickLine={{ stroke: '#64748b' }}
+                  />
+                  <YAxis 
+                    stroke="#64748b"
+                    tick={{ fill: '#64748b', fontSize: 12 }}
+                    tickLine={{ stroke: '#64748b' }}
+                    domain={[0, 0.9]}
+                    ticks={[0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]}
+                  />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: '12px'
+                    }}
+                  />
+                  {Object.entries(domainColors).map(([domain, config]) => (
+                    (!selectedDomain || selectedDomain === domain) && (
+                      <Line 
+                        key={domain}
+                        type="monotone" 
+                        dataKey={`russia_defense_${domain}`}
+                        stroke={config.color} 
+                        strokeWidth={3}
+                        name={`${config.label}`}
+                        connectNulls={false}
+                        dot={{ fill: config.color, strokeWidth: 2, r: 4 }}
+                      />
+                    )
+                  ))}
+                  <Legend 
+                    wrapperStyle={{ paddingTop: '20px', fontSize: '12px' }}
+                    iconType="line"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Russia Offensive Strategy */}
+            <div className="bg-red-50 dark:bg-red-900/20 p-6 rounded-lg border">
+              <h4 className="text-lg font-semibold mb-4 text-red-600">Russia Offensive Strategy</h4>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis 
+                    dataKey="turn" 
+                    stroke="#64748b"
+                    tick={{ fill: '#64748b', fontSize: 12 }}
+                    tickLine={{ stroke: '#64748b' }}
+                  />
+                  <YAxis 
+                    stroke="#64748b"
+                    tick={{ fill: '#64748b', fontSize: 12 }}
+                    tickLine={{ stroke: '#64748b' }}
+                    domain={['dataMin - 0.1', 'dataMax + 0.1']}
+                  />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: '12px'
+                    }}
+                  />
+                  {Object.entries(domainColors).map(([domain, config]) => (
+                    (!selectedDomain || selectedDomain === domain) && (
+                      <Line 
+                        key={domain}
+                        type="monotone" 
+                        dataKey={`russia_offense_${domain}`}
+                        stroke={config.color} 
+                        strokeWidth={3}
+                        name={`${config.label}`}
+                        connectNulls={false}
+                        dot={{ fill: config.color, strokeWidth: 2, r: 4 }}
+                      />
+                    )
+                  ))}
+                  <Legend 
+                    wrapperStyle={{ paddingTop: '20px', fontSize: '12px' }}
+                    iconType="line"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </div>
 
           {/* Legend/Explanation */}
           <div className="glass-panel p-4 bg-muted/20">
-            <h4 className="text-sm font-semibold mb-2">Statistics Explanation</h4>
+            <h4 className="text-sm font-semibold mb-2">Chart Explanation</h4>
             <div className="text-sm text-muted-foreground space-y-1">
-              <p><strong className="text-blue-400">Defense:</strong> Current deterrence level in each domain (higher = better protected)</p>
-              <p><strong className="text-cyan-400/text-orange-400">Offense:</strong> Impact dealt to opponent's deterrence (100 - opponent's current deterrence)</p>
-              <p><strong>Domains:</strong> Joint, Economy, Cognitive, Space, Cyber - click to filter</p>
+              <p><strong className="text-blue-600">Defensive Strategy:</strong> Shows how each domain's deterrence strength changes over turns (normalized from baseline 100)</p>
+              <p><strong className="text-red-600">Offensive Strategy:</strong> Shows the impact each team has on the opponent's deterrence capabilities</p>
+              <p><strong>Domains:</strong> Five strategic domains - Joint, Space, Cyber, Cognitive, Economy. Click domain filters above to focus on specific domains.</p>
+              <p><strong>Turns:</strong> X-axis shows strategic progression over time with line charts displaying trends and patterns</p>
             </div>
           </div>
         </div>
