@@ -16,6 +16,7 @@ import TurnBasedLogs from '../components/Statistics';
 import DomainStatistics from '../components/DomainStatistics';
 import cardsData from '../data/cards.json';
 import { Card } from '@shared/schema';
+import { generateMDDSReport } from '../utils/pdfGenerator';
 
 export default function MDDSStrategy() {
   const store = useMDDSStore();
@@ -62,6 +63,22 @@ export default function MDDSStrategy() {
   const natoCartTotal = calculateCartTotal(natoState.cart, natoState.ownedPermanents);
   const russiaCartTotal = calculateCartTotal(russiaState.cart, russiaState.ownedPermanents);
 
+  const handleDownloadPDF = async () => {
+    try {
+      await generateMDDSReport({
+        currentTurn: store.turn,
+        maxTurns: store.maxTurns,
+        natoTeam: store.teams.NATO,
+        russiaTeam: store.teams.Russia,
+        turnStatistics: store.turnStatistics,
+        strategyLog: store.strategyLog
+      });
+    } catch (error) {
+      console.error('Failed to generate PDF:', error);
+      alert('Failed to generate PDF report. Please try again.');
+    }
+  };
+
   return (
     <div className="min-h-screen pb-20 md:pb-0">
       <AppHeader
@@ -80,6 +97,7 @@ export default function MDDSStrategy() {
           // Note: This could be enhanced to update the store
           console.log('Set max turns:', turns);
         }}
+        onDownloadPDF={handleDownloadPDF}
       />
 
       <div className="container mx-auto px-4 py-6 max-w-full">
