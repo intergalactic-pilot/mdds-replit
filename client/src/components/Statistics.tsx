@@ -88,7 +88,7 @@ export default function TurnBasedLogs() {
                                   <span className="text-muted-foreground">Turn {log.turn}:</span>
                                 </div>
                                 <div className="text-xs text-muted-foreground">
-                                  {log.timestamp.toLocaleTimeString()}
+                                  {new Date(log.timestamp).toLocaleTimeString()}
                                 </div>
                               </div>
                               <div className="mt-1">
