@@ -60,6 +60,15 @@ export function commitPurchases(
   for (const card of teamState.cart) {
     const cardPrice = calculateDiscountedPrice(card, teamState.ownedPermanents);
     
+    // Track card purchase for availability logic (initialize if doesn't exist)
+    if (!teamState.recentPurchases) {
+      teamState.recentPurchases = [];
+    }
+    teamState.recentPurchases.push({
+      cardId: card.id,
+      purchasedTurn: gameState.turn
+    });
+    
     // Log individual card purchase
     newGameState.strategyLog.push({
       turn: gameState.turn,
@@ -106,6 +115,21 @@ export function commitPurchases(
   });
   
   return newGameState;
+}
+
+// Check if a card is available for purchase by a team (not purchased in previous turn)
+export function isCardAvailable(cardId: string, team: string, currentTurn: number, teamState: any): boolean {
+  // Initialize recentPurchases if it doesn't exist (for migration compatibility)
+  if (!teamState.recentPurchases) {
+    return true; // If no purchase history, card is available
+  }
+  
+  // Check if this team purchased this card in the previous turn
+  const recentPurchase = teamState.recentPurchases.find(
+    (purchase: any) => purchase.cardId === cardId && purchase.purchasedTurn === currentTurn - 1
+  );
+  
+  return !recentPurchase; // Available if NOT recently purchased
 }
 
 // Advance to next turn

@@ -35,6 +35,7 @@ export interface TeamState {
   permanentsQueue: Array<{ card: Card; availableTurn: number }>;
   expertsQueue: Array<{ card: Card; availableTurn: number }>;
   cart: Card[];
+  recentPurchases: Array<{ cardId: string; purchasedTurn: number }>;
 }
 
 export interface GameState {

@@ -45,7 +45,8 @@ const createInitialTeamState = (): TeamState => ({
   ownedPermanents: [],
   permanentsQueue: [],
   expertsQueue: [],
-  cart: []
+  cart: [],
+  recentPurchases: []
 });
 
 const createInitialState = (): Omit<GameState, 'teams'> & { teams: Record<Team, TeamState>; turnStatistics: TurnStatistics[] } => {
