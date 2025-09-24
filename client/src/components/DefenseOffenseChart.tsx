@@ -85,10 +85,11 @@ export default function DefenseOffenseChart() {
           <p className="font-semibold mb-2">{`Turn ${label}`}</p>
           {payload.map((entry: any, index: number) => {
             const [team, type, domain] = entry.dataKey.split('_');
-            const color = domainColors[domain as Domain]?.color || '#666';
             const Icon = type === 'Defense' ? Shield : Sword;
+            // Use team colors for tooltip
+            const teamColor = team === 'NATO' ? '#3B82F6' : '#EF4444'; // blue for NATO, red for Russia
             return (
-              <p key={index} style={{ color }} className="flex items-center gap-1">
+              <p key={index} style={{ color: teamColor }} className="flex items-center gap-1">
                 <Icon className="w-3 h-3" />
                 {team} {type} ({domain}): {entry.value}
               </p>
@@ -226,17 +227,16 @@ export default function DefenseOffenseChart() {
                 {(selectedView === 'defense' || selectedView === 'both') && 
                   Object.keys(domainColors).map(domain => {
                     if (!visibleDomains[domain as Domain]) return null;
-                    const color = domainColors[domain as Domain].color;
                     return [
                       showNATO && (
                         <Line
                           key={`NATO_Defense_${domain}`}
                           type="monotone"
                           dataKey={`NATO_Defense_${domain}`}
-                          stroke={color}
+                          stroke="#3B82F6" // NATO blue
                           strokeWidth={2}
                           strokeDasharray="none"
-                          dot={{ fill: color, strokeWidth: 1, r: 3 }}
+                          dot={{ fill: "#3B82F6", strokeWidth: 1, r: 3 }}
                           name={`NATO Defense (${domain})`}
                         />
                       ),
@@ -245,10 +245,10 @@ export default function DefenseOffenseChart() {
                           key={`Russia_Defense_${domain}`}
                           type="monotone"
                           dataKey={`Russia_Defense_${domain}`}
-                          stroke={color}
+                          stroke="#EF4444" // Russia red
                           strokeWidth={2}
                           strokeDasharray="5 5"
-                          dot={{ fill: color, strokeWidth: 1, r: 3 }}
+                          dot={{ fill: "#EF4444", strokeWidth: 1, r: 3 }}
                           name={`Russia Defense (${domain})`}
                         />
                       )
@@ -259,17 +259,16 @@ export default function DefenseOffenseChart() {
                 {(selectedView === 'offense' || selectedView === 'both') && 
                   Object.keys(domainColors).map(domain => {
                     if (!visibleDomains[domain as Domain]) return null;
-                    const color = domainColors[domain as Domain].color;
                     return [
                       showNATO && (
                         <Line
                           key={`NATO_Offense_${domain}`}
                           type="monotone"
                           dataKey={`NATO_Offense_${domain}`}
-                          stroke={color}
+                          stroke="#60A5FA" // Lighter NATO blue for offense
                           strokeWidth={2}
-                          strokeDasharray="2 2"
-                          dot={{ fill: color, strokeWidth: 1, r: 3 }}
+                          strokeDasharray="3 3"
+                          dot={{ fill: "#60A5FA", strokeWidth: 1, r: 3 }}
                           name={`NATO Offense (${domain})`}
                         />
                       ),
@@ -278,10 +277,10 @@ export default function DefenseOffenseChart() {
                           key={`Russia_Offense_${domain}`}
                           type="monotone"
                           dataKey={`Russia_Offense_${domain}`}
-                          stroke={color}
+                          stroke="#F87171" // Lighter Russia red for offense
                           strokeWidth={2}
                           strokeDasharray="8 2"
-                          dot={{ fill: color, strokeWidth: 1, r: 3 }}
+                          dot={{ fill: "#F87171", strokeWidth: 1, r: 3 }}
                           name={`Russia Offense (${domain})`}
                         />
                       )
@@ -293,14 +292,28 @@ export default function DefenseOffenseChart() {
           
           {/* Legend Explanation */}
           <div className="text-xs text-muted-foreground p-3 glass-panel">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              <div className="flex items-center gap-1">
-                <Shield className="w-3 h-3" />
-                <strong>Defense:</strong> Team's own deterrence values (solid lines for NATO, dashed for Russia)
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <h5 className="font-semibold text-foreground">NATO (Blue)</h5>
+                <div className="flex items-center gap-1">
+                  <Shield className="w-3 h-3 text-blue-500" />
+                  <span className="text-blue-500">Defense: Solid lines</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Sword className="w-3 h-3 text-blue-400" />
+                  <span className="text-blue-400">Offense: Dashed lines</span>
+                </div>
               </div>
-              <div className="flex items-center gap-1">
-                <Sword className="w-3 h-3" />
-                <strong>Offense:</strong> Impact on opponent (dotted lines for NATO, dash-dot for Russia)
+              <div className="space-y-2">
+                <h5 className="font-semibold text-foreground">Russia (Red)</h5>
+                <div className="flex items-center gap-1">
+                  <Shield className="w-3 h-3 text-red-500" />
+                  <span className="text-red-500">Defense: Dashed lines</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Sword className="w-3 h-3 text-red-400" />
+                  <span className="text-red-400">Offense: Dash-dot lines</span>
+                </div>
               </div>
             </div>
           </div>
