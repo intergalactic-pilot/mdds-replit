@@ -335,7 +335,7 @@ export default function DomainStatistics() {
               <div className="space-y-6" data-testid="domain-based-stats-content">
                 {/* Domain Selector */}
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold">Select Domain for Detailed Analysis</h3>
+            <h3 className="text-sm font-semibold">Select Dimension for Detailed Analysis</h3>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
               {Object.entries(domainColors).map(([domain, config]) => (
                 <button
