@@ -63,8 +63,8 @@ function IndividualChart({ title, team, type, data, visibleDomains, onToggleDoma
               </button>
             </DialogTrigger>
             <DialogContent className="max-w-7xl w-[90vw] h-[65vh] p-4">
-              <DialogTitle>{title}</DialogTitle>
-              <div className="flex-1 mt-3">
+              <DialogTitle className="text-center">{title}</DialogTitle>
+              <div className="flex-1 mt-1">
                 <ResponsiveContainer width="100%" height={450}>
                   <RechartsLineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted-foreground) / 0.2)" />

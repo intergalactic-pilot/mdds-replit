@@ -188,8 +188,8 @@ export default function DomainStatistics() {
                         </button>
                       </DialogTrigger>
                       <DialogContent className="max-w-7xl w-[90vw] h-[65vh] p-4">
-                        <DialogTitle>Combined NATO vs Russia - All Domains Over Time</DialogTitle>
-                        <div className="flex-1 mt-3">
+                        <DialogTitle className="text-center">Combined NATO vs Russia - All Domains Over Time</DialogTitle>
+                        <div className="flex-1 mt-1">
                           <ResponsiveContainer width="100%" height={450}>
                             <RechartsLineChart data={overallChartData}>
                               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -511,8 +511,8 @@ export default function DomainStatistics() {
                     </button>
                   </DialogTrigger>
                   <DialogContent className="max-w-7xl w-[90vw] h-[65vh] p-4">
-                    <DialogTitle>Dimensional Deterrence Differences</DialogTitle>
-                    <div className="flex-1 mt-3">
+                    <DialogTitle className="text-center">Dimensional Deterrence Differences</DialogTitle>
+                    <div className="flex-1 mt-1">
                       <ResponsiveContainer width="100%" height={450}>
                         <RechartsLineChart data={chartData}>
                           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -629,10 +629,10 @@ export default function DomainStatistics() {
                       </button>
                     </DialogTrigger>
                     <DialogContent className="max-w-7xl w-[90vw] h-[65vh] p-4">
-                      <DialogTitle className={`capitalize ${domainColors[selectedDomain].textClass}`}>
+                      <DialogTitle className={`text-center capitalize ${domainColors[selectedDomain].textClass}`}>
                         {selectedDomain} Domain Analysis
                       </DialogTitle>
-                      <div className="flex-1 mt-3">
+                      <div className="flex-1 mt-1">
                         <ResponsiveContainer width="100%" height={450}>
                           <RechartsLineChart data={getDomainSpecificData(selectedDomain)}>
                             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
