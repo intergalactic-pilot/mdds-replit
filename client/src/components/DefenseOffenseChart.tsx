@@ -134,18 +134,18 @@ export default function DefenseOffenseChart() {
     return null;
   }
 
-  // Prepare data for NATO Defense chart
+  // Prepare data for NATO Defensive chart (showing self-effects)
   const natoDefenseData = turnStatistics.map(stat => ({
     turn: stat.turn,
-    joint: stat.natoDeterrence.joint,
-    economy: stat.natoDeterrence.economy,
-    cognitive: stat.natoDeterrence.cognitive,
-    space: stat.natoDeterrence.space,
-    cyber: stat.natoDeterrence.cyber
+    joint: natoDefensiveEffects[stat.turn]?.joint || 0,
+    economy: natoDefensiveEffects[stat.turn]?.economy || 0,
+    cognitive: natoDefensiveEffects[stat.turn]?.cognitive || 0,
+    space: natoDefensiveEffects[stat.turn]?.space || 0,
+    cyber: natoDefensiveEffects[stat.turn]?.cyber || 0
   }));
 
-  // Calculate NATO's effects on Russia's dimensions for each turn
-  const calculateNatoEffectsOnRussia = () => {
+  // Calculate team's offensive effects on opponent's dimensions for each turn
+  const calculateOffensiveEffects = (attackingTeam: 'NATO' | 'Russia') => {
     const effectsByTurn: Record<number, Record<Domain, number>> = {};
     
     // Initialize all turns with zero effects
@@ -159,17 +159,17 @@ export default function DefenseOffenseChart() {
       };
     });
     
-    // Process strategy log to find NATO card purchases
+    // Process strategy log to find team card purchases
     strategyLog.forEach(logEntry => {
-      if (logEntry.team === 'NATO' && logEntry.action.includes('purchased')) {
-        // Extract card ID from the action string (format: "NATO purchased CardName (ID) for XK")
+      if (logEntry.team === attackingTeam && logEntry.action.includes('purchased')) {
+        // Extract card ID from the action string (format: "TEAM purchased CardName (ID) for XK")
         const cardIdMatch = logEntry.action.match(/\(([^)]+)\)/);
         if (cardIdMatch) {
           const cardId = cardIdMatch[1];
           const card = cards.find(c => c.id === cardId);
           
           if (card && card.effects) {
-            // Sum positive effects on opponent (Russia)
+            // Sum positive effects on opponent
             card.effects.forEach(effect => {
               if (effect.target === 'opponent' && effect.delta > 0) {
                 effectsByTurn[logEntry.turn][effect.domain] += effect.delta;
@@ -183,36 +183,79 @@ export default function DefenseOffenseChart() {
     return effectsByTurn;
   };
   
-  const natoEffectsOnRussia = calculateNatoEffectsOnRussia();
+  const natoOffensiveEffects = calculateOffensiveEffects('NATO');
+  const russiaOffensiveEffects = calculateOffensiveEffects('Russia');
   
-  // Prepare data for NATO Offense chart (showing effects on Russia)
+  // Calculate team's defensive effects (self-targeting positive effects) for each turn
+  const calculateDefensiveEffects = (defendingTeam: 'NATO' | 'Russia') => {
+    const effectsByTurn: Record<number, Record<Domain, number>> = {};
+    
+    // Initialize all turns with zero effects
+    turnStatistics.forEach(stat => {
+      effectsByTurn[stat.turn] = {
+        joint: 0,
+        economy: 0,
+        cognitive: 0,
+        space: 0,
+        cyber: 0
+      };
+    });
+    
+    // Process strategy log to find team card purchases
+    strategyLog.forEach(logEntry => {
+      if (logEntry.team === defendingTeam && logEntry.action.includes('purchased')) {
+        // Extract card ID from the action string (format: "TEAM purchased CardName (ID) for XK")
+        const cardIdMatch = logEntry.action.match(/\(([^)]+)\)/);
+        if (cardIdMatch) {
+          const cardId = cardIdMatch[1];
+          const card = cards.find(c => c.id === cardId);
+          
+          if (card && card.effects) {
+            // Sum positive effects on self (defensive)
+            card.effects.forEach(effect => {
+              if (effect.target === 'self' && effect.delta > 0) {
+                effectsByTurn[logEntry.turn][effect.domain] += effect.delta;
+              }
+            });
+          }
+        }
+      }
+    });
+    
+    return effectsByTurn;
+  };
+  
+  const natoDefensiveEffects = calculateDefensiveEffects('NATO');
+  const russiaDefensiveEffects = calculateDefensiveEffects('Russia');
+  
+  // Prepare data for NATO Offensive chart (showing effects on Russia)
   const natoOffenseData = turnStatistics.map(stat => ({
     turn: stat.turn,
-    joint: natoEffectsOnRussia[stat.turn]?.joint || 0,
-    economy: natoEffectsOnRussia[stat.turn]?.economy || 0,
-    cognitive: natoEffectsOnRussia[stat.turn]?.cognitive || 0,
-    space: natoEffectsOnRussia[stat.turn]?.space || 0,
-    cyber: natoEffectsOnRussia[stat.turn]?.cyber || 0
+    joint: natoOffensiveEffects[stat.turn]?.joint || 0,
+    economy: natoOffensiveEffects[stat.turn]?.economy || 0,
+    cognitive: natoOffensiveEffects[stat.turn]?.cognitive || 0,
+    space: natoOffensiveEffects[stat.turn]?.space || 0,
+    cyber: natoOffensiveEffects[stat.turn]?.cyber || 0
   }));
 
-  // Prepare data for Russia Defense chart
+  // Prepare data for Russia Defensive chart (showing self-effects)
   const russiaDefenseData = turnStatistics.map(stat => ({
     turn: stat.turn,
-    joint: stat.russiaDeterrence.joint,
-    economy: stat.russiaDeterrence.economy,
-    cognitive: stat.russiaDeterrence.cognitive,
-    space: stat.russiaDeterrence.space,
-    cyber: stat.russiaDeterrence.cyber
+    joint: russiaDefensiveEffects[stat.turn]?.joint || 0,
+    economy: russiaDefensiveEffects[stat.turn]?.economy || 0,
+    cognitive: russiaDefensiveEffects[stat.turn]?.cognitive || 0,
+    space: russiaDefensiveEffects[stat.turn]?.space || 0,
+    cyber: russiaDefensiveEffects[stat.turn]?.cyber || 0
   }));
 
-  // Prepare data for Russia Offense chart
+  // Prepare data for Russia Offensive chart (showing effects on NATO)
   const russiaOffenseData = turnStatistics.map(stat => ({
     turn: stat.turn,
-    joint: 100 - stat.natoDeterrence.joint,
-    economy: 100 - stat.natoDeterrence.economy,
-    cognitive: 100 - stat.natoDeterrence.cognitive,
-    space: 100 - stat.natoDeterrence.space,
-    cyber: 100 - stat.natoDeterrence.cyber
+    joint: russiaOffensiveEffects[stat.turn]?.joint || 0,
+    economy: russiaOffensiveEffects[stat.turn]?.economy || 0,
+    cognitive: russiaOffensiveEffects[stat.turn]?.cognitive || 0,
+    space: russiaOffensiveEffects[stat.turn]?.space || 0,
+    cyber: russiaOffensiveEffects[stat.turn]?.cyber || 0
   }));
 
   return (
@@ -269,7 +312,7 @@ export default function DefenseOffenseChart() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* NATO Defense Chart */}
             <IndividualChart
-              title="NATO Defensive Strategy"
+              title="NATO Defensive Effects"
               team="NATO"
               type="Defense"
               data={natoDefenseData}
@@ -280,7 +323,7 @@ export default function DefenseOffenseChart() {
             
             {/* NATO Offense Chart */}
             <IndividualChart
-              title="NATO Effects on Russia"
+              title="NATO Offensive Effects on Russia"
               team="NATO"
               type="Offense"
               data={natoOffenseData}
@@ -291,7 +334,7 @@ export default function DefenseOffenseChart() {
             
             {/* Russia Defense Chart */}
             <IndividualChart
-              title="Russia Defensive Strategy"
+              title="Russia Defensive Effects"
               team="Russia"
               type="Defense"
               data={russiaDefenseData}
@@ -302,7 +345,7 @@ export default function DefenseOffenseChart() {
             
             {/* Russia Offense Chart */}
             <IndividualChart
-              title="Russia Offensive Strategy"
+              title="Russia Offensive Effects on NATO"
               team="Russia"
               type="Offense"
               data={russiaOffenseData}
