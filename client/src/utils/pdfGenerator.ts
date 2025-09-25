@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
-import { TeamState, Team, Domain } from '@shared/schema';
+import { TeamState, Team, Domain, Card } from '@shared/schema';
+import cardsData from '../data/cards.json';
 
 interface TurnStatistics {
   turn: number;
@@ -90,7 +91,7 @@ const drawLineChart = (
   });
   
   // Draw NATO line (blue) with enhanced styling
-  pdf.setLineWidth(2);
+  pdf.setLineWidth(1.2);
   pdf.setDrawColor(59, 130, 246); // Blue
   for (let i = 0; i < data.length - 1; i++) {
     const x1 = x + (i * width / (data.length - 1));
@@ -116,7 +117,7 @@ const drawLineChart = (
   
   // Draw Russia line (red) with enhanced styling
   pdf.setDrawColor(239, 68, 68); // Red
-  pdf.setLineWidth(2);
+  pdf.setLineWidth(1.2);
   for (let i = 0; i < data.length - 1; i++) {
     const x1 = x + (i * width / (data.length - 1));
     const y1 = y + height - ((data[i].russia - minValue) / valueRange * height);
@@ -251,6 +252,266 @@ const drawBarChart = (
   
   pdf.setDrawColor(0, 0, 0); // Reset to black
   pdf.setTextColor(0, 0, 0); // Reset text color to black
+};
+
+// Domain colors matching the web component
+const domainColors = {
+  joint: { r: 156, g: 163, b: 175 }, // #9CA3AF
+  economy: { r: 16, g: 185, b: 129 }, // #10B981
+  cognitive: { r: 139, g: 92, b: 246 }, // #8B5CF6
+  space: { r: 59, g: 130, b: 246 }, // #3B82F6
+  cyber: { r: 245, g: 158, b: 11 } // #F59E0B
+};
+
+// Helper function to draw domain-specific line chart
+const drawDomainChart = (
+  pdf: jsPDF,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  data: Array<{turn: number, joint: number, economy: number, cognitive: number, space: number, cyber: number}>,
+  title: string
+) => {
+  // Modern chart border
+  pdf.setLineWidth(1);
+  pdf.setDrawColor(150, 150, 150);
+  pdf.rect(x, y, width, height);
+  
+  // Title
+  pdf.setFontSize(9);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setTextColor(0, 0, 0);
+  pdf.text(title, x + width/2, y - 3, { align: 'center' });
+  
+  if (data.length === 0) return;
+  
+  // Handle single data point case
+  if (data.length === 1) {
+    pdf.setFontSize(7);
+    pdf.setFont('helvetica', 'italic');
+    pdf.text('Insufficient data (minimum 2 turns)', x + width/2, y + height/2, { align: 'center' });
+    return;
+  }
+  
+  const domains: Domain[] = ['joint', 'economy', 'cognitive', 'space', 'cyber'];
+  
+  // Find max and min values across all domains
+  const allValues = data.flatMap(d => domains.map(domain => d[domain]));
+  const maxValue = Math.max(...allValues, 1);
+  const minValue = Math.min(...allValues, 0);
+  const valueRange = Math.max(maxValue - minValue, 1);
+  
+  // Y-axis labels (smaller)
+  pdf.setFontSize(6);
+  pdf.setFont('helvetica', 'normal');
+  for (let i = 0; i <= 3; i++) {
+    const value = minValue + (valueRange * i / 3);
+    const labelY = y + height - (i * height / 3);
+    pdf.text(Math.round(value).toString(), x - 8, labelY, { align: 'right' });
+    
+    // Modern grid lines
+    pdf.setLineWidth(0.2);
+    pdf.setDrawColor(230, 230, 230);
+    pdf.line(x, labelY, x + width, labelY);
+  }
+  
+  // X-axis labels (smaller)
+  data.forEach((point, index) => {
+    const labelX = x + (index * width / (data.length - 1));
+    pdf.setFontSize(6);
+    pdf.text(`T${point.turn}`, labelX, y + height + 6, { align: 'center' });
+  });
+  
+  // Draw lines for each domain
+  domains.forEach(domain => {
+    const color = domainColors[domain];
+    pdf.setLineWidth(1);
+    pdf.setDrawColor(color.r, color.g, color.b);
+    
+    // Draw line segments
+    for (let i = 0; i < data.length - 1; i++) {
+      const x1 = x + (i * width / (data.length - 1));
+      const y1 = y + height - ((data[i][domain] - minValue) / valueRange * height);
+      const x2 = x + ((i + 1) * width / (data.length - 1));
+      const y2 = y + height - ((data[i + 1][domain] - minValue) / valueRange * height);
+      pdf.line(x1, y1, x2, y2);
+    }
+    
+    // Draw dots at data points
+    pdf.setFillColor(color.r, color.g, color.b);
+    data.forEach((point, index) => {
+      const dotX = x + (index * width / (data.length - 1));
+      const dotY = y + height - ((point[domain] - minValue) / valueRange * height);
+      pdf.circle(dotX, dotY, 1, 'F');
+    });
+  });
+  
+  // Domain legend (compact)
+  pdf.setFontSize(5);
+  pdf.setFont('helvetica', 'normal');
+  domains.forEach((domain, index) => {
+    const color = domainColors[domain];
+    const legendX = x + 5 + (index * 15);
+    const legendY = y - 8;
+    
+    pdf.setFillColor(color.r, color.g, color.b);
+    pdf.circle(legendX, legendY, 0.8, 'F');
+    pdf.setTextColor(color.r, color.g, color.b);
+    pdf.text(domain.charAt(0).toUpperCase(), legendX + 3, legendY + 1);
+  });
+  
+  pdf.setTextColor(0, 0, 0); // Reset text color
+};
+
+// Helper function to calculate defense/offense effects (matching web component logic)
+const calculateDefenseOffenseEffects = (data: PDFReportData) => {
+  const cards = cardsData as Card[];
+  
+  // Calculate team's offensive effects on opponent's dimensions for each turn (cumulative)
+  const calculateOffensiveEffects = (attackingTeam: 'NATO' | 'Russia') => {
+    const effectsByTurn: Record<number, Record<Domain, number>> = {};
+    const cumulativeEffects: Record<Domain, number> = {
+      joint: 0, economy: 0, cognitive: 0, space: 0, cyber: 0
+    };
+    
+    // Initialize all turns with zero effects
+    data.turnStatistics.forEach(stat => {
+      effectsByTurn[stat.turn] = { joint: 0, economy: 0, cognitive: 0, space: 0, cyber: 0 };
+    });
+    
+    // Process each turn sequentially to build cumulative effects
+    data.turnStatistics.forEach(stat => {
+      // Find all card purchases for this team in this turn
+      const turnPurchases = data.strategyLog.filter(logEntry => 
+        logEntry.team === attackingTeam && 
+        logEntry.turn === stat.turn && 
+        logEntry.action.includes('purchased')
+      );
+      
+      // Add effects from cards purchased this turn
+      turnPurchases.forEach(logEntry => {
+        const cardIdMatch = logEntry.action.match(/\(([^)]+)\)/);
+        if (cardIdMatch) {
+          const cardId = cardIdMatch[1];
+          const card = cards.find(c => c.id === cardId);
+          
+          if (card && card.effects) {
+            card.effects.forEach(effect => {
+              if (effect.target === 'opponent') {
+                // Add to cumulative effects (keep negative values)
+                cumulativeEffects[effect.domain] += effect.delta;
+              } else if (effect.target === 'global') {
+                // Global effects also impact opponent
+                cumulativeEffects[effect.domain] += effect.delta;
+              }
+            });
+          }
+        }
+      });
+      
+      // Record cumulative effects for this turn
+      effectsByTurn[stat.turn] = { ...cumulativeEffects };
+    });
+    
+    return effectsByTurn;
+  };
+  
+  // Calculate team's defensive effects (self-targeting positive effects) for each turn (cumulative)
+  const calculateDefensiveEffects = (defendingTeam: 'NATO' | 'Russia') => {
+    const effectsByTurn: Record<number, Record<Domain, number>> = {};
+    const cumulativeEffects: Record<Domain, number> = {
+      joint: 0, economy: 0, cognitive: 0, space: 0, cyber: 0
+    };
+    
+    // Initialize all turns with zero effects
+    data.turnStatistics.forEach(stat => {
+      effectsByTurn[stat.turn] = { joint: 0, economy: 0, cognitive: 0, space: 0, cyber: 0 };
+    });
+    
+    // Process each turn sequentially to build cumulative effects
+    data.turnStatistics.forEach(stat => {
+      // Find all card purchases for this team in this turn
+      const turnPurchases = data.strategyLog.filter(logEntry => 
+        logEntry.team === defendingTeam && 
+        logEntry.turn === stat.turn && 
+        logEntry.action.includes('purchased')
+      );
+      
+      // Add effects from cards purchased this turn
+      turnPurchases.forEach(logEntry => {
+        const cardIdMatch = logEntry.action.match(/\(([^)]+)\)/);
+        if (cardIdMatch) {
+          const cardId = cardIdMatch[1];
+          const card = cards.find(c => c.id === cardId);
+          
+          if (card && card.effects) {
+            card.effects.forEach(effect => {
+              if (effect.target === 'self') {
+                // Add to cumulative defensive effects (including negative deltas)
+                cumulativeEffects[effect.domain] += effect.delta;
+              } else if (effect.target === 'global') {
+                // Global effects also impact self
+                cumulativeEffects[effect.domain] += effect.delta;
+              }
+            });
+          }
+        }
+      });
+      
+      // Record cumulative effects for this turn
+      effectsByTurn[stat.turn] = { ...cumulativeEffects };
+    });
+    
+    return effectsByTurn;
+  };
+  
+  const natoOffensiveEffects = calculateOffensiveEffects('NATO');
+  const russiaOffensiveEffects = calculateOffensiveEffects('Russia');
+  const natoDefensiveEffects = calculateDefensiveEffects('NATO');
+  const russiaDefensiveEffects = calculateDefensiveEffects('Russia');
+  
+  // Prepare data for NATO Defensive chart (showing self-effects)
+  const natoDefenseData = data.turnStatistics.map(stat => ({
+    turn: stat.turn,
+    joint: natoDefensiveEffects[stat.turn]?.joint || 0,
+    economy: natoDefensiveEffects[stat.turn]?.economy || 0,
+    cognitive: natoDefensiveEffects[stat.turn]?.cognitive || 0,
+    space: natoDefensiveEffects[stat.turn]?.space || 0,
+    cyber: natoDefensiveEffects[stat.turn]?.cyber || 0
+  }));
+  
+  // Prepare data for NATO Offensive chart (showing effects on Russia)
+  const natoOffenseData = data.turnStatistics.map(stat => ({
+    turn: stat.turn,
+    joint: natoOffensiveEffects[stat.turn]?.joint || 0,
+    economy: natoOffensiveEffects[stat.turn]?.economy || 0,
+    cognitive: natoOffensiveEffects[stat.turn]?.cognitive || 0,
+    space: natoOffensiveEffects[stat.turn]?.space || 0,
+    cyber: natoOffensiveEffects[stat.turn]?.cyber || 0
+  }));
+  
+  // Prepare data for Russia Defensive chart (showing self-effects)
+  const russiaDefenseData = data.turnStatistics.map(stat => ({
+    turn: stat.turn,
+    joint: russiaDefensiveEffects[stat.turn]?.joint || 0,
+    economy: russiaDefensiveEffects[stat.turn]?.economy || 0,
+    cognitive: russiaDefensiveEffects[stat.turn]?.cognitive || 0,
+    space: russiaDefensiveEffects[stat.turn]?.space || 0,
+    cyber: russiaDefensiveEffects[stat.turn]?.cyber || 0
+  }));
+  
+  // Prepare data for Russia Offensive chart (showing effects on NATO)
+  const russiaOffenseData = data.turnStatistics.map(stat => ({
+    turn: stat.turn,
+    joint: russiaOffensiveEffects[stat.turn]?.joint || 0,
+    economy: russiaOffensiveEffects[stat.turn]?.economy || 0,
+    cognitive: russiaOffensiveEffects[stat.turn]?.cognitive || 0,
+    space: russiaOffensiveEffects[stat.turn]?.space || 0,
+    cyber: russiaOffensiveEffects[stat.turn]?.cyber || 0
+  }));
+  
+  return { natoDefenseData, natoOffenseData, russiaDefenseData, russiaOffenseData };
 };
 
 export const generateMDDSReport = async (data: PDFReportData) => {
@@ -563,44 +824,56 @@ export const generateMDDSReport = async (data: PDFReportData) => {
     }
   });
   
-  // Defense vs Offense Analysis
-  if (data.turnStatistics.length > 0) {
-    checkPage(80);
+  // Four Individual Defense/Offense Charts
+  if (data.turnStatistics.length > 1 && data.strategyLog.length > 0) {
+    // Calculate effects similar to the web component
+    const { natoDefenseData, natoOffenseData, russiaDefenseData, russiaOffenseData } = calculateDefenseOffenseEffects(data);
     
-    const latestStats = data.turnStatistics[data.turnStatistics.length - 1];
-    const defenseOffenseData = domains.map(domain => ({
-      label: domain.charAt(0).toUpperCase() + domain.slice(1),
-      nato: latestStats.natoDeterrence[domain], // Defense
-      russia: 100 - latestStats.natoDeterrence[domain] // Offense potential
-    }));
-    
-    drawBarChart(
+    // NATO Defensive Effects
+    checkPage(70);
+    drawDomainChart(
       pdf,
       margin + 5,
       yPosition + 20,
-      contentWidth - 10,
+      (contentWidth - 10) / 2 - 5,
       50,
-      defenseOffenseData,
-      'NATO Defense vs Russia Offense Potential (Latest Turn)'
+      natoDefenseData,
+      'NATO Defensive Effects'
     );
-    yPosition += 75;
     
-    // Russia Defense vs NATO Offense
-    checkPage(80);
-    const defenseOffenseDataRussia = domains.map(domain => ({
-      label: domain.charAt(0).toUpperCase() + domain.slice(1),
-      nato: 100 - latestStats.russiaDeterrence[domain], // NATO offense potential
-      russia: latestStats.russiaDeterrence[domain] // Russia defense
-    }));
+    // NATO Offensive Effects on Russia
+    drawDomainChart(
+      pdf,
+      margin + 5 + (contentWidth - 10) / 2 + 5,
+      yPosition + 20,
+      (contentWidth - 10) / 2 - 5,
+      50,
+      natoOffenseData,
+      'NATO Offensive Effects on Russia'
+    );
+    yPosition += 85;
     
-    drawBarChart(
+    // Russia Defensive Effects
+    checkPage(70);
+    drawDomainChart(
       pdf,
       margin + 5,
       yPosition + 20,
-      contentWidth - 10,
+      (contentWidth - 10) / 2 - 5,
       50,
-      defenseOffenseDataRussia,
-      'NATO Offense Potential vs Russia Defense (Latest Turn)'
+      russiaDefenseData,
+      'Russia Defensive Effects'
+    );
+    
+    // Russia Offensive Effects on NATO
+    drawDomainChart(
+      pdf,
+      margin + 5 + (contentWidth - 10) / 2 + 5,
+      yPosition + 20,
+      (contentWidth - 10) / 2 - 5,
+      50,
+      russiaOffenseData,
+      'Russia Offensive Effects on NATO'
     );
     yPosition += 75;
   }
