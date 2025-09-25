@@ -33,7 +33,6 @@ export default function TurnBasedLogs() {
           <BarChart3 className="w-5 h-5 text-primary" />
           <h2 className="text-lg font-semibold">Turn-based logs</h2>
           <span className="text-sm text-muted-foreground">
-            ({strategyLog.filter(log => log.action.includes('purchased')).length} purchases, {turnStatistics.length} turn{turnStatistics.length !== 1 ? 's' : ''})
           </span>
         </div>
         {isExpanded ? (
@@ -62,7 +61,6 @@ export default function TurnBasedLogs() {
                       <BarChart3 className="w-4 h-4" />
                       <h3 className="font-semibold">Card Purchase Logs</h3>
                       <span className="text-sm text-muted-foreground">
-                        ({strategyLog.filter(log => log.action.includes('purchased')).length})
                       </span>
                     </div>
                     {isPurchaseLogsExpanded ? (
@@ -114,7 +112,6 @@ export default function TurnBasedLogs() {
                       <TrendingUp className="w-4 h-4" />
                       <h3 className="font-semibold">Deterrence Statistics</h3>
                       <span className="text-sm text-muted-foreground">
-                        ({turnStatistics.length})
                       </span>
                     </div>
                     {isStatisticsExpanded ? (
@@ -205,7 +202,6 @@ export default function TurnBasedLogs() {
                       <TrendingUp className="w-4 h-4" />
                       <h3 className="font-semibold">Latest Turn Dimensional Breakdown</h3>
                       <span className="text-sm text-muted-foreground">
-                        (5 domains)
                       </span>
                     </div>
                     {isDomainBreakdownExpanded ? (
@@ -269,7 +265,6 @@ export default function TurnBasedLogs() {
                       </div>
                       <h3 className="font-semibold">Defensive/Offensive Statistics</h3>
                       <span className="text-sm text-muted-foreground">
-                        (Domain-based analysis)
                       </span>
                     </div>
                     {isDefenseOffenseExpanded ? (

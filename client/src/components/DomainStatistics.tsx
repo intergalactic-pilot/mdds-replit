@@ -89,9 +89,6 @@ export default function DomainStatistics() {
         <div className="flex items-center gap-3">
           <LineChart className="w-5 h-5 text-primary" />
           <h2 className="text-lg font-semibold">Statistics</h2>
-          <span className="text-sm text-muted-foreground">
-            (Overall and domain-based analysis)
-          </span>
         </div>
         {isExpanded ? (
           <ChevronUp className="w-5 h-5 text-muted-foreground" />
@@ -114,9 +111,6 @@ export default function DomainStatistics() {
               <div className="flex items-center gap-2">
                 <BarChart3 className="w-4 h-4" />
                 <h3 className="font-semibold">Overall Statistics</h3>
-                <span className="text-sm text-muted-foreground">
-                  (All domains per turn)
-                </span>
               </div>
               {isOverallStatsExpanded ? (
                 <ChevronUp className="w-4 h-4 text-muted-foreground" />
@@ -329,9 +323,6 @@ export default function DomainStatistics() {
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-4 h-4" />
                 <h3 className="font-semibold">Dimension-based Statistics</h3>
-                <span className="text-sm text-muted-foreground">
-                  (Interactive domain analysis)
-                </span>
               </div>
               {isDomainBasedStatsExpanded ? (
                 <ChevronUp className="w-4 h-4 text-muted-foreground" />
