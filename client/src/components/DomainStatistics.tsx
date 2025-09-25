@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp, LineChart, BarChart3, TrendingUp, Minus, MoreHo
 import { useMDDSStore } from '@/state/store';
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Domain } from '@shared/schema';
+import DefenseOffenseChart from './DefenseOffenseChart';
 
 const domainColors = {
   joint: { color: '#9CA3AF', bgClass: 'bg-gray-500/20', textClass: 'text-gray-500' },
@@ -526,6 +527,9 @@ export default function DomainStatistics() {
               </div>
             )}
           </div>
+
+          {/* Defensive/Offensive Statistics Chart */}
+          <DefenseOffenseChart />
         </div>
       )}
     </div>
