@@ -288,7 +288,7 @@ export default function DefenseOffenseChart() {
           {/* Global Domain Controls */}
           <div className="p-3 glass-panel">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm font-medium">Domain Visibility (Global):</span>
+              <span className="text-sm font-medium">Dimensional Visibility:</span>
             </div>
             <div className="flex flex-wrap gap-2">
               {(Object.keys(domainColors) as Domain[]).map(domain => (
