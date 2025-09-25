@@ -4,7 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { sanitizeText } from '../logic/guards';
+import { useMDDSStore } from '@/state/store';
 import { 
   HelpCircle, 
   RotateCcw,
@@ -12,7 +14,8 @@ import {
   Settings,
   Moon,
   Sun,
-  Download
+  Download,
+  Edit
 } from 'lucide-react';
 import logoUrl from '@assets/Logo_1758524556759.png';
 import { useTheme } from "./ThemeProvider";
@@ -37,6 +40,42 @@ export default function AppHeader({
   const { theme, setTheme } = useTheme();
   const [showRules, setShowRules] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showSessionInfo, setShowSessionInfo] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  
+  // Use store for session management
+  const sessionInfo = useMDDSStore(state => state.sessionInfo);
+  const updateSessionName = useMDDSStore(state => state.updateSessionName);
+  const updateParticipant = useMDDSStore(state => state.updateParticipant);
+  const addParticipant = useMDDSStore(state => state.addParticipant);
+  const removeParticipant = useMDDSStore(state => state.removeParticipant);
+
+  const validateSessionInfo = () => {
+    const errors: string[] = [];
+    
+    if (!sessionInfo.sessionName.trim()) {
+      errors.push('Session name is required');
+    }
+    
+    sessionInfo.participants.forEach((participant, index) => {
+      if (!participant.name.trim()) {
+        errors.push(`Participant ${index + 1} name is required`);
+      }
+      if (!participant.country.trim()) {
+        errors.push(`Participant ${index + 1} country is required`);
+      }
+    });
+    
+    setValidationErrors(errors);
+    return errors.length === 0;
+  };
+
+  const handleSessionSave = () => {
+    if (validateSessionInfo()) {
+      setShowSessionInfo(false);
+      setValidationErrors([]);
+    }
+  };
 
   return (
     <header className="glass-header">
@@ -74,6 +113,104 @@ export default function AppHeader({
               <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
               <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
             </Button>
+
+            {/* Session Info */}
+            <Dialog open={showSessionInfo} onOpenChange={setShowSessionInfo}>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="icon" data-testid="button-session-info">
+                  <Edit className="w-4 h-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>{sanitizeText('Session Information')}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="session-name">Session Name</Label>
+                    <Input
+                      id="session-name"
+                      value={sessionInfo.sessionName}
+                      onChange={(e) => updateSessionName(e.target.value)}
+                      placeholder="Enter session name"
+                      data-testid="input-session-name"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label>Participants</Label>
+                    <div className="space-y-3 mt-2">
+                      {sessionInfo.participants.map((participant, index) => (
+                        <div key={index} className="grid grid-cols-2 gap-2">
+                          <Input
+                            value={participant.name}
+                            onChange={(e) => updateParticipant(index, 'name', e.target.value)}
+                            placeholder="Participant name"
+                            data-testid={`input-participant-name-${index}`}
+                          />
+                          <Input
+                            value={participant.country}
+                            onChange={(e) => updateParticipant(index, 'country', e.target.value)}
+                            placeholder="Country"
+                            data-testid={`input-participant-country-${index}`}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <div className="flex gap-2 mt-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={addParticipant}
+                        data-testid="button-add-participant"
+                      >
+                        Add Participant
+                      </Button>
+                      {sessionInfo.participants.length > 2 && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeParticipant(sessionInfo.participants.length - 1)}
+                          data-testid="button-remove-participant"
+                        >
+                          Remove Last
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {validationErrors.length > 0 && (
+                    <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-md p-3">
+                      <div className="text-sm text-red-600 dark:text-red-400">
+                        <div className="font-medium mb-1">Please fix the following errors:</div>
+                        <ul className="list-disc list-inside space-y-1">
+                          {validationErrors.map((error, index) => (
+                            <li key={index}>{error}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-end gap-2 pt-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowSessionInfo(false)}
+                      data-testid="button-cancel-session"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleSessionSave}
+                      data-testid="button-save-session"
+                    >
+                      Save
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
 
             {/* Download PDF */}
             <Button 
