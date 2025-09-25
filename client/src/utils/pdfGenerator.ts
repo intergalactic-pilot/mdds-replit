@@ -18,6 +18,14 @@ interface StrategyLogEntry {
   timestamp: Date;
 }
 
+interface SessionInfo {
+  sessionName: string;
+  participants: Array<{
+    name: string;
+    country: string;
+  }>;
+}
+
 interface PDFReportData {
   currentTurn: number;
   maxTurns: number;
@@ -25,9 +33,49 @@ interface PDFReportData {
   russiaTeam: TeamState;
   turnStatistics: TurnStatistics[];
   strategyLog: StrategyLogEntry[];
+  sessionInfo: SessionInfo;
 }
 
+// Helper function to capture chart screenshots
+const captureChartScreenshots = async () => {
+  const screenshots: { [key: string]: string } = {};
+  
+  // List of chart selectors to capture
+  const chartSelectors = [
+    { id: 'deterrence-chart', name: 'Deterrence Overview' },
+    { id: 'turn-based-logs', name: 'Turn-based Statistics' },
+    { id: 'domain-statistics-content', name: 'Domain Statistics' },
+    { id: 'defense-offense-charts', name: 'Defense/Offense Analysis' }
+  ];
+  
+  for (const chart of chartSelectors) {
+    try {
+      const element = document.querySelector(`[data-testid="${chart.id}"]`);
+      if (element) {
+        const canvas = await html2canvas(element as HTMLElement, {
+          backgroundColor: '#1a1a2e', // Dark background
+          scale: 1.5, // Higher resolution
+          useCORS: true,
+          allowTaint: true,
+          ignoreElements: (element) => {
+            // Skip buttons and interactive elements that might cause issues
+            return element.tagName === 'BUTTON' && (element.textContent?.includes('Expand') || false);
+          }
+        });
+        screenshots[chart.id] = canvas.toDataURL('image/png');
+      }
+    } catch (error) {
+      console.warn(`Failed to capture chart ${chart.name}:`, error);
+    }
+  }
+  
+  return screenshots;
+};
+
 export const generateMDDSReport = async (data: PDFReportData) => {
+  // Capture chart screenshots first
+  const screenshots = await captureChartScreenshots();
+  
   const pdf = new jsPDF('p', 'mm', 'a4');
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
@@ -56,6 +104,80 @@ export const generateMDDSReport = async (data: PDFReportData) => {
   const reportDate = new Date().toLocaleDateString();
   pdf.text(`Generated on: ${reportDate}`, pageWidth / 2, yPosition, { align: 'center' });
   yPosition += 20;
+
+  // Session Information Section
+  checkPage(50);
+  pdf.setFontSize(16);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Session Information', margin, yPosition);
+  yPosition += 10;
+  
+  pdf.setFontSize(12);
+  pdf.setFont('helvetica', 'normal');
+  const sessionName = data.sessionInfo.sessionName || 'Unnamed Session';
+  pdf.text(`Session Name: ${sessionName}`, margin, yPosition);
+  yPosition += 10;
+  
+  // Participants
+  pdf.setFontSize(14);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Participants:', margin, yPosition);
+  yPosition += 8;
+  
+  pdf.setFontSize(10);
+  pdf.setFont('helvetica', 'normal');
+  const validParticipants = data.sessionInfo.participants.filter(p => p.name.trim() !== '' || p.country.trim() !== '');
+  if (validParticipants.length > 0) {
+    validParticipants.forEach((participant, index) => {
+      const participantText = `${index + 1}. ${participant.name || 'N/A'} (${participant.country || 'N/A'})`;
+      pdf.text(participantText, margin + 5, yPosition);
+      yPosition += 6;
+    });
+  } else {
+    pdf.text('No participants listed', margin + 5, yPosition);
+    yPosition += 6;
+  }
+  yPosition += 15;
+
+  // Charts Section
+  checkPage(40);
+  pdf.setFontSize(16);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Charts and Visualizations', margin, yPosition);
+  yPosition += 15;
+
+  // Add chart screenshots
+  const chartNames = {
+    'deterrence-chart': 'Deterrence Overview',
+    'turn-based-logs': 'Turn-based Statistics', 
+    'domain-statistics-content': 'Domain Statistics',
+    'defense-offense-charts': 'Defense/Offense Analysis'
+  };
+
+  for (const [chartId, chartName] of Object.entries(chartNames)) {
+    if (screenshots[chartId]) {
+      // Add chart title
+      checkPage(80);
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(chartName, margin, yPosition);
+      yPosition += 8;
+      
+      try {
+        // Add chart image
+        const imgWidth = contentWidth;
+        const imgHeight = 60; // Fixed height for consistency
+        pdf.addImage(screenshots[chartId], 'PNG', margin, yPosition, imgWidth, imgHeight);
+        yPosition += imgHeight + 10;
+      } catch (error) {
+        console.warn(`Failed to add chart image ${chartName}:`, error);
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text('Chart image could not be generated', margin, yPosition);
+        yPosition += 15;
+      }
+    }
+  }
   
   // Strategy Overview Section
   checkPage(40);

@@ -71,7 +71,8 @@ export default function MDDSStrategy() {
         natoTeam: store.teams.NATO,
         russiaTeam: store.teams.Russia,
         turnStatistics: store.turnStatistics,
-        strategyLog: store.strategyLog
+        strategyLog: store.strategyLog,
+        sessionInfo: store.sessionInfo
       });
     } catch (error) {
       console.error('Failed to generate PDF:', error);
