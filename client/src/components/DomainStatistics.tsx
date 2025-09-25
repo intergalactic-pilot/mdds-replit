@@ -151,7 +151,7 @@ export default function DomainStatistics() {
                   
                   {/* Domain Toggles */}
                   <div className="space-y-2">
-                    <h5 className="text-xs font-medium text-muted-foreground">Domains</h5>
+                    <h5 className="text-xs font-medium text-muted-foreground">Dimensions</h5>
                     <div className="flex flex-wrap gap-2">
                       {Object.entries(domainColors).map(([domain, config]) => (
                         <button
