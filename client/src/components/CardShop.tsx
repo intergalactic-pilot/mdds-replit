@@ -227,10 +227,10 @@ export default function CardShop({
           
           <Select value={domainFilter} onValueChange={(value) => setDomainFilter(value as Domain | 'all')}>
             <SelectTrigger data-testid="select-domain-filter">
-              <SelectValue placeholder="All Domains" />
+              <SelectValue placeholder="All Dimensions" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Domains</SelectItem>
+              <SelectItem value="all">All Dimensions</SelectItem>
               <SelectItem value="joint">Joint</SelectItem>
               <SelectItem value="economy">Economy</SelectItem>
               <SelectItem value="cognitive">Cognitive</SelectItem>
