@@ -134,16 +134,6 @@ export default function DefenseOffenseChart() {
     return null;
   }
 
-  // Prepare data for NATO Defensive chart (showing self-effects)
-  const natoDefenseData = turnStatistics.map(stat => ({
-    turn: stat.turn,
-    joint: natoDefensiveEffects[stat.turn]?.joint || 0,
-    economy: natoDefensiveEffects[stat.turn]?.economy || 0,
-    cognitive: natoDefensiveEffects[stat.turn]?.cognitive || 0,
-    space: natoDefensiveEffects[stat.turn]?.space || 0,
-    cyber: natoDefensiveEffects[stat.turn]?.cyber || 0
-  }));
-
   // Calculate team's offensive effects on opponent's dimensions for each turn
   const calculateOffensiveEffects = (attackingTeam: 'NATO' | 'Russia') => {
     const effectsByTurn: Record<number, Record<Domain, number>> = {};
@@ -227,6 +217,16 @@ export default function DefenseOffenseChart() {
   
   const natoDefensiveEffects = calculateDefensiveEffects('NATO');
   const russiaDefensiveEffects = calculateDefensiveEffects('Russia');
+  
+  // Prepare data for NATO Defensive chart (showing self-effects)
+  const natoDefenseData = turnStatistics.map(stat => ({
+    turn: stat.turn,
+    joint: natoDefensiveEffects[stat.turn]?.joint || 0,
+    economy: natoDefensiveEffects[stat.turn]?.economy || 0,
+    cognitive: natoDefensiveEffects[stat.turn]?.cognitive || 0,
+    space: natoDefensiveEffects[stat.turn]?.space || 0,
+    cyber: natoDefensiveEffects[stat.turn]?.cyber || 0
+  }));
   
   // Prepare data for NATO Offensive chart (showing effects on Russia)
   const natoOffenseData = turnStatistics.map(stat => ({
