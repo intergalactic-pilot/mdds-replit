@@ -38,7 +38,6 @@ export default function TeamPanel({ team, teamState, isActive = false, currentTu
             <Shield className="w-4 h-4 mr-1" />
             {sanitizeText(team)}
           </Badge>
-          {isActive && <Badge variant="outline">Active</Badge>}
         </CardTitle>
       </CardHeader>
       
