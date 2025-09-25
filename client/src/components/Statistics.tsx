@@ -203,7 +203,7 @@ export default function TurnBasedLogs() {
                   >
                     <div className="flex items-center gap-2">
                       <TrendingUp className="w-4 h-4" />
-                      <h3 className="font-semibold">Latest Turn Domain Breakdown</h3>
+                      <h3 className="font-semibold">Latest Turn Dimensional Breakdown</h3>
                       <span className="text-sm text-muted-foreground">
                         (5 domains)
                       </span>
