@@ -366,7 +366,7 @@ export default function DomainStatistics() {
           <div className="space-y-6">
             {/* Line Chart showing domain differences over time */}
             <div className="glass-panel p-4">
-              <h4 className="text-sm font-semibold mb-3">Domain Deterrence Differences (Baseline: 100)</h4>
+              <h4 className="text-sm font-semibold mb-3">Domain Deterrence Differences</h4>
               <ResponsiveContainer width="100%" height={300}>
                 <RechartsLineChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
