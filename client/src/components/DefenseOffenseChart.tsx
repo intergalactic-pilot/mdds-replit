@@ -68,14 +68,16 @@ function IndividualChart({ title, team, type, data, visibleDomains, onToggleDoma
       <div className="h-48">
         <ResponsiveContainer width="100%" height="100%">
           <RechartsLineChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted-foreground) / 0.2)" />
             <XAxis 
               dataKey="turn" 
-              stroke="rgba(255,255,255,0.7)"
+              stroke="hsl(var(--muted-foreground))"
+              tick={{ fill: 'hsl(var(--muted-foreground))' }}
               fontSize={10}
             />
             <YAxis 
-              stroke="rgba(255,255,255,0.7)"
+              stroke="hsl(var(--muted-foreground))"
+              tick={{ fill: 'hsl(var(--muted-foreground))' }}
               fontSize={10}
             />
             <Tooltip content={<CustomTooltip />} />

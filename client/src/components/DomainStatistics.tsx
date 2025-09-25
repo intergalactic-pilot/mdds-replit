@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, LineChart, BarChart3, TrendingUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, LineChart, BarChart3, TrendingUp, Minus, MoreHorizontal } from 'lucide-react';
 import { useMDDSStore } from '@/state/store';
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Domain } from '@shared/schema';
@@ -198,7 +198,6 @@ export default function DomainStatistics() {
                           borderRadius: '8px'
                         }}
                       />
-                      <Legend />
                       
                       {/* NATO Lines - Always visible */}
                       {visibleDomains.joint && (
@@ -300,6 +299,20 @@ export default function DomainStatistics() {
                       )}
                     </RechartsLineChart>
                   </ResponsiveContainer>
+                  
+                  {/* Custom Team Legend */}
+                  <div className="mt-4 flex justify-center gap-6">
+                    <div className="flex items-center gap-2">
+                      <Minus className="w-4 h-4 text-blue-400" strokeWidth={3} />
+                      <span className="text-sm text-blue-400 font-medium">NATO (Solid Lines)</span>
+                    </div>
+                    {showRussia && (
+                      <div className="flex items-center gap-2">
+                        <MoreHorizontal className="w-4 h-4 text-red-400" strokeWidth={3} />
+                        <span className="text-sm text-red-400 font-medium">Russia (Dashed Lines)</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
