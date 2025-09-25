@@ -14,9 +14,21 @@ interface TurnStatistics {
   timestamp: Date;
 }
 
+// Session information interface
+interface SessionInfo {
+  sessionName: string;
+  participants: Array<{
+    name: string;
+    country: string;
+  }>;
+}
+
 interface MDDSStore extends GameState {
   // Statistics tracking
   turnStatistics: TurnStatistics[];
+  
+  // Session information
+  sessionInfo: SessionInfo;
   
   // Actions
   addToCart: (team: Team, card: Card) => void;
@@ -26,6 +38,12 @@ interface MDDSStore extends GameState {
   resetStrategy: () => void;
   concludeStrategy: (team: Team) => void;
   setCurrentTeam: (team: Team) => void;
+  
+  // Session management
+  updateSessionName: (name: string) => void;
+  updateParticipant: (index: number, field: 'name' | 'country', value: string) => void;
+  addParticipant: () => void;
+  removeParticipant: (index: number) => void;
   
   // UI State
   selectedCard: Card | null;
@@ -49,7 +67,7 @@ const createInitialTeamState = (): TeamState => ({
   recentPurchases: []
 });
 
-const createInitialState = (): Omit<GameState, 'teams'> & { teams: Record<Team, TeamState>; turnStatistics: TurnStatistics[] } => {
+const createInitialState = (): Omit<GameState, 'teams'> & { teams: Record<Team, TeamState>; turnStatistics: TurnStatistics[]; sessionInfo: SessionInfo } => {
   const natoTeam = createInitialTeamState();
   const russiaTeam = createInitialTeamState();
   
@@ -68,6 +86,10 @@ const createInitialState = (): Omit<GameState, 'teams'> & { teams: Record<Team, 
       action: sanitizeText('Strategy initiated - Turn 1 begins'),
       timestamp: new Date()
     }],
+    sessionInfo: {
+      sessionName: '',
+      participants: [{ name: '', country: '' }, { name: '', country: '' }]
+    },
     turnStatistics: [{
       turn: 1,
       natoTotalDeterrence: natoTeam.totalDeterrence,
@@ -156,6 +178,47 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
     }));
   },
 
+  // Session management functions
+  updateSessionName: (name: string) => {
+    set((state) => ({
+      sessionInfo: {
+        ...state.sessionInfo,
+        sessionName: name
+      }
+    }));
+  },
+
+  updateParticipant: (index: number, field: 'name' | 'country', value: string) => {
+    set((state) => ({
+      sessionInfo: {
+        ...state.sessionInfo,
+        participants: state.sessionInfo.participants.map((p, i) => 
+          i === index ? { ...p, [field]: value } : p
+        )
+      }
+    }));
+  },
+
+  addParticipant: () => {
+    set((state) => ({
+      sessionInfo: {
+        ...state.sessionInfo,
+        participants: [...state.sessionInfo.participants, { name: '', country: '' }]
+      }
+    }));
+  },
+
+  removeParticipant: (index: number) => {
+    set((state) => ({
+      sessionInfo: {
+        ...state.sessionInfo,
+        participants: state.sessionInfo.participants.length > 2 
+          ? state.sessionInfo.participants.filter((_, i) => i !== index)
+          : state.sessionInfo.participants
+      }
+    }));
+  },
+
   saveToLocalStorage: () => {
     const state = get();
     const saveData = {
@@ -165,7 +228,8 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
       teams: state.teams,
       phase: state.phase,
       strategyLog: state.strategyLog,
-      turnStatistics: state.turnStatistics
+      turnStatistics: state.turnStatistics,
+      sessionInfo: state.sessionInfo
     };
     localStorage.setItem('mdds-strategy', JSON.stringify(saveData));
   },
@@ -183,7 +247,16 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
             }
           });
         }
-        set(data);
+        const currentState = get();
+        set({
+          ...data,
+          sessionInfo: data.sessionInfo ? {
+            sessionName: data.sessionInfo.sessionName || '',
+            participants: data.sessionInfo.participants && data.sessionInfo.participants.length > 0 
+              ? data.sessionInfo.participants
+              : currentState.sessionInfo.participants
+          } : currentState.sessionInfo
+        });
         return true;
       }
       return false;
@@ -202,6 +275,7 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
       phase: state.phase,
       strategyLog: state.strategyLog,
       turnStatistics: state.turnStatistics,
+      sessionInfo: state.sessionInfo,
       exportedAt: new Date().toISOString()
     };
     return JSON.stringify(exportData, null, 2);
@@ -218,6 +292,7 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
           }
         });
       }
+      const currentState = get();
       set({
         turn: data.turn,
         maxTurns: data.maxTurns,
@@ -225,7 +300,13 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
         teams: data.teams,
         phase: data.phase,
         strategyLog: data.strategyLog,
-        turnStatistics: data.turnStatistics || []
+        turnStatistics: data.turnStatistics || [],
+        sessionInfo: data.sessionInfo ? {
+          sessionName: data.sessionInfo.sessionName || '',
+          participants: data.sessionInfo.participants && data.sessionInfo.participants.length > 0 
+            ? data.sessionInfo.participants
+            : currentState.sessionInfo.participants
+        } : currentState.sessionInfo
       });
       return true;
     } catch {
