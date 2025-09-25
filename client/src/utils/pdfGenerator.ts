@@ -1,5 +1,4 @@
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import { TeamState, Team, Domain } from '@shared/schema';
 
 interface TurnStatistics {
@@ -36,44 +35,167 @@ interface PDFReportData {
   sessionInfo: SessionInfo;
 }
 
-// Helper function to capture chart screenshots
-const captureChartScreenshots = async () => {
-  const screenshots: { [key: string]: string } = {};
+// Helper function to draw line chart
+const drawLineChart = (
+  pdf: jsPDF, 
+  x: number, 
+  y: number, 
+  width: number, 
+  height: number,
+  data: Array<{turn: number, nato: number, russia: number}>,
+  title: string
+) => {
+  // Chart border
+  pdf.setLineWidth(0.5);
+  pdf.rect(x, y, width, height);
   
-  // List of chart selectors to capture
-  const chartSelectors = [
-    { id: 'deterrence-chart', name: 'Deterrence Overview' },
-    { id: 'turn-based-logs', name: 'Turn-based Statistics' },
-    { id: 'domain-statistics-content', name: 'Domain Statistics' },
-    { id: 'defense-offense-charts', name: 'Defense/Offense Analysis' }
-  ];
+  // Title
+  pdf.setFontSize(10);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text(title, x + width/2, y - 5, { align: 'center' });
   
-  for (const chart of chartSelectors) {
-    try {
-      const element = document.querySelector(`[data-testid="${chart.id}"]`);
-      if (element) {
-        const canvas = await html2canvas(element as HTMLElement, {
-          backgroundColor: '#ffffff', // White background for reports
-          scale: 2, // Higher resolution for crisp output
-          useCORS: true,
-          allowTaint: true,
-          ignoreElements: (element) => {
-            return element.tagName === 'BUTTON' && (element.textContent?.includes('Expand') || false);
-          }
-        });
-        screenshots[chart.id] = canvas.toDataURL('image/png');
-      }
-    } catch (error) {
-      console.warn(`Failed to capture chart ${chart.name}:`, error);
-    }
+  if (data.length === 0) return;
+  
+  // Handle single data point case
+  if (data.length === 1) {
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'italic');
+    pdf.text('Insufficient data for line chart (minimum 2 turns required)', x + width/2, y + height/2, { align: 'center' });
+    return;
   }
   
-  return screenshots;
+  const maxValue = Math.max(...data.map(d => Math.max(d.nato, d.russia)));
+  const minValue = Math.min(...data.map(d => Math.min(d.nato, d.russia)));
+  const valueRange = Math.max(maxValue - minValue, 1); // Ensure minimum range of 1
+  
+  // Y-axis labels
+  pdf.setFontSize(8);
+  pdf.setFont('helvetica', 'normal');
+  for (let i = 0; i <= 4; i++) {
+    const value = minValue + (valueRange * i / 4);
+    const labelY = y + height - (i * height / 4);
+    pdf.text(Math.round(value).toString(), x - 10, labelY, { align: 'right' });
+    
+    // Grid lines
+    pdf.setLineWidth(0.1);
+    pdf.setDrawColor(200, 200, 200);
+    pdf.line(x, labelY, x + width, labelY);
+  }
+  
+  // X-axis labels
+  data.forEach((point, index) => {
+    const labelX = x + (index * width / (data.length - 1));
+    pdf.text(`T${point.turn}`, labelX, y + height + 10, { align: 'center' });
+  });
+  
+  // Draw NATO line (blue)
+  pdf.setLineWidth(1);
+  pdf.setDrawColor(59, 130, 246); // Blue
+  for (let i = 0; i < data.length - 1; i++) {
+    const x1 = x + (i * width / (data.length - 1));
+    const y1 = y + height - ((data[i].nato - minValue) / valueRange * height);
+    const x2 = x + ((i + 1) * width / (data.length - 1));
+    const y2 = y + height - ((data[i + 1].nato - minValue) / valueRange * height);
+    pdf.line(x1, y1, x2, y2);
+  }
+  
+  // Draw Russia line (red)
+  pdf.setDrawColor(239, 68, 68); // Red
+  for (let i = 0; i < data.length - 1; i++) {
+    const x1 = x + (i * width / (data.length - 1));
+    const y1 = y + height - ((data[i].russia - minValue) / valueRange * height);
+    const x2 = x + ((i + 1) * width / (data.length - 1));
+    const y2 = y + height - ((data[i + 1].russia - minValue) / valueRange * height);
+    pdf.line(x1, y1, x2, y2);
+  }
+  
+  // Legend
+  pdf.setDrawColor(59, 130, 246);
+  pdf.setLineWidth(2);
+  pdf.line(x + width - 80, y - 15, x + width - 65, y - 15);
+  pdf.setFontSize(8);
+  pdf.text('NATO', x + width - 60, y - 12);
+  
+  pdf.setDrawColor(239, 68, 68);
+  pdf.line(x + width - 35, y - 15, x + width - 20, y - 15);
+  pdf.text('Russia', x + width - 15, y - 12);
+  
+  pdf.setDrawColor(0, 0, 0); // Reset to black
+};
+
+// Helper function to draw bar chart
+const drawBarChart = (
+  pdf: jsPDF,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  data: Array<{label: string, nato: number, russia: number}>,
+  title: string
+) => {
+  // Chart border
+  pdf.setLineWidth(0.5);
+  pdf.rect(x, y, width, height);
+  
+  // Title
+  pdf.setFontSize(10);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text(title, x + width/2, y - 5, { align: 'center' });
+  
+  if (data.length === 0) return;
+  
+  const maxValue = Math.max(...data.map(d => Math.max(d.nato, d.russia)), 1); // Ensure minimum value of 1
+  const barWidth = width / (data.length * 2 + 1);
+  
+  // Y-axis labels
+  pdf.setFontSize(8);
+  pdf.setFont('helvetica', 'normal');
+  for (let i = 0; i <= 4; i++) {
+    const value = (maxValue * i / 4);
+    const labelY = y + height - (i * height / 4);
+    pdf.text(Math.round(value).toString(), x - 10, labelY, { align: 'right' });
+    
+    // Grid lines
+    pdf.setLineWidth(0.1);
+    pdf.setDrawColor(200, 200, 200);
+    pdf.line(x, labelY, x + width, labelY);
+  }
+  
+  // Draw bars
+  data.forEach((item, index) => {
+    const barX = x + (index * 2 + 0.5) * barWidth;
+    
+    // NATO bar (blue)
+    const natoHeight = (item.nato / maxValue) * height;
+    pdf.setFillColor(59, 130, 246);
+    pdf.rect(barX, y + height - natoHeight, barWidth * 0.8, natoHeight, 'F');
+    
+    // Russia bar (red)
+    const russiaHeight = (item.russia / maxValue) * height;
+    pdf.setFillColor(239, 68, 68);
+    pdf.rect(barX + barWidth, y + height - russiaHeight, barWidth * 0.8, russiaHeight, 'F');
+    
+    // Label
+    pdf.setFontSize(7);
+    pdf.setFont('helvetica', 'normal');
+    const labelText = item.label.length > 8 ? item.label.substring(0, 6) + '..' : item.label;
+    pdf.text(labelText, barX + barWidth, y + height + 8, { align: 'center' });
+  });
+  
+  // Legend
+  pdf.setFillColor(59, 130, 246);
+  pdf.rect(x + width - 80, y - 18, 8, 4, 'F');
+  pdf.setFontSize(8);
+  pdf.text('NATO', x + width - 68, y - 15);
+  
+  pdf.setFillColor(239, 68, 68);
+  pdf.rect(x + width - 35, y - 18, 8, 4, 'F');
+  pdf.text('Russia', x + width - 23, y - 15);
+  
+  pdf.setDrawColor(0, 0, 0); // Reset to black
 };
 
 export const generateMDDSReport = async (data: PDFReportData) => {
-  // Capture chart screenshots first
-  const screenshots = await captureChartScreenshots();
   
   const pdf = new jsPDF('p', 'mm', 'a4');
   const pageWidth = pdf.internal.pageSize.getWidth();
@@ -312,35 +434,45 @@ export const generateMDDSReport = async (data: PDFReportData) => {
   pdf.text('Charts (Overall Statistics for Both Teams, Dimension Based Statistics for Both Teams)', margin, yPosition);
   yPosition += 10;
   
-  // Add overall and dimension-based chart screenshots
-  const mainCharts = [
-    { id: 'deterrence-chart', title: 'Overall Deterrence Statistics' },
-    { id: 'domain-statistics-content', title: 'Dimension-Based Team Statistics' }
-  ];
+  // Overall Deterrence Line Chart
+  checkPage(80);
+  const lineChartData = data.turnStatistics.map(stat => ({
+    turn: stat.turn,
+    nato: stat.natoTotalDeterrence,
+    russia: stat.russiaTotalDeterrence
+  }));
   
-  mainCharts.forEach(chart => {
-    if (screenshots[chart.id]) {
-      checkPage(90);
-      
-      pdf.setFontSize(10);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(chart.title, margin + 5, yPosition);
-      yPosition += 8;
-      
-      try {
-        const imgWidth = contentWidth - 10;
-        const imgHeight = 70;
-        pdf.addImage(screenshots[chart.id], 'PNG', margin + 5, yPosition, imgWidth, imgHeight);
-        yPosition += imgHeight + 15;
-      } catch (error) {
-        console.warn(`Failed to add chart image ${chart.title}:`, error);
-        pdf.setFontSize(9);
-        pdf.setFont('helvetica', 'italic');
-        pdf.text('[Chart visualization unavailable]', margin + 5, yPosition);
-        yPosition += 15;
-      }
-    }
-  });
+  if (lineChartData.length > 0) {
+    drawLineChart(
+      pdf,
+      margin + 5,
+      yPosition + 20,
+      contentWidth - 10,
+      50,
+      lineChartData,
+      'Total Deterrence Over Time'
+    );
+    yPosition += 85;
+  }
+  
+  // Current Dimensional Scores Bar Chart
+  checkPage(80);
+  const currentDimensionData = domains.map(domain => ({
+    label: domain.charAt(0).toUpperCase() + domain.slice(1),
+    nato: data.natoTeam.deterrence[domain],
+    russia: data.russiaTeam.deterrence[domain]
+  }));
+  
+  drawBarChart(
+    pdf,
+    margin + 5,
+    yPosition + 20,
+    contentWidth - 10,
+    50,
+    currentDimensionData,
+    'Current Dimensional Deterrence Scores'
+  );
+  yPosition += 85;
   
   // Defensive/Offensive Statistic Charts that includes all charts in color
   checkPage(40);
@@ -349,35 +481,71 @@ export const generateMDDSReport = async (data: PDFReportData) => {
   pdf.text('Defensive/Offensive Statistic Charts', margin, yPosition);
   yPosition += 10;
   
-  // Add turn-based and defense/offense charts
-  const defenseOffenseCharts = [
-    { id: 'turn-based-logs', title: 'Turn-Based Strategic Evolution' },
-    { id: 'defense-offense-charts', title: 'Defensive and Offensive Analysis Charts' }
-  ];
-  
-  defenseOffenseCharts.forEach(chart => {
-    if (screenshots[chart.id]) {
-      checkPage(90);
-      
-      pdf.setFontSize(10);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(chart.title, margin + 5, yPosition);
-      yPosition += 8;
-      
-      try {
-        const imgWidth = contentWidth - 10;
-        const imgHeight = 70;
-        pdf.addImage(screenshots[chart.id], 'PNG', margin + 5, yPosition, imgWidth, imgHeight);
-        yPosition += imgHeight + 15;
-      } catch (error) {
-        console.warn(`Failed to add chart image ${chart.title}:`, error);
-        pdf.setFontSize(9);
-        pdf.setFont('helvetica', 'italic');
-        pdf.text('[Chart visualization unavailable]', margin + 5, yPosition);
-        yPosition += 15;
-      }
+  // Turn-by-Turn Dimensional Evolution Charts
+  domains.forEach(domain => {
+    checkPage(80);
+    
+    const dimensionData = data.turnStatistics.map(stat => ({
+      turn: stat.turn,
+      nato: stat.natoDeterrence[domain],
+      russia: stat.russiaDeterrence[domain]
+    }));
+    
+    if (dimensionData.length > 0) {
+      drawLineChart(
+        pdf,
+        margin + 5,
+        yPosition + 20,
+        contentWidth - 10,
+        40,
+        dimensionData,
+        `${domain.charAt(0).toUpperCase() + domain.slice(1)} Dimension Evolution`
+      );
+      yPosition += 70;
     }
   });
+  
+  // Defense vs Offense Analysis
+  if (data.turnStatistics.length > 0) {
+    checkPage(80);
+    
+    const latestStats = data.turnStatistics[data.turnStatistics.length - 1];
+    const defenseOffenseData = domains.map(domain => ({
+      label: domain.charAt(0).toUpperCase() + domain.slice(1),
+      nato: latestStats.natoDeterrence[domain], // Defense
+      russia: 100 - latestStats.natoDeterrence[domain] // Offense potential
+    }));
+    
+    drawBarChart(
+      pdf,
+      margin + 5,
+      yPosition + 20,
+      contentWidth - 10,
+      50,
+      defenseOffenseData,
+      'NATO Defense vs Russia Offense Potential (Latest Turn)'
+    );
+    yPosition += 75;
+    
+    // Russia Defense vs NATO Offense
+    checkPage(80);
+    const defenseOffenseDataRussia = domains.map(domain => ({
+      label: domain.charAt(0).toUpperCase() + domain.slice(1),
+      nato: 100 - latestStats.russiaDeterrence[domain], // NATO offense potential
+      russia: latestStats.russiaDeterrence[domain] // Russia defense
+    }));
+    
+    drawBarChart(
+      pdf,
+      margin + 5,
+      yPosition + 20,
+      contentWidth - 10,
+      50,
+      defenseOffenseDataRussia,
+      'NATO Offense Potential vs Russia Defense (Latest Turn)'
+    );
+    yPosition += 75;
+  }
   
   // Final footer
   addFooter();
