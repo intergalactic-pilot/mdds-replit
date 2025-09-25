@@ -45,8 +45,9 @@ const drawLineChart = (
   data: Array<{turn: number, nato: number, russia: number}>,
   title: string
 ) => {
-  // Chart border
-  pdf.setLineWidth(0.5);
+  // Modern chart border with rounded effect
+  pdf.setLineWidth(1);
+  pdf.setDrawColor(150, 150, 150);
   pdf.rect(x, y, width, height);
   
   // Title
@@ -76,9 +77,9 @@ const drawLineChart = (
     const labelY = y + height - (i * height / 4);
     pdf.text(Math.round(value).toString(), x - 10, labelY, { align: 'right' });
     
-    // Grid lines
-    pdf.setLineWidth(0.1);
-    pdf.setDrawColor(200, 200, 200);
+    // Modern grid lines
+    pdf.setLineWidth(0.3);
+    pdf.setDrawColor(220, 220, 220);
     pdf.line(x, labelY, x + width, labelY);
   }
   
@@ -88,8 +89,8 @@ const drawLineChart = (
     pdf.text(`T${point.turn}`, labelX, y + height + 10, { align: 'center' });
   });
   
-  // Draw NATO line (blue)
-  pdf.setLineWidth(1);
+  // Draw NATO line (blue) with enhanced styling
+  pdf.setLineWidth(2);
   pdf.setDrawColor(59, 130, 246); // Blue
   for (let i = 0; i < data.length - 1; i++) {
     const x1 = x + (i * width / (data.length - 1));
@@ -99,8 +100,23 @@ const drawLineChart = (
     pdf.line(x1, y1, x2, y2);
   }
   
-  // Draw Russia line (red)
+  // Draw NATO data points (dots)
+  pdf.setFillColor(59, 130, 246); // Blue
+  data.forEach((point, index) => {
+    const dotX = x + (index * width / (data.length - 1));
+    const dotY = y + height - ((point.nato - minValue) / valueRange * height);
+    pdf.circle(dotX, dotY, 1.5, 'F');
+    
+    // Add value label
+    pdf.setFontSize(6);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(59, 130, 246);
+    pdf.text(point.nato.toString(), dotX - 3, dotY - 3);
+  });
+  
+  // Draw Russia line (red) with enhanced styling
   pdf.setDrawColor(239, 68, 68); // Red
+  pdf.setLineWidth(2);
   for (let i = 0; i < data.length - 1; i++) {
     const x1 = x + (i * width / (data.length - 1));
     const y1 = y + height - ((data[i].russia - minValue) / valueRange * height);
@@ -109,18 +125,39 @@ const drawLineChart = (
     pdf.line(x1, y1, x2, y2);
   }
   
-  // Legend
+  // Draw Russia data points (dots)
+  pdf.setFillColor(239, 68, 68); // Red
+  data.forEach((point, index) => {
+    const dotX = x + (index * width / (data.length - 1));
+    const dotY = y + height - ((point.russia - minValue) / valueRange * height);
+    pdf.circle(dotX, dotY, 1.5, 'F');
+    
+    // Add value label
+    pdf.setFontSize(6);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(239, 68, 68);
+    pdf.text(point.russia.toString(), dotX + 3, dotY - 3);
+  });
+  
+  // Enhanced Legend with dots
   pdf.setDrawColor(59, 130, 246);
   pdf.setLineWidth(2);
   pdf.line(x + width - 80, y - 15, x + width - 65, y - 15);
+  pdf.setFillColor(59, 130, 246);
+  pdf.circle(x + width - 72.5, y - 15, 1, 'F');
   pdf.setFontSize(8);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setTextColor(0, 0, 0);
   pdf.text('NATO', x + width - 60, y - 12);
   
   pdf.setDrawColor(239, 68, 68);
   pdf.line(x + width - 35, y - 15, x + width - 20, y - 15);
+  pdf.setFillColor(239, 68, 68);
+  pdf.circle(x + width - 27.5, y - 15, 1, 'F');
   pdf.text('Russia', x + width - 15, y - 12);
   
   pdf.setDrawColor(0, 0, 0); // Reset to black
+  pdf.setTextColor(0, 0, 0); // Reset text color to black
 };
 
 // Helper function to draw bar chart
@@ -133,8 +170,9 @@ const drawBarChart = (
   data: Array<{label: string, nato: number, russia: number}>,
   title: string
 ) => {
-  // Chart border
-  pdf.setLineWidth(0.5);
+  // Modern chart border
+  pdf.setLineWidth(1);
+  pdf.setDrawColor(150, 150, 150);
   pdf.rect(x, y, width, height);
   
   // Title
@@ -155,37 +193,56 @@ const drawBarChart = (
     const labelY = y + height - (i * height / 4);
     pdf.text(Math.round(value).toString(), x - 10, labelY, { align: 'right' });
     
-    // Grid lines
-    pdf.setLineWidth(0.1);
-    pdf.setDrawColor(200, 200, 200);
+    // Modern grid lines
+    pdf.setLineWidth(0.3);
+    pdf.setDrawColor(220, 220, 220);
     pdf.line(x, labelY, x + width, labelY);
   }
   
-  // Draw bars
+  // Draw bars with enhanced styling
   data.forEach((item, index) => {
     const barX = x + (index * 2 + 0.5) * barWidth;
     
-    // NATO bar (blue)
+    // NATO bar (blue) with enhanced styling
     const natoHeight = (item.nato / maxValue) * height;
     pdf.setFillColor(59, 130, 246);
     pdf.rect(barX, y + height - natoHeight, barWidth * 0.8, natoHeight, 'F');
     
-    // Russia bar (red)
+    // Add NATO value label
+    if (natoHeight > 10) {
+      pdf.setFontSize(6);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(255, 255, 255);
+      pdf.text(item.nato.toString(), barX + (barWidth * 0.4), y + height - natoHeight/2, { align: 'center' });
+    }
+    
+    // Russia bar (red) with enhanced styling
     const russiaHeight = (item.russia / maxValue) * height;
     pdf.setFillColor(239, 68, 68);
     pdf.rect(barX + barWidth, y + height - russiaHeight, barWidth * 0.8, russiaHeight, 'F');
     
-    // Label
+    // Add Russia value label
+    if (russiaHeight > 10) {
+      pdf.setFontSize(6);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(255, 255, 255);
+      pdf.text(item.russia.toString(), barX + barWidth + (barWidth * 0.4), y + height - russiaHeight/2, { align: 'center' });
+    }
+    
+    // X-axis label
     pdf.setFontSize(7);
     pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(0, 0, 0);
     const labelText = item.label.length > 8 ? item.label.substring(0, 6) + '..' : item.label;
     pdf.text(labelText, barX + barWidth, y + height + 8, { align: 'center' });
   });
   
-  // Legend
+  // Enhanced Legend
   pdf.setFillColor(59, 130, 246);
   pdf.rect(x + width - 80, y - 18, 8, 4, 'F');
   pdf.setFontSize(8);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setTextColor(0, 0, 0);
   pdf.text('NATO', x + width - 68, y - 15);
   
   pdf.setFillColor(239, 68, 68);
@@ -193,6 +250,7 @@ const drawBarChart = (
   pdf.text('Russia', x + width - 23, y - 15);
   
   pdf.setDrawColor(0, 0, 0); // Reset to black
+  pdf.setTextColor(0, 0, 0); // Reset text color to black
 };
 
 export const generateMDDSReport = async (data: PDFReportData) => {
