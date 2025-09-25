@@ -268,9 +268,6 @@ export default function DefenseOffenseChart() {
           {/* Legend */}
           <div className="text-xs text-muted-foreground p-3 glass-panel">
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <div className="text-center">
-                <h5 className="font-semibold text-foreground mb-1">Domain Colors</h5>
-              </div>
               {(Object.entries(domainColors) as [Domain, typeof domainColors[Domain]][]).map(([domain, config]) => (
                 <div key={domain} className="flex items-center justify-center gap-1">
                   <div 
