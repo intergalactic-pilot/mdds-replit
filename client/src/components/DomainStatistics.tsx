@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, LineChart, BarChart3, TrendingUp, Minus, MoreHorizontal, ZoomIn } from 'lucide-react';
+import { ChevronDown, ChevronUp, LineChart, BarChart3, TrendingUp, Minus, MoreHorizontal, ZoomIn, Shield, Sword } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useMDDSStore } from '@/state/store';
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -16,10 +16,8 @@ const domainColors = {
 
 export default function DomainStatistics() {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isOverallStatsExpanded, setIsOverallStatsExpanded] = useState(false);
-  const [isDomainBasedStatsExpanded, setIsDomainBasedStatsExpanded] = useState(false);
+  const [activeSection, setActiveSection] = useState<'overall' | 'dimension' | 'defense' | null>(null);
   const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
-  const [expandedChart, setExpandedChart] = useState<string | null>(null);
   
   // Interactive controls for Overall Statistics
   const [showRussia, setShowRussia] = useState(true);
@@ -46,18 +44,6 @@ export default function DomainStatistics() {
   if (turnStatistics.length < 2) {
     return null;
   }
-
-  // Prepare chart data with 100 as baseline reference
-  const chartData = turnStatistics.map(stat => {
-    const differences: Record<string, number> = { turn: stat.turn };
-    Object.keys(stat.natoDeterrence).forEach(domain => {
-      const natoValue = stat.natoDeterrence[domain as keyof typeof stat.natoDeterrence];
-      const russiaValue = stat.russiaDeterrence[domain as keyof typeof stat.russiaDeterrence];
-      // Calculate difference from 100 baseline: (NATO - 100) - (Russia - 100) = NATO - Russia
-      differences[domain] = (natoValue - 100) - (russiaValue - 100);
-    });
-    return differences;
-  });
 
   // Prepare overall chart data showing all domains for each turn
   const overallChartData = turnStatistics.map(stat => {
@@ -103,538 +89,195 @@ export default function DomainStatistics() {
       {isExpanded && (
         <div className="border-t border-border/50 p-4 space-y-4" data-testid="domain-statistics-content">
           
-          {/* Overall Statistics */}
-          <div className="space-y-3">
+          {/* Three Square Buttons */}
+          <div className="grid grid-cols-3 gap-2 mb-6">
             <button
-              onClick={() => setIsOverallStatsExpanded(!isOverallStatsExpanded)}
-              className="w-full flex items-center justify-between p-3 glass-panel hover-elevate transition-all duration-300 text-left"
-              data-testid="button-toggle-overall-stats"
+              onClick={() => setActiveSection(activeSection === 'overall' ? null : 'overall')}
+              className={`p-4 text-center font-semibold transition-all duration-300 hover-elevate ${
+                activeSection === 'overall' 
+                  ? 'bg-blue-500/20 text-blue-400 border-2 border-blue-500/50' 
+                  : 'glass-panel border border-border/50 text-muted-foreground hover:text-foreground'
+              }`}
+              style={{ borderRadius: '3px' }}
+              data-testid="button-overall-statistics"
             >
-              <div className="flex items-center gap-2">
-                <BarChart3 className="w-4 h-4" />
-                <h3 className="font-semibold">Overall Statistics</h3>
-              </div>
-              {isOverallStatsExpanded ? (
-                <ChevronUp className="w-4 h-4 text-muted-foreground" />
-              ) : (
-                <ChevronDown className="w-4 h-4 text-muted-foreground" />
-              )}
+              <BarChart3 className="w-5 h-5 mx-auto mb-2" />
+              <div className="text-sm">Overall Statistics</div>
             </button>
             
-            {isOverallStatsExpanded && (
-              <div className="space-y-4" data-testid="overall-stats-content">
-                {/* Interactive Controls */}
-                <div className="glass-panel p-4 space-y-4">
-                  <h4 className="text-sm font-semibold">Chart Controls</h4>
-                  
-                  {/* Team Toggle */}
-                  <div className="space-y-2">
-                    <h5 className="text-xs font-medium text-muted-foreground">Teams</h5>
-                    <div className="flex gap-2">
-                      <button
-                        className={`px-3 py-2 rounded-md text-xs font-medium transition-all hover-elevate ${
-                          true ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50' : 'border border-border/50 text-muted-foreground'
-                        }`}
-                        data-testid="toggle-nato"
-                      >
-                        NATO
-                      </button>
-                      <button
-                        onClick={() => setShowRussia(!showRussia)}
-                        className={`px-3 py-2 rounded-md text-xs font-medium transition-all hover-elevate ${
-                          showRussia ? 'bg-red-500/20 text-red-400 border border-red-500/50' : 'border border-border/50 text-muted-foreground'
-                        }`}
-                        data-testid="toggle-russia"
-                      >
-                        Russia
-                      </button>
-                    </div>
-                  </div>
-                  
-                  {/* Domain Toggles */}
-                  <div className="space-y-2">
-                    <h5 className="text-xs font-medium text-muted-foreground">Dimensions</h5>
-                    <div className="flex flex-wrap gap-2">
-                      {Object.entries(domainColors).map(([domain, config]) => (
-                        <button
-                          key={domain}
-                          onClick={() => toggleDomainVisibility(domain as Domain)}
-                          className={`px-3 py-2 rounded-md text-xs font-medium transition-all hover-elevate capitalize ${
-                            visibleDomains[domain as Domain] 
-                              ? `${config.bgClass} ${config.textClass} border border-current` 
-                              : 'border border-border/50 text-muted-foreground'
-                          }`}
-                          data-testid={`toggle-domain-${domain}`}
-                        >
-                          {domain}
-                        </button>
+            <button
+              onClick={() => setActiveSection(activeSection === 'dimension' ? null : 'dimension')}
+              className={`p-4 text-center font-semibold transition-all duration-300 hover-elevate ${
+                activeSection === 'dimension' 
+                  ? 'bg-green-500/20 text-green-400 border-2 border-green-500/50' 
+                  : 'glass-panel border border-border/50 text-muted-foreground hover:text-foreground'
+              }`}
+              style={{ borderRadius: '3px' }}
+              data-testid="button-dimension-statistics"
+            >
+              <TrendingUp className="w-5 h-5 mx-auto mb-2" />
+              <div className="text-sm">Dimension Based Statistics</div>
+            </button>
+            
+            <button
+              onClick={() => setActiveSection(activeSection === 'defense' ? null : 'defense')}
+              className={`p-4 text-center font-semibold transition-all duration-300 hover-elevate ${
+                activeSection === 'defense' 
+                  ? 'bg-purple-500/20 text-purple-400 border-2 border-purple-500/50' 
+                  : 'glass-panel border border-border/50 text-muted-foreground hover:text-foreground'
+              }`}
+              style={{ borderRadius: '3px' }}
+              data-testid="button-defense-offense-statistics"
+            >
+              <div className="flex items-center justify-center gap-1 mb-2">
+                <Shield className="w-4 h-4" />
+                <Sword className="w-4 h-4" />
+              </div>
+              <div className="text-sm">Defensive/Offensive Statistics Chart</div>
+            </button>
+          </div>
+          
+          {/* Overall Statistics Content */}
+          {activeSection === 'overall' && (
+            <div className="space-y-4" data-testid="overall-stats-content">
+              {/* Table-based Deterrence Statistics */}
+              <div className="space-y-3">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4" />
+                  Deterrence Statistics Table
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border/50">
+                        <th className="text-left py-2 px-1 font-medium">Turn</th>
+                        <th className="text-center py-2 px-1 font-medium text-blue-400">NATO Total</th>
+                        <th className="text-center py-2 px-1 font-medium text-red-400">Russia Total</th>
+                        <th className="text-center py-2 px-1 font-medium text-gray-500">Joint</th>
+                        <th className="text-center py-2 px-1 font-medium text-green-500">Economy</th>
+                        <th className="text-center py-2 px-1 font-medium text-purple-500">Cognitive</th>
+                        <th className="text-center py-2 px-1 font-medium text-blue-500">Space</th>
+                        <th className="text-center py-2 px-1 font-medium text-yellow-500">Cyber</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {turnStatistics.map((stat, index) => (
+                        <tr key={index} className="border-b border-border/20">
+                          <td className="py-2 px-1 font-medium" data-testid={`turn-${stat.turn}`}>
+                            Turn {stat.turn}
+                          </td>
+                          <td className="text-center py-2 px-1 text-blue-400 font-semibold" data-testid={`nato-total-${stat.turn}`}>
+                            {stat.natoTotalDeterrence}
+                          </td>
+                          <td className="text-center py-2 px-1 text-red-400 font-semibold" data-testid={`russia-total-${stat.turn}`}>
+                            {stat.russiaTotalDeterrence}
+                          </td>
+                          <td className="text-center py-2 px-1" data-testid={`joint-${stat.turn}`}>
+                            <div className="space-y-1 text-xs">
+                              <div className="text-blue-400 font-medium">{stat.natoDeterrence.joint}</div>
+                              <div className="text-red-400 font-medium">{stat.russiaDeterrence.joint}</div>
+                            </div>
+                          </td>
+                          <td className="text-center py-2 px-1" data-testid={`economy-${stat.turn}`}>
+                            <div className="space-y-1 text-xs">
+                              <div className="text-blue-400 font-medium">{stat.natoDeterrence.economy}</div>
+                              <div className="text-red-400 font-medium">{stat.russiaDeterrence.economy}</div>
+                            </div>
+                          </td>
+                          <td className="text-center py-2 px-1" data-testid={`cognitive-${stat.turn}`}>
+                            <div className="space-y-1 text-xs">
+                              <div className="text-blue-400 font-medium">{stat.natoDeterrence.cognitive}</div>
+                              <div className="text-red-400 font-medium">{stat.russiaDeterrence.cognitive}</div>
+                            </div>
+                          </td>
+                          <td className="text-center py-2 px-1" data-testid={`space-${stat.turn}`}>
+                            <div className="space-y-1 text-xs">
+                              <div className="text-blue-400 font-medium">{stat.natoDeterrence.space}</div>
+                              <div className="text-red-400 font-medium">{stat.russiaDeterrence.space}</div>
+                            </div>
+                          </td>
+                          <td className="text-center py-2 px-1" data-testid={`cyber-${stat.turn}`}>
+                            <div className="space-y-1 text-xs">
+                              <div className="text-blue-400 font-medium">{stat.natoDeterrence.cyber}</div>
+                              <div className="text-red-400 font-medium">{stat.russiaDeterrence.cyber}</div>
+                            </div>
+                          </td>
+                        </tr>
                       ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Combined Chart */}
-                <div className="glass-panel p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-sm font-semibold">Combined NATO vs Russia - All Domains Over Time</h4>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <button
-                          className="flex items-center gap-2 px-3 py-1 text-xs font-medium rounded-md border border-border/50 hover-elevate transition-all"
-                          data-testid="button-zoom-combined-chart"
-                        >
-                          <ZoomIn className="w-3 h-3" />
-                          Expand
-                        </button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-7xl w-[90vw] h-[65vh] p-4">
-                        <DialogTitle className="text-center">Combined NATO vs Russia - All Domains Over Time</DialogTitle>
-                        <div className="flex-1 mt-1">
-                          <ResponsiveContainer width="100%" height={450}>
-                            <RechartsLineChart data={overallChartData}>
-                              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                              <XAxis 
-                                dataKey="turn" 
-                                stroke="hsl(var(--muted-foreground))"
-                                tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                              />
-                              <YAxis 
-                                stroke="hsl(var(--muted-foreground))"
-                                tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                              />
-                              <Tooltip 
-                                contentStyle={{
-                                  backgroundColor: 'hsl(var(--card))',
-                                  border: '1px solid hsl(var(--border))',
-                                  borderRadius: '8px'
-                                }}
-                              />
-                              
-                              {/* NATO Lines */}
-                              {visibleDomains.joint && (
-                                <Line 
-                                  type="monotone" 
-                                  dataKey="nato_joint" 
-                                  stroke={domainColors.joint.color} 
-                                  name="NATO Joint"
-                                  strokeWidth={3}
-                                />
-                              )}
-                              {visibleDomains.economy && (
-                                <Line 
-                                  type="monotone" 
-                                  dataKey="nato_economy" 
-                                  stroke={domainColors.economy.color} 
-                                  name="NATO Economy"
-                                  strokeWidth={3}
-                                />
-                              )}
-                              {visibleDomains.cognitive && (
-                                <Line 
-                                  type="monotone" 
-                                  dataKey="nato_cognitive" 
-                                  stroke={domainColors.cognitive.color} 
-                                  name="NATO Cognitive"
-                                  strokeWidth={3}
-                                />
-                              )}
-                              {visibleDomains.space && (
-                                <Line 
-                                  type="monotone" 
-                                  dataKey="nato_space" 
-                                  stroke={domainColors.space.color} 
-                                  name="NATO Space"
-                                  strokeWidth={3}
-                                />
-                              )}
-                              {visibleDomains.cyber && (
-                                <Line 
-                                  type="monotone" 
-                                  dataKey="nato_cyber" 
-                                  stroke={domainColors.cyber.color} 
-                                  name="NATO Cyber"
-                                  strokeWidth={3}
-                                />
-                              )}
-
-                              {/* Russia Lines - Dashed */}
-                              {showRussia && visibleDomains.joint && (
-                                <Line 
-                                  type="monotone" 
-                                  dataKey="russia_joint" 
-                                  stroke={domainColors.joint.color} 
-                                  name="Russia Joint"
-                                  strokeWidth={3}
-                                  strokeDasharray="5 5"
-                                />
-                              )}
-                              {showRussia && visibleDomains.economy && (
-                                <Line 
-                                  type="monotone" 
-                                  dataKey="russia_economy" 
-                                  stroke={domainColors.economy.color} 
-                                  name="Russia Economy"
-                                  strokeWidth={3}
-                                  strokeDasharray="5 5"
-                                />
-                              )}
-                              {showRussia && visibleDomains.cognitive && (
-                                <Line 
-                                  type="monotone" 
-                                  dataKey="russia_cognitive" 
-                                  stroke={domainColors.cognitive.color} 
-                                  name="Russia Cognitive"
-                                  strokeWidth={3}
-                                  strokeDasharray="5 5"
-                                />
-                              )}
-                              {showRussia && visibleDomains.space && (
-                                <Line 
-                                  type="monotone" 
-                                  dataKey="russia_space" 
-                                  stroke={domainColors.space.color} 
-                                  name="Russia Space"
-                                  strokeWidth={3}
-                                  strokeDasharray="5 5"
-                                />
-                              )}
-                              {showRussia && visibleDomains.cyber && (
-                                <Line 
-                                  type="monotone" 
-                                  dataKey="russia_cyber" 
-                                  stroke={domainColors.cyber.color} 
-                                  name="Russia Cyber"
-                                  strokeWidth={3}
-                                  strokeDasharray="5 5"
-                                />
-                              )}
-                            </RechartsLineChart>
-                          </ResponsiveContainer>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                  <ResponsiveContainer width="100%" height={400}>
-                    <RechartsLineChart data={overallChartData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis 
-                        dataKey="turn" 
-                        stroke="hsl(var(--muted-foreground))"
-                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                      />
-                      <YAxis 
-                        stroke="hsl(var(--muted-foreground))"
-                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                      />
-                      <Tooltip 
-                        contentStyle={{
-                          backgroundColor: 'hsl(var(--card))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px'
-                        }}
-                      />
-                      
-                      {/* NATO Lines - Always visible */}
-                      {visibleDomains.joint && (
-                        <Line 
-                          type="monotone" 
-                          dataKey="nato_joint" 
-                          stroke={domainColors.joint.color} 
-                          name="NATO Joint"
-                          strokeWidth={2}
-                        />
-                      )}
-                      {visibleDomains.economy && (
-                        <Line 
-                          type="monotone" 
-                          dataKey="nato_economy" 
-                          stroke={domainColors.economy.color} 
-                          name="NATO Economy"
-                          strokeWidth={2}
-                        />
-                      )}
-                      {visibleDomains.cognitive && (
-                        <Line 
-                          type="monotone" 
-                          dataKey="nato_cognitive" 
-                          stroke={domainColors.cognitive.color} 
-                          name="NATO Cognitive"
-                          strokeWidth={2}
-                        />
-                      )}
-                      {visibleDomains.space && (
-                        <Line 
-                          type="monotone" 
-                          dataKey="nato_space" 
-                          stroke={domainColors.space.color} 
-                          name="NATO Space"
-                          strokeWidth={2}
-                        />
-                      )}
-                      {visibleDomains.cyber && (
-                        <Line 
-                          type="monotone" 
-                          dataKey="nato_cyber" 
-                          stroke={domainColors.cyber.color} 
-                          name="NATO Cyber"
-                          strokeWidth={2}
-                        />
-                      )}
-                      
-                      {/* Russia Lines - Togglable */}
-                      {showRussia && visibleDomains.joint && (
-                        <Line 
-                          type="monotone" 
-                          dataKey="russia_joint" 
-                          stroke={domainColors.joint.color} 
-                          name="Russia Joint"
-                          strokeWidth={2}
-                          strokeDasharray="5 5"
-                        />
-                      )}
-                      {showRussia && visibleDomains.economy && (
-                        <Line 
-                          type="monotone" 
-                          dataKey="russia_economy" 
-                          stroke={domainColors.economy.color} 
-                          name="Russia Economy"
-                          strokeWidth={2}
-                          strokeDasharray="5 5"
-                        />
-                      )}
-                      {showRussia && visibleDomains.cognitive && (
-                        <Line 
-                          type="monotone" 
-                          dataKey="russia_cognitive" 
-                          stroke={domainColors.cognitive.color} 
-                          name="Russia Cognitive"
-                          strokeWidth={2}
-                          strokeDasharray="5 5"
-                        />
-                      )}
-                      {showRussia && visibleDomains.space && (
-                        <Line 
-                          type="monotone" 
-                          dataKey="russia_space" 
-                          stroke={domainColors.space.color} 
-                          name="Russia Space"
-                          strokeWidth={2}
-                          strokeDasharray="5 5"
-                        />
-                      )}
-                      {showRussia && visibleDomains.cyber && (
-                        <Line 
-                          type="monotone" 
-                          dataKey="russia_cyber" 
-                          stroke={domainColors.cyber.color} 
-                          name="Russia Cyber"
-                          strokeWidth={2}
-                          strokeDasharray="5 5"
-                        />
-                      )}
-                    </RechartsLineChart>
-                  </ResponsiveContainer>
-                  
-                  {/* Custom Team Legend */}
-                  <div className="mt-4 flex justify-center gap-6">
-                    <div className="flex items-center gap-2">
-                      <Minus className="w-4 h-4 text-blue-400" strokeWidth={3} />
-                      <span className="text-sm text-blue-400 font-medium">NATO (Solid Lines)</span>
-                    </div>
-                    {showRussia && (
-                      <div className="flex items-center gap-2">
-                        <MoreHorizontal className="w-4 h-4 text-red-400" strokeWidth={3} />
-                        <span className="text-sm text-red-400 font-medium">Russia (Dashed Lines)</span>
-                      </div>
-                    )}
-                  </div>
+                    </tbody>
+                  </table>
                 </div>
               </div>
-            )}
-          </div>
 
-          {/* Dimension-based Statistics */}
-          <div className="space-y-3">
-            <button
-              onClick={() => setIsDomainBasedStatsExpanded(!isDomainBasedStatsExpanded)}
-              className="w-full flex items-center justify-between p-3 glass-panel hover-elevate transition-all duration-300 text-left"
-              data-testid="button-toggle-domain-based-stats"
-            >
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4" />
-                <h3 className="font-semibold">Dimension-based Statistics</h3>
-              </div>
-              {isDomainBasedStatsExpanded ? (
-                <ChevronUp className="w-4 h-4 text-muted-foreground" />
-              ) : (
-                <ChevronDown className="w-4 h-4 text-muted-foreground" />
-              )}
-            </button>
-            
-            {isDomainBasedStatsExpanded && (
-              <div className="space-y-6" data-testid="domain-based-stats-content">
-                {/* Domain Selector */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold">Select Dimension for Detailed Analysis</h3>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-              {Object.entries(domainColors).map(([domain, config]) => (
-                <button
-                  key={domain}
-                  onClick={() => setSelectedDomain(selectedDomain === domain ? null : domain as Domain)}
-                  className={`p-3 rounded-md border transition-all duration-200 text-sm font-medium hover-elevate ${
-                    selectedDomain === domain 
-                      ? `${config.bgClass} border-current ${config.textClass}` 
-                      : 'border-border/50 hover:border-border text-muted-foreground'
-                  }`}
-                  data-testid={`button-select-domain-${domain}`}
-                >
-                  <div className="capitalize">{domain}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-                {/* Domain Differences Chart */}
-          <div className="space-y-6">
-            {/* Line Chart showing domain differences over time */}
-            <div className="glass-panel p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-sm font-semibold">Dimensional Deterrence Differences</h4>
-                <Dialog>
-                  <DialogTrigger asChild>
+              {/* Interactive Controls */}
+              <div className="glass-panel p-4 space-y-4">
+                <h4 className="text-sm font-semibold">Chart Controls</h4>
+                
+                {/* Team Toggle */}
+                <div className="space-y-2">
+                  <h5 className="text-xs font-medium text-muted-foreground">Teams</h5>
+                  <div className="flex gap-2">
                     <button
-                      className="flex items-center gap-2 px-3 py-1 text-xs font-medium rounded-md border border-border/50 hover-elevate transition-all"
-                      data-testid="button-zoom-differences-chart"
+                      className={`px-3 py-2 rounded-md text-xs font-medium transition-all hover-elevate ${
+                        true ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50' : 'border border-border/50 text-muted-foreground'
+                      }`}
+                      data-testid="toggle-nato"
                     >
-                      <ZoomIn className="w-3 h-3" />
-                      Expand
+                      NATO
                     </button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-7xl w-[90vw] h-[65vh] p-4">
-                    <DialogTitle className="text-center">Dimensional Deterrence Differences</DialogTitle>
-                    <div className="flex-1 mt-1">
-                      <ResponsiveContainer width="100%" height={450}>
-                        <RechartsLineChart data={chartData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                          <XAxis 
-                            dataKey="turn" 
-                            stroke="hsl(var(--muted-foreground))"
-                            tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                          />
-                          <YAxis 
-                            stroke="hsl(var(--muted-foreground))"
-                            tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                          />
-                          <Tooltip 
-                            contentStyle={{
-                              backgroundColor: 'hsl(var(--card))',
-                              border: '1px solid hsl(var(--border))',
-                              borderRadius: '8px'
-                            }}
-                          />
-                          <Legend />
-                          {Object.entries(domainColors).map(([domain, config]) => (
-                            <Line
-                              key={domain}
-                              type="monotone"
-                              dataKey={domain}
-                              stroke={config.color}
-                              name={domain.charAt(0).toUpperCase() + domain.slice(1)}
-                              strokeWidth={3}
-                            />
-                          ))}
-                        </RechartsLineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                    <button
+                      onClick={() => setShowRussia(!showRussia)}
+                      className={`px-3 py-2 rounded-md text-xs font-medium transition-all hover-elevate ${
+                        showRussia ? 'bg-red-500/20 text-red-400 border border-red-500/50' : 'border border-border/50 text-muted-foreground'
+                      }`}
+                      data-testid="toggle-russia"
+                    >
+                      Russia
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Domain Toggles */}
+                <div className="space-y-2">
+                  <h5 className="text-xs font-medium text-muted-foreground">Dimensions</h5>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.entries(domainColors).map(([domain, config]) => (
+                      <button
+                        key={domain}
+                        onClick={() => toggleDomainVisibility(domain as Domain)}
+                        className={`px-3 py-2 rounded-md text-xs font-medium transition-all hover-elevate capitalize ${
+                          visibleDomains[domain as Domain] 
+                            ? `${config.bgClass} ${config.textClass} border border-current` 
+                            : 'border border-border/50 text-muted-foreground'
+                        }`}
+                        data-testid={`toggle-domain-${domain}`}
+                      >
+                        {domain}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <ResponsiveContainer width="100%" height={300}>
-                <RechartsLineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis 
-                    dataKey="turn" 
-                    stroke="hsl(var(--muted-foreground))"
-                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                  />
-                  <YAxis 
-                    stroke="hsl(var(--muted-foreground))"
-                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                  />
-                  <Tooltip 
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px'
-                    }}
-                  />
-                  <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="joint" 
-                    stroke={domainColors.joint.color} 
-                    name="Joint"
-                    strokeWidth={2}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="economy" 
-                    stroke={domainColors.economy.color} 
-                    name="Economy"
-                    strokeWidth={2}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="cognitive" 
-                    stroke={domainColors.cognitive.color} 
-                    name="Cognitive"
-                    strokeWidth={2}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="space" 
-                    stroke={domainColors.space.color} 
-                    name="Space"
-                    strokeWidth={2}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="cyber" 
-                    stroke={domainColors.cyber.color} 
-                    name="Cyber"
-                    strokeWidth={2}
-                  />
-                </RechartsLineChart>
-              </ResponsiveContainer>
-            </div>
 
-          </div>
-
-                {/* Domain-Specific Analysis */}
-                {selectedDomain && (
-            <div className="space-y-4" data-testid={`domain-analysis-${selectedDomain}`}>
+              {/* Combined Chart */}
               <div className="glass-panel p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className={`text-sm font-semibold capitalize ${domainColors[selectedDomain].textClass}`}>
-                    {selectedDomain} Domain Analysis
-                  </h4>
+                  <h4 className="text-sm font-semibold">Combined NATO vs Russia - All Domains Over Time</h4>
                   <Dialog>
                     <DialogTrigger asChild>
                       <button
                         className="flex items-center gap-2 px-3 py-1 text-xs font-medium rounded-md border border-border/50 hover-elevate transition-all"
-                        data-testid={`button-zoom-domain-${selectedDomain}`}
+                        data-testid="button-zoom-combined-chart"
                       >
                         <ZoomIn className="w-3 h-3" />
                         Expand
                       </button>
                     </DialogTrigger>
                     <DialogContent className="max-w-7xl w-[90vw] h-[65vh] p-4">
-                      <DialogTitle className={`text-center capitalize ${domainColors[selectedDomain].textClass}`}>
-                        {selectedDomain} Domain Analysis
-                      </DialogTitle>
+                      <DialogTitle className="text-center">Combined NATO vs Russia - All Domains Over Time</DialogTitle>
                       <div className="flex-1 mt-1">
                         <ResponsiveContainer width="100%" height={450}>
-                          <RechartsLineChart data={getDomainSpecificData(selectedDomain)}>
+                          <RechartsLineChart data={overallChartData}>
                             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                             <XAxis 
                               dataKey="turn" 
@@ -652,39 +295,113 @@ export default function DomainStatistics() {
                                 borderRadius: '8px'
                               }}
                             />
-                            <Legend />
-                            <Line 
-                              type="monotone" 
-                              dataKey="natoValue" 
-                              stroke="#3B82F6" 
-                              name="NATO (vs 100)"
-                              strokeWidth={3}
-                            />
-                            <Line 
-                              type="monotone" 
-                              dataKey="russiaValue" 
-                              stroke="#EF4444" 
-                              name="Russia (vs 100)"
-                              strokeWidth={3}
-                            />
-                            <Line 
-                              type="monotone" 
-                              dataKey="difference" 
-                              stroke={domainColors[selectedDomain].color} 
-                              name="Difference (NATO - Russia)"
-                              strokeWidth={4}
-                              strokeDasharray="5 5"
-                            />
+                            
+                            {/* NATO Lines */}
+                            {visibleDomains.joint && (
+                              <Line 
+                                type="monotone" 
+                                dataKey="nato_joint" 
+                                stroke={domainColors.joint.color} 
+                                name="NATO Joint"
+                                strokeWidth={3}
+                              />
+                            )}
+                            {visibleDomains.economy && (
+                              <Line 
+                                type="monotone" 
+                                dataKey="nato_economy" 
+                                stroke={domainColors.economy.color} 
+                                name="NATO Economy"
+                                strokeWidth={3}
+                              />
+                            )}
+                            {visibleDomains.cognitive && (
+                              <Line 
+                                type="monotone" 
+                                dataKey="nato_cognitive" 
+                                stroke={domainColors.cognitive.color} 
+                                name="NATO Cognitive"
+                                strokeWidth={3}
+                              />
+                            )}
+                            {visibleDomains.space && (
+                              <Line 
+                                type="monotone" 
+                                dataKey="nato_space" 
+                                stroke={domainColors.space.color} 
+                                name="NATO Space"
+                                strokeWidth={3}
+                              />
+                            )}
+                            {visibleDomains.cyber && (
+                              <Line 
+                                type="monotone" 
+                                dataKey="nato_cyber" 
+                                stroke={domainColors.cyber.color} 
+                                name="NATO Cyber"
+                                strokeWidth={3}
+                              />
+                            )}
+
+                            {/* Russia Lines - Dashed */}
+                            {showRussia && visibleDomains.joint && (
+                              <Line 
+                                type="monotone" 
+                                dataKey="russia_joint" 
+                                stroke={domainColors.joint.color} 
+                                name="Russia Joint"
+                                strokeWidth={3}
+                                strokeDasharray="5 5"
+                              />
+                            )}
+                            {showRussia && visibleDomains.economy && (
+                              <Line 
+                                type="monotone" 
+                                dataKey="russia_economy" 
+                                stroke={domainColors.economy.color} 
+                                name="Russia Economy"
+                                strokeWidth={3}
+                                strokeDasharray="5 5"
+                              />
+                            )}
+                            {showRussia && visibleDomains.cognitive && (
+                              <Line 
+                                type="monotone" 
+                                dataKey="russia_cognitive" 
+                                stroke={domainColors.cognitive.color} 
+                                name="Russia Cognitive"
+                                strokeWidth={3}
+                                strokeDasharray="5 5"
+                              />
+                            )}
+                            {showRussia && visibleDomains.space && (
+                              <Line 
+                                type="monotone" 
+                                dataKey="russia_space" 
+                                stroke={domainColors.space.color} 
+                                name="Russia Space"
+                                strokeWidth={3}
+                                strokeDasharray="5 5"
+                              />
+                            )}
+                            {showRussia && visibleDomains.cyber && (
+                              <Line 
+                                type="monotone" 
+                                dataKey="russia_cyber" 
+                                stroke={domainColors.cyber.color} 
+                                name="Russia Cyber"
+                                strokeWidth={3}
+                                strokeDasharray="5 5"
+                              />
+                            )}
                           </RechartsLineChart>
                         </ResponsiveContainer>
                       </div>
                     </DialogContent>
                   </Dialog>
                 </div>
-                
-                {/* Domain-specific line chart */}
-                <ResponsiveContainer width="100%" height={300}>
-                  <RechartsLineChart data={getDomainSpecificData(selectedDomain)}>
+                <ResponsiveContainer width="100%" height={400}>
+                  <RechartsLineChart data={overallChartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis 
                       dataKey="turn" 
@@ -702,79 +419,196 @@ export default function DomainStatistics() {
                         borderRadius: '8px'
                       }}
                     />
-                    <Legend />
-                    <Line 
-                      type="monotone" 
-                      dataKey="natoValue" 
-                      stroke="#3B82F6" 
-                      name="NATO (vs 100)"
-                      strokeWidth={2}
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="russiaValue" 
-                      stroke="#EF4444" 
-                      name="Russia (vs 100)"
-                      strokeWidth={2}
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="difference" 
-                      stroke={domainColors[selectedDomain].color} 
-                      name="Difference (NATO - Russia)"
-                      strokeWidth={3}
-                      strokeDasharray="5 5"
-                    />
+                    
+                    {/* NATO Lines - Always visible */}
+                    {visibleDomains.joint && (
+                      <Line 
+                        type="monotone" 
+                        dataKey="nato_joint" 
+                        stroke={domainColors.joint.color} 
+                        name="NATO Joint"
+                        strokeWidth={2}
+                      />
+                    )}
+                    {visibleDomains.economy && (
+                      <Line 
+                        type="monotone" 
+                        dataKey="nato_economy" 
+                        stroke={domainColors.economy.color} 
+                        name="NATO Economy"
+                        strokeWidth={2}
+                      />
+                    )}
+                    {visibleDomains.cognitive && (
+                      <Line 
+                        type="monotone" 
+                        dataKey="nato_cognitive" 
+                        stroke={domainColors.cognitive.color} 
+                        name="NATO Cognitive"
+                        strokeWidth={2}
+                      />
+                    )}
+                    {visibleDomains.space && (
+                      <Line 
+                        type="monotone" 
+                        dataKey="nato_space" 
+                        stroke={domainColors.space.color} 
+                        name="NATO Space"
+                        strokeWidth={2}
+                      />
+                    )}
+                    {visibleDomains.cyber && (
+                      <Line 
+                        type="monotone" 
+                        dataKey="nato_cyber" 
+                        stroke={domainColors.cyber.color} 
+                        name="NATO Cyber"
+                        strokeWidth={2}
+                      />
+                    )}
+                    
+                    {/* Russia Lines - Togglable */}
+                    {showRussia && visibleDomains.joint && (
+                      <Line 
+                        type="monotone" 
+                        dataKey="russia_joint" 
+                        stroke={domainColors.joint.color} 
+                        name="Russia Joint"
+                        strokeWidth={2}
+                        strokeDasharray="5 5"
+                      />
+                    )}
+                    {showRussia && visibleDomains.economy && (
+                      <Line 
+                        type="monotone" 
+                        dataKey="russia_economy" 
+                        stroke={domainColors.economy.color} 
+                        name="Russia Economy"
+                        strokeWidth={2}
+                        strokeDasharray="5 5"
+                      />
+                    )}
+                    {showRussia && visibleDomains.cognitive && (
+                      <Line 
+                        type="monotone" 
+                        dataKey="russia_cognitive" 
+                        stroke={domainColors.cognitive.color} 
+                        name="Russia Cognitive"
+                        strokeWidth={2}
+                        strokeDasharray="5 5"
+                      />
+                    )}
+                    {showRussia && visibleDomains.space && (
+                      <Line 
+                        type="monotone" 
+                        dataKey="russia_space" 
+                        stroke={domainColors.space.color} 
+                        name="Russia Space"
+                        strokeWidth={2}
+                        strokeDasharray="5 5"
+                      />
+                    )}
+                    {showRussia && visibleDomains.cyber && (
+                      <Line 
+                        type="monotone" 
+                        dataKey="russia_cyber" 
+                        stroke={domainColors.cyber.color} 
+                        name="Russia Cyber"
+                        strokeWidth={2}
+                        strokeDasharray="5 5"
+                      />
+                    )}
                   </RechartsLineChart>
                 </ResponsiveContainer>
-              </div>
-
-              {/* Domain statistics table */}
-              <div className="glass-panel p-4">
-                <h5 className="text-sm font-semibold mb-3">Turn-by-Turn Data</h5>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-border/50">
-                        <th className="text-left py-2 px-3 font-medium">Turn</th>
-                        <th className="text-center py-2 px-3 font-medium text-blue-400">NATO</th>
-                        <th className="text-center py-2 px-3 font-medium text-red-400">Russia</th>
-                        <th className={`text-center py-2 px-3 font-medium ${domainColors[selectedDomain].textClass}`}>
-                          Difference
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {getDomainSpecificData(selectedDomain).map((data, index) => (
-                        <tr key={index} className="border-b border-border/20">
-                          <td className="py-2 px-3 font-medium">Turn {data.turn}</td>
-                          <td className="text-center py-2 px-3 text-blue-400 font-semibold">
-                            {data.natoValue}
-                          </td>
-                          <td className="text-center py-2 px-3 text-red-400 font-semibold">
-                            {data.russiaValue}
-                          </td>
-                          <td className={`text-center py-2 px-3 font-semibold ${
-                            data.difference > 0 ? 'text-blue-400' : 
-                            data.difference < 0 ? 'text-red-400' : 
-                            'text-muted-foreground'
-                          }`}>
-                            {data.difference > 0 ? `+${data.difference}` : data.difference}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                
+                {/* Custom Team Legend */}
+                <div className="mt-4 flex justify-center gap-6">
+                  <div className="flex items-center gap-2">
+                    <Minus className="w-4 h-4 text-blue-400" strokeWidth={3} />
+                    <span className="text-sm text-blue-400 font-medium">NATO (Solid Lines)</span>
+                  </div>
+                  {showRussia && (
+                    <div className="flex items-center gap-2">
+                      <MoreHorizontal className="w-4 h-4 text-red-400" strokeWidth={3} />
+                      <span className="text-sm text-red-400 font-medium">Russia (Dashed Lines)</span>
+                    </div>
+                  )}
                 </div>
               </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+            </div>
+          )}
 
-          {/* Defensive/Offensive Statistics Chart */}
-          <DefenseOffenseChart />
+          {/* Dimension-based Statistics Content */}
+          {activeSection === 'dimension' && (
+            <div className="space-y-6" data-testid="domain-based-stats-content">
+              {/* Domain Selector */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold">Select Dimension for Detailed Analysis</h3>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                  {Object.entries(domainColors).map(([domain, config]) => (
+                    <button
+                      key={domain}
+                      onClick={() => setSelectedDomain(selectedDomain === domain ? null : domain as Domain)}
+                      className={`p-3 rounded-md border transition-all duration-200 text-sm font-medium hover-elevate ${
+                        selectedDomain === domain 
+                          ? `${config.bgClass} border-current ${config.textClass}` 
+                          : 'border-border/50 hover:border-border text-muted-foreground'
+                      }`}
+                      data-testid={`button-select-domain-${domain}`}
+                    >
+                      <div className="capitalize">{domain}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Domain Table when selected */}
+              {selectedDomain && (
+                <div className="glass-panel p-4">
+                  <h4 className="text-sm font-semibold mb-3 capitalize">{selectedDomain} Domain Analysis</h4>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-border/50">
+                          <th className="text-left py-2 px-3 font-medium">Turn</th>
+                          <th className="text-center py-2 px-3 font-medium text-blue-400">NATO Value</th>
+                          <th className="text-center py-2 px-3 font-medium text-red-400">Russia Value</th>
+                          <th className="text-center py-2 px-3 font-medium">Difference</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {getDomainSpecificData(selectedDomain).map((data, index) => (
+                          <tr key={index} className="border-b border-border/20">
+                            <td className="py-2 px-3 font-medium">Turn {data.turn}</td>
+                            <td className="text-center py-2 px-3 text-blue-400 font-semibold">
+                              {data.natoValue}
+                            </td>
+                            <td className="text-center py-2 px-3 text-red-400 font-semibold">
+                              {data.russiaValue}
+                            </td>
+                            <td className={`text-center py-2 px-3 font-semibold ${
+                              data.difference > 0 ? 'text-blue-400' : 
+                              data.difference < 0 ? 'text-red-400' : 
+                              'text-muted-foreground'
+                            }`}>
+                              {data.difference > 0 ? `+${data.difference}` : data.difference}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Defensive/Offensive Statistics Chart Content */}
+          {activeSection === 'defense' && (
+            <div className="space-y-4" data-testid="defense-offense-stats-content">
+              <DefenseOffenseChart />
+            </div>
+          )}
         </div>
       )}
     </div>

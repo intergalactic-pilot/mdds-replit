@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, BarChart3, TrendingUp, Shield, Sword } from 'lucide-react';
 import { useMDDSStore } from '@/state/store';
+import DefenseOffenseChart from './DefenseOffenseChart';
 
 const domainColors = {
   joint: 'text-gray-500',
@@ -13,9 +14,7 @@ const domainColors = {
 export default function TurnBasedLogs() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isPurchaseLogsExpanded, setIsPurchaseLogsExpanded] = useState(false);
-  const [isStatisticsExpanded, setIsStatisticsExpanded] = useState(false);
-  const [isDomainBreakdownExpanded, setIsDomainBreakdownExpanded] = useState(false);
-  const [isDefenseOffenseExpanded, setIsDefenseOffenseExpanded] = useState(false);
+  const [activeSection, setActiveSection] = useState<'overall' | 'dimension' | 'defense' | null>(null);
   const turnStatistics = useMDDSStore(state => state.turnStatistics);
   const strategyLog = useMDDSStore(state => state.strategyLog);
 
@@ -100,28 +99,58 @@ export default function TurnBasedLogs() {
                 </div>
               )}
               
-              {/* Deterrence Statistics Table */}
+              {/* Three Square Buttons */}
               {turnStatistics.length > 0 && (
-                <div className="space-y-3">
-                  <button
-                    onClick={() => setIsStatisticsExpanded(!isStatisticsExpanded)}
-                    className="w-full flex items-center justify-between p-3 glass-panel hover-elevate transition-all duration-300 text-left"
-                    data-testid="button-toggle-statistics"
-                  >
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4" />
-                      <h3 className="font-semibold">Deterrence Statistics</h3>
-                      <span className="text-sm text-muted-foreground">
-                      </span>
-                    </div>
-                    {isStatisticsExpanded ? (
-                      <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                    )}
-                  </button>
-                  
-                  {isStatisticsExpanded && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-3 gap-2 mb-6">
+                    <button
+                      onClick={() => setActiveSection(activeSection === 'overall' ? null : 'overall')}
+                      className={`p-4 text-center font-semibold transition-all duration-300 hover-elevate ${
+                        activeSection === 'overall' 
+                          ? 'bg-blue-500/20 text-blue-400 border-2 border-blue-500/50' 
+                          : 'glass-panel border border-border/50 text-muted-foreground hover:text-foreground'
+                      }`}
+                      style={{ borderRadius: '3px' }}
+                      data-testid="button-overall-statistics"
+                    >
+                      <BarChart3 className="w-5 h-5 mx-auto mb-2" />
+                      <div className="text-sm">Overall Statistics</div>
+                    </button>
+                    
+                    <button
+                      onClick={() => setActiveSection(activeSection === 'dimension' ? null : 'dimension')}
+                      className={`p-4 text-center font-semibold transition-all duration-300 hover-elevate ${
+                        activeSection === 'dimension' 
+                          ? 'bg-green-500/20 text-green-400 border-2 border-green-500/50' 
+                          : 'glass-panel border border-border/50 text-muted-foreground hover:text-foreground'
+                      }`}
+                      style={{ borderRadius: '3px' }}
+                      data-testid="button-dimension-statistics"
+                    >
+                      <TrendingUp className="w-5 h-5 mx-auto mb-2" />
+                      <div className="text-sm">Dimension Based Statistics</div>
+                    </button>
+                    
+                    <button
+                      onClick={() => setActiveSection(activeSection === 'defense' ? null : 'defense')}
+                      className={`p-4 text-center font-semibold transition-all duration-300 hover-elevate ${
+                        activeSection === 'defense' 
+                          ? 'bg-purple-500/20 text-purple-400 border-2 border-purple-500/50' 
+                          : 'glass-panel border border-border/50 text-muted-foreground hover:text-foreground'
+                      }`}
+                      style={{ borderRadius: '3px' }}
+                      data-testid="button-defense-offense-statistics"
+                    >
+                      <div className="flex items-center justify-center gap-1 mb-2">
+                        <Shield className="w-4 h-4" />
+                        <Sword className="w-4 h-4" />
+                      </div>
+                      <div className="text-sm">Defensive/Offensive Statistics Chart</div>
+                    </button>
+                  </div>
+
+                  {/* Overall Statistics Content */}
+                  {activeSection === 'overall' && (
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
@@ -186,32 +215,9 @@ export default function TurnBasedLogs() {
                       </table>
                     </div>
                   )}
-                </div>
-              )}
 
-              
-              {/* Domain Breakdown for Latest Turn */}
-              {turnStatistics.length > 0 && (
-                <div className="space-y-3">
-                  <button
-                    onClick={() => setIsDomainBreakdownExpanded(!isDomainBreakdownExpanded)}
-                    className="w-full flex items-center justify-between p-3 glass-panel hover-elevate transition-all duration-300 text-left"
-                    data-testid="button-toggle-domain-breakdown"
-                  >
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4" />
-                      <h3 className="font-semibold">Latest Turn Dimensional Breakdown</h3>
-                      <span className="text-sm text-muted-foreground">
-                      </span>
-                    </div>
-                    {isDomainBreakdownExpanded ? (
-                      <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                    )}
-                  </button>
-                  
-                  {isDomainBreakdownExpanded && (
+                  {/* Dimension Based Statistics Content */}
+                  {activeSection === 'dimension' && (
                     <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
                       {Object.entries(turnStatistics[turnStatistics.length - 1].natoDeterrence).map(([domain, natoValue]) => {
                         const russiaValue = turnStatistics[turnStatistics.length - 1].russiaDeterrence[domain as keyof typeof turnStatistics[number]['russiaDeterrence']];
@@ -246,170 +252,11 @@ export default function TurnBasedLogs() {
                       })}
                     </div>
                   )}
-                </div>
-              )}
 
-
-              {/* Defensive/Offensive Statistics Table - HIDDEN */}
-              {false && turnStatistics.length > 0 && (
-                <div className="space-y-3">
-                  <button
-                    onClick={() => setIsDefenseOffenseExpanded(!isDefenseOffenseExpanded)}
-                    className="w-full flex items-center justify-between p-3 glass-panel hover-elevate transition-all duration-300 text-left"
-                    data-testid="button-toggle-defense-offense"
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1">
-                        <Shield className="w-4 h-4 text-blue-500" />
-                        <Sword className="w-4 h-4 text-red-500" />
-                      </div>
-                      <h3 className="font-semibold">Defensive/Offensive Statistics</h3>
-                      <span className="text-sm text-muted-foreground">
-                      </span>
-                    </div>
-                    {isDefenseOffenseExpanded ? (
-                      <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                    )}
-                  </button>
-                  
-                  {isDefenseOffenseExpanded && (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b border-border/50">
-                            <th className="text-left py-2 px-1 font-medium">Turn</th>
-                            <th className="text-center py-2 px-1 font-medium">Team</th>
-                            <th className="text-center py-2 px-1 font-medium text-gray-500">
-                              <div className="flex flex-col items-center gap-1">
-                                <span>Joint</span>
-                                <div className="flex gap-1 text-xs">
-                                  <span className="text-blue-500">Def</span>
-                                  <span className="text-red-500">Off</span>
-                                </div>
-                              </div>
-                            </th>
-                            <th className="text-center py-2 px-1 font-medium text-green-500">
-                              <div className="flex flex-col items-center gap-1">
-                                <span>Economy</span>
-                                <div className="flex gap-1 text-xs">
-                                  <span className="text-blue-500">Def</span>
-                                  <span className="text-red-500">Off</span>
-                                </div>
-                              </div>
-                            </th>
-                            <th className="text-center py-2 px-1 font-medium text-purple-500">
-                              <div className="flex flex-col items-center gap-1">
-                                <span>Cognitive</span>
-                                <div className="flex gap-1 text-xs">
-                                  <span className="text-blue-500">Def</span>
-                                  <span className="text-red-500">Off</span>
-                                </div>
-                              </div>
-                            </th>
-                            <th className="text-center py-2 px-1 font-medium text-blue-500">
-                              <div className="flex flex-col items-center gap-1">
-                                <span>Space</span>
-                                <div className="flex gap-1 text-xs">
-                                  <span className="text-blue-500">Def</span>
-                                  <span className="text-red-500">Off</span>
-                                </div>
-                              </div>
-                            </th>
-                            <th className="text-center py-2 px-1 font-medium text-yellow-500">
-                              <div className="flex flex-col items-center gap-1">
-                                <span>Cyber</span>
-                                <div className="flex gap-1 text-xs">
-                                  <span className="text-blue-500">Def</span>
-                                  <span className="text-red-500">Off</span>
-                                </div>
-                              </div>
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {turnStatistics.flatMap((stat, index) => [
-                            // NATO row
-                            <tr key={`nato-${index}`} className="border-b border-border/20">
-                              <td className="py-2 px-1 font-medium" data-testid={`defense-offense-nato-${stat.turn}`}>
-                                Turn {stat.turn}
-                              </td>
-                              <td className="text-center py-2 px-1 text-blue-400 font-semibold">
-                                NATO
-                              </td>
-                              <td className="text-center py-2 px-1" data-testid={`nato-joint-def-off-${stat.turn}`}>
-                                <div className="space-y-1 text-xs">
-                                  <div className="text-blue-500 font-medium">{stat.natoDeterrence.joint}</div>
-                                  <div className="text-red-500 font-medium">{100 - stat.russiaDeterrence.joint}</div>
-                                </div>
-                              </td>
-                              <td className="text-center py-2 px-1" data-testid={`nato-economy-def-off-${stat.turn}`}>
-                                <div className="space-y-1 text-xs">
-                                  <div className="text-blue-500 font-medium">{stat.natoDeterrence.economy}</div>
-                                  <div className="text-red-500 font-medium">{100 - stat.russiaDeterrence.economy}</div>
-                                </div>
-                              </td>
-                              <td className="text-center py-2 px-1" data-testid={`nato-cognitive-def-off-${stat.turn}`}>
-                                <div className="space-y-1 text-xs">
-                                  <div className="text-blue-500 font-medium">{stat.natoDeterrence.cognitive}</div>
-                                  <div className="text-red-500 font-medium">{100 - stat.russiaDeterrence.cognitive}</div>
-                                </div>
-                              </td>
-                              <td className="text-center py-2 px-1" data-testid={`nato-space-def-off-${stat.turn}`}>
-                                <div className="space-y-1 text-xs">
-                                  <div className="text-blue-500 font-medium">{stat.natoDeterrence.space}</div>
-                                  <div className="text-red-500 font-medium">{100 - stat.russiaDeterrence.space}</div>
-                                </div>
-                              </td>
-                              <td className="text-center py-2 px-1" data-testid={`nato-cyber-def-off-${stat.turn}`}>
-                                <div className="space-y-1 text-xs">
-                                  <div className="text-blue-500 font-medium">{stat.natoDeterrence.cyber}</div>
-                                  <div className="text-red-500 font-medium">{100 - stat.russiaDeterrence.cyber}</div>
-                                </div>
-                              </td>
-                            </tr>,
-                            // Russia row
-                            <tr key={`russia-${index}`} className="border-b border-border/20">
-                              <td className="py-2 px-1 font-medium">
-                              </td>
-                              <td className="text-center py-2 px-1 text-red-400 font-semibold">
-                                Russia
-                              </td>
-                              <td className="text-center py-2 px-1" data-testid={`russia-joint-def-off-${stat.turn}`}>
-                                <div className="space-y-1 text-xs">
-                                  <div className="text-blue-500 font-medium">{stat.russiaDeterrence.joint}</div>
-                                  <div className="text-red-500 font-medium">{100 - stat.natoDeterrence.joint}</div>
-                                </div>
-                              </td>
-                              <td className="text-center py-2 px-1" data-testid={`russia-economy-def-off-${stat.turn}`}>
-                                <div className="space-y-1 text-xs">
-                                  <div className="text-blue-500 font-medium">{stat.russiaDeterrence.economy}</div>
-                                  <div className="text-red-500 font-medium">{100 - stat.natoDeterrence.economy}</div>
-                                </div>
-                              </td>
-                              <td className="text-center py-2 px-1" data-testid={`russia-cognitive-def-off-${stat.turn}`}>
-                                <div className="space-y-1 text-xs">
-                                  <div className="text-blue-500 font-medium">{stat.russiaDeterrence.cognitive}</div>
-                                  <div className="text-red-500 font-medium">{100 - stat.natoDeterrence.cognitive}</div>
-                                </div>
-                              </td>
-                              <td className="text-center py-2 px-1" data-testid={`russia-space-def-off-${stat.turn}`}>
-                                <div className="space-y-1 text-xs">
-                                  <div className="text-blue-500 font-medium">{stat.russiaDeterrence.space}</div>
-                                  <div className="text-red-500 font-medium">{100 - stat.natoDeterrence.space}</div>
-                                </div>
-                              </td>
-                              <td className="text-center py-2 px-1" data-testid={`russia-cyber-def-off-${stat.turn}`}>
-                                <div className="space-y-1 text-xs">
-                                  <div className="text-blue-500 font-medium">{stat.russiaDeterrence.cyber}</div>
-                                  <div className="text-red-500 font-medium">{100 - stat.natoDeterrence.cyber}</div>
-                                </div>
-                              </td>
-                            </tr>
-                          ])}
-                        </tbody>
-                      </table>
+                  {/* Defensive/Offensive Statistics Chart Content */}
+                  {activeSection === 'defense' && (
+                    <div className="space-y-4">
+                      <DefenseOffenseChart forceExpanded={true} hideToggle={true} />
                     </div>
                   )}
                 </div>
