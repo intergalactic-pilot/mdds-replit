@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, LineChart, BarChart3, TrendingUp, Minus, MoreHorizontal } from 'lucide-react';
+import { ChevronDown, ChevronUp, LineChart, BarChart3, TrendingUp, Minus, MoreHorizontal, ZoomIn } from 'lucide-react';
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useMDDSStore } from '@/state/store';
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Domain } from '@shared/schema';
@@ -18,6 +19,7 @@ export default function DomainStatistics() {
   const [isOverallStatsExpanded, setIsOverallStatsExpanded] = useState(false);
   const [isDomainBasedStatsExpanded, setIsDomainBasedStatsExpanded] = useState(false);
   const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
+  const [expandedChart, setExpandedChart] = useState<string | null>(null);
   
   // Interactive controls for Overall Statistics
   const [showRussia, setShowRussia] = useState(true);
@@ -173,7 +175,145 @@ export default function DomainStatistics() {
 
                 {/* Combined Chart */}
                 <div className="glass-panel p-4">
-                  <h4 className="text-sm font-semibold mb-3">Combined NATO vs Russia - All Domains Over Time</h4>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-sm font-semibold">Combined NATO vs Russia - All Domains Over Time</h4>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <button
+                          className="flex items-center gap-2 px-3 py-1 text-xs font-medium rounded-md border border-border/50 hover-elevate transition-all"
+                          data-testid="button-zoom-combined-chart"
+                        >
+                          <ZoomIn className="w-3 h-3" />
+                          Expand
+                        </button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-6xl w-[95vw] h-[90vh]">
+                        <DialogTitle>Combined NATO vs Russia - All Domains Over Time</DialogTitle>
+                        <div className="flex-1 mt-4">
+                          <ResponsiveContainer width="100%" height={600}>
+                            <RechartsLineChart data={overallChartData}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                              <XAxis 
+                                dataKey="turn" 
+                                stroke="hsl(var(--muted-foreground))"
+                                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                              />
+                              <YAxis 
+                                stroke="hsl(var(--muted-foreground))"
+                                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                              />
+                              <Tooltip 
+                                contentStyle={{
+                                  backgroundColor: 'hsl(var(--card))',
+                                  border: '1px solid hsl(var(--border))',
+                                  borderRadius: '8px'
+                                }}
+                              />
+                              
+                              {/* NATO Lines */}
+                              {visibleDomains.joint && (
+                                <Line 
+                                  type="monotone" 
+                                  dataKey="nato_joint" 
+                                  stroke={domainColors.joint.color} 
+                                  name="NATO Joint"
+                                  strokeWidth={3}
+                                />
+                              )}
+                              {visibleDomains.economy && (
+                                <Line 
+                                  type="monotone" 
+                                  dataKey="nato_economy" 
+                                  stroke={domainColors.economy.color} 
+                                  name="NATO Economy"
+                                  strokeWidth={3}
+                                />
+                              )}
+                              {visibleDomains.cognitive && (
+                                <Line 
+                                  type="monotone" 
+                                  dataKey="nato_cognitive" 
+                                  stroke={domainColors.cognitive.color} 
+                                  name="NATO Cognitive"
+                                  strokeWidth={3}
+                                />
+                              )}
+                              {visibleDomains.space && (
+                                <Line 
+                                  type="monotone" 
+                                  dataKey="nato_space" 
+                                  stroke={domainColors.space.color} 
+                                  name="NATO Space"
+                                  strokeWidth={3}
+                                />
+                              )}
+                              {visibleDomains.cyber && (
+                                <Line 
+                                  type="monotone" 
+                                  dataKey="nato_cyber" 
+                                  stroke={domainColors.cyber.color} 
+                                  name="NATO Cyber"
+                                  strokeWidth={3}
+                                />
+                              )}
+
+                              {/* Russia Lines - Dashed */}
+                              {showRussia && visibleDomains.joint && (
+                                <Line 
+                                  type="monotone" 
+                                  dataKey="russia_joint" 
+                                  stroke={domainColors.joint.color} 
+                                  name="Russia Joint"
+                                  strokeWidth={3}
+                                  strokeDasharray="5 5"
+                                />
+                              )}
+                              {showRussia && visibleDomains.economy && (
+                                <Line 
+                                  type="monotone" 
+                                  dataKey="russia_economy" 
+                                  stroke={domainColors.economy.color} 
+                                  name="Russia Economy"
+                                  strokeWidth={3}
+                                  strokeDasharray="5 5"
+                                />
+                              )}
+                              {showRussia && visibleDomains.cognitive && (
+                                <Line 
+                                  type="monotone" 
+                                  dataKey="russia_cognitive" 
+                                  stroke={domainColors.cognitive.color} 
+                                  name="Russia Cognitive"
+                                  strokeWidth={3}
+                                  strokeDasharray="5 5"
+                                />
+                              )}
+                              {showRussia && visibleDomains.space && (
+                                <Line 
+                                  type="monotone" 
+                                  dataKey="russia_space" 
+                                  stroke={domainColors.space.color} 
+                                  name="Russia Space"
+                                  strokeWidth={3}
+                                  strokeDasharray="5 5"
+                                />
+                              )}
+                              {showRussia && visibleDomains.cyber && (
+                                <Line 
+                                  type="monotone" 
+                                  dataKey="russia_cyber" 
+                                  stroke={domainColors.cyber.color} 
+                                  name="Russia Cyber"
+                                  strokeWidth={3}
+                                  strokeDasharray="5 5"
+                                />
+                              )}
+                            </RechartsLineChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                   <ResponsiveContainer width="100%" height={400}>
                     <RechartsLineChart data={overallChartData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -358,7 +498,57 @@ export default function DomainStatistics() {
           <div className="space-y-6">
             {/* Line Chart showing domain differences over time */}
             <div className="glass-panel p-4">
-              <h4 className="text-sm font-semibold mb-3">Dimensional Deterrence Differences</h4>
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-sm font-semibold">Dimensional Deterrence Differences</h4>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button
+                      className="flex items-center gap-2 px-3 py-1 text-xs font-medium rounded-md border border-border/50 hover-elevate transition-all"
+                      data-testid="button-zoom-differences-chart"
+                    >
+                      <ZoomIn className="w-3 h-3" />
+                      Expand
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-6xl w-[95vw] h-[90vh]">
+                    <DialogTitle>Dimensional Deterrence Differences</DialogTitle>
+                    <div className="flex-1 mt-4">
+                      <ResponsiveContainer width="100%" height={600}>
+                        <RechartsLineChart data={chartData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                          <XAxis 
+                            dataKey="turn" 
+                            stroke="hsl(var(--muted-foreground))"
+                            tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                          />
+                          <YAxis 
+                            stroke="hsl(var(--muted-foreground))"
+                            tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                          />
+                          <Tooltip 
+                            contentStyle={{
+                              backgroundColor: 'hsl(var(--card))',
+                              border: '1px solid hsl(var(--border))',
+                              borderRadius: '8px'
+                            }}
+                          />
+                          <Legend />
+                          {Object.entries(domainColors).map(([domain, config]) => (
+                            <Line
+                              key={domain}
+                              type="monotone"
+                              dataKey={domain}
+                              stroke={config.color}
+                              name={domain.charAt(0).toUpperCase() + domain.slice(1)}
+                              strokeWidth={3}
+                            />
+                          ))}
+                        </RechartsLineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
               <ResponsiveContainer width="100%" height={300}>
                 <RechartsLineChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -424,9 +614,73 @@ export default function DomainStatistics() {
                 {selectedDomain && (
             <div className="space-y-4" data-testid={`domain-analysis-${selectedDomain}`}>
               <div className="glass-panel p-4">
-                <h4 className={`text-sm font-semibold mb-3 capitalize ${domainColors[selectedDomain].textClass}`}>
-                  {selectedDomain} Domain Analysis
-                </h4>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className={`text-sm font-semibold capitalize ${domainColors[selectedDomain].textClass}`}>
+                    {selectedDomain} Domain Analysis
+                  </h4>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <button
+                        className="flex items-center gap-2 px-3 py-1 text-xs font-medium rounded-md border border-border/50 hover-elevate transition-all"
+                        data-testid={`button-zoom-domain-${selectedDomain}`}
+                      >
+                        <ZoomIn className="w-3 h-3" />
+                        Expand
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-6xl w-[95vw] h-[90vh]">
+                      <DialogTitle className={`capitalize ${domainColors[selectedDomain].textClass}`}>
+                        {selectedDomain} Domain Analysis
+                      </DialogTitle>
+                      <div className="flex-1 mt-4">
+                        <ResponsiveContainer width="100%" height={600}>
+                          <RechartsLineChart data={getDomainSpecificData(selectedDomain)}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                            <XAxis 
+                              dataKey="turn" 
+                              stroke="hsl(var(--muted-foreground))"
+                              tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                            />
+                            <YAxis 
+                              stroke="hsl(var(--muted-foreground))"
+                              tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                            />
+                            <Tooltip 
+                              contentStyle={{
+                                backgroundColor: 'hsl(var(--card))',
+                                border: '1px solid hsl(var(--border))',
+                                borderRadius: '8px'
+                              }}
+                            />
+                            <Legend />
+                            <Line 
+                              type="monotone" 
+                              dataKey="natoValue" 
+                              stroke="#3B82F6" 
+                              name="NATO (vs 100)"
+                              strokeWidth={3}
+                            />
+                            <Line 
+                              type="monotone" 
+                              dataKey="russiaValue" 
+                              stroke="#EF4444" 
+                              name="Russia (vs 100)"
+                              strokeWidth={3}
+                            />
+                            <Line 
+                              type="monotone" 
+                              dataKey="difference" 
+                              stroke={domainColors[selectedDomain].color} 
+                              name="Difference (NATO - Russia)"
+                              strokeWidth={4}
+                              strokeDasharray="5 5"
+                            />
+                          </RechartsLineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
                 
                 {/* Domain-specific line chart */}
                 <ResponsiveContainer width="100%" height={300}>
