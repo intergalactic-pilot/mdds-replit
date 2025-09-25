@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { ChevronDown, ChevronUp, Shield, Sword, Eye, EyeOff } from 'lucide-react';
 import { useMDDSStore } from '@/state/store';
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Domain } from '@shared/schema';
+import { Domain, Card } from '@shared/schema';
+import cardsData from '../data/cards.json';
 
 const domainColors = {
   joint: { color: '#9CA3AF', textClass: 'text-gray-500' },
@@ -115,6 +116,9 @@ export default function DefenseOffenseChart() {
   });
   
   const turnStatistics = useMDDSStore(state => state.turnStatistics);
+  const strategyLog = useMDDSStore(state => state.strategyLog);
+  
+  const cards = cardsData as Card[];
 
   const toggleExpanded = () => setIsExpanded(!isExpanded);
   
@@ -140,14 +144,55 @@ export default function DefenseOffenseChart() {
     cyber: stat.natoDeterrence.cyber
   }));
 
-  // Prepare data for NATO Offense chart
+  // Calculate NATO's effects on Russia's dimensions for each turn
+  const calculateNatoEffectsOnRussia = () => {
+    const effectsByTurn: Record<number, Record<Domain, number>> = {};
+    
+    // Initialize all turns with zero effects
+    turnStatistics.forEach(stat => {
+      effectsByTurn[stat.turn] = {
+        joint: 0,
+        economy: 0,
+        cognitive: 0,
+        space: 0,
+        cyber: 0
+      };
+    });
+    
+    // Process strategy log to find NATO card purchases
+    strategyLog.forEach(logEntry => {
+      if (logEntry.team === 'NATO' && logEntry.action.includes('purchased')) {
+        // Extract card ID from the action string (format: "NATO purchased CardName (ID) for XK")
+        const cardIdMatch = logEntry.action.match(/\(([^)]+)\)/);
+        if (cardIdMatch) {
+          const cardId = cardIdMatch[1];
+          const card = cards.find(c => c.id === cardId);
+          
+          if (card && card.effects) {
+            // Sum positive effects on opponent (Russia)
+            card.effects.forEach(effect => {
+              if (effect.target === 'opponent' && effect.delta > 0) {
+                effectsByTurn[logEntry.turn][effect.domain] += effect.delta;
+              }
+            });
+          }
+        }
+      }
+    });
+    
+    return effectsByTurn;
+  };
+  
+  const natoEffectsOnRussia = calculateNatoEffectsOnRussia();
+  
+  // Prepare data for NATO Offense chart (showing effects on Russia)
   const natoOffenseData = turnStatistics.map(stat => ({
     turn: stat.turn,
-    joint: 100 - stat.russiaDeterrence.joint,
-    economy: 100 - stat.russiaDeterrence.economy,
-    cognitive: 100 - stat.russiaDeterrence.cognitive,
-    space: 100 - stat.russiaDeterrence.space,
-    cyber: 100 - stat.russiaDeterrence.cyber
+    joint: natoEffectsOnRussia[stat.turn]?.joint || 0,
+    economy: natoEffectsOnRussia[stat.turn]?.economy || 0,
+    cognitive: natoEffectsOnRussia[stat.turn]?.cognitive || 0,
+    space: natoEffectsOnRussia[stat.turn]?.space || 0,
+    cyber: natoEffectsOnRussia[stat.turn]?.cyber || 0
   }));
 
   // Prepare data for Russia Defense chart
@@ -235,7 +280,7 @@ export default function DefenseOffenseChart() {
             
             {/* NATO Offense Chart */}
             <IndividualChart
-              title="NATO Offensive Strategy"
+              title="NATO Effects on Russia"
               team="NATO"
               type="Offense"
               data={natoOffenseData}
