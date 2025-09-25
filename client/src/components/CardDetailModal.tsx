@@ -40,7 +40,7 @@ export default function CardDetailModal({
   const hasDiscount = discountedPrice !== undefined && discountedPrice < card.baseCostK;
 
   const handlePasswordSubmit = () => {
-    if (passwordInput === "MDDS.01!") {
+    if (passwordInput === "MDDS") {
       setIsUnlocked(true);
       setShowPasswordInput(false);
       setPasswordError("");
