@@ -140,7 +140,7 @@ export default function DomainStatistics() {
                         }`}
                         data-testid="toggle-nato"
                       >
-                        NATO (Always Visible)
+                        NATO
                       </button>
                       <button
                         onClick={() => setShowRussia(!showRussia)}
@@ -149,7 +149,7 @@ export default function DomainStatistics() {
                         }`}
                         data-testid="toggle-russia"
                       >
-                        Russia {showRussia ? '(Visible)' : '(Hidden)'}
+                        Russia
                       </button>
                     </div>
                   </div>
@@ -169,7 +169,7 @@ export default function DomainStatistics() {
                           }`}
                           data-testid={`toggle-domain-${domain}`}
                         >
-                          {domain} {visibleDomains[domain as Domain] ? '(Visible)' : '(Hidden)'}
+                          {domain}
                         </button>
                       ))}
                     </div>
