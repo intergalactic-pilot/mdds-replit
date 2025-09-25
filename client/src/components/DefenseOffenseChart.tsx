@@ -154,8 +154,13 @@ function IndividualChart({ title, team, type, data, visibleDomains, onToggleDoma
   );
 }
 
-export default function DefenseOffenseChart() {
-  const [isExpanded, setIsExpanded] = useState(false);
+interface DefenseOffenseChartProps {
+  forceExpanded?: boolean;
+  hideToggle?: boolean;
+}
+
+export default function DefenseOffenseChart({ forceExpanded = false, hideToggle = false }: DefenseOffenseChartProps = {}) {
+  const [isExpanded, setIsExpanded] = useState(forceExpanded);
   const [visibleDomains, setVisibleDomains] = useState<Record<Domain, boolean>>({
     joint: true,
     economy: true,
@@ -308,31 +313,35 @@ export default function DefenseOffenseChart() {
     cyber: russiaOffensiveEffects[stat.turn]?.cyber || 0
   }));
 
+  const shouldShowContent = forceExpanded || isExpanded;
+
   return (
     <div className="space-y-3">
-      <button
-        onClick={toggleExpanded}
-        className="w-full flex items-center justify-between p-3 glass-panel hover-elevate transition-all duration-300 text-left"
-        data-testid="button-toggle-defense-offense-chart"
-      >
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1">
-            <Shield className="w-4 h-4 text-blue-500" />
-            <Sword className="w-4 h-4 text-red-500" />
+      {!hideToggle && (
+        <button
+          onClick={toggleExpanded}
+          className="w-full flex items-center justify-between p-3 glass-panel hover-elevate transition-all duration-300 text-left"
+          data-testid="button-toggle-defense-offense-chart"
+        >
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              <Shield className="w-4 h-4 text-blue-500" />
+              <Sword className="w-4 h-4 text-red-500" />
+            </div>
+            <h3 className="font-semibold">Defensive/Offensive Statistics Chart</h3>
+            <span className="text-sm text-muted-foreground">
+              (Four interactive domain charts)
+            </span>
           </div>
-          <h3 className="font-semibold">Defensive/Offensive Statistics Chart</h3>
-          <span className="text-sm text-muted-foreground">
-            (Four interactive domain charts)
-          </span>
-        </div>
-        {isExpanded ? (
-          <ChevronUp className="w-4 h-4 text-muted-foreground" />
-        ) : (
-          <ChevronDown className="w-4 h-4 text-muted-foreground" />
-        )}
-      </button>
+          {isExpanded ? (
+            <ChevronUp className="w-4 h-4 text-muted-foreground" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-muted-foreground" />
+          )}
+        </button>
+      )}
       
-      {isExpanded && (
+      {shouldShowContent && (
         <div className="space-y-4">
           {/* Global Domain Controls */}
           <div className="p-3 glass-panel">
