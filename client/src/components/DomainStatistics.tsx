@@ -319,7 +319,7 @@ export default function DomainStatistics() {
             )}
           </div>
 
-          {/* Domain-based Statistics */}
+          {/* Dimension-based Statistics */}
           <div className="space-y-3">
             <button
               onClick={() => setIsDomainBasedStatsExpanded(!isDomainBasedStatsExpanded)}
@@ -328,7 +328,7 @@ export default function DomainStatistics() {
             >
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-4 h-4" />
-                <h3 className="font-semibold">Domain-based Statistics</h3>
+                <h3 className="font-semibold">Dimension-based Statistics</h3>
                 <span className="text-sm text-muted-foreground">
                   (Interactive domain analysis)
                 </span>
