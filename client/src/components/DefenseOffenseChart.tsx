@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, Shield, Sword, Eye, EyeOff } from 'lucide-react';
+import { ChevronDown, ChevronUp, Shield, Sword, Eye, EyeOff, ZoomIn } from 'lucide-react';
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useMDDSStore } from '@/state/store';
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Domain, Card } from '@shared/schema';
@@ -50,19 +51,67 @@ function IndividualChart({ title, team, type, data, visibleDomains, onToggleDoma
     <div className={`${bgClass} p-4 rounded-lg border border-border/50`}>
       <div className="flex items-center justify-between mb-3">
         <h4 className="font-semibold text-sm">{title}</h4>
-        <div className="flex gap-1">
-          {(Object.keys(domainColors) as Domain[]).map(domain => (
-            <button
-              key={domain}
-              onClick={() => onToggleDomain(domain)}
-              className={`w-3 h-3 rounded-full transition-opacity ${
-                visibleDomains[domain] ? 'opacity-100' : 'opacity-30'
-              }`}
-              style={{ backgroundColor: domainColors[domain].color }}
-              title={`Toggle ${domain}`}
-              data-testid={`toggle-${team.toLowerCase()}-${type.toLowerCase()}-${domain}`}
-            />
-          ))}
+        <div className="flex items-center gap-2">
+          <Dialog>
+            <DialogTrigger asChild>
+              <button
+                className="flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md border border-border/50 hover-elevate transition-all"
+                data-testid={`button-zoom-${team.toLowerCase()}-${type.toLowerCase()}`}
+              >
+                <ZoomIn className="w-3 h-3" />
+                Expand
+              </button>
+            </DialogTrigger>
+            <DialogContent className="max-w-6xl w-[95vw] h-[90vh]">
+              <DialogTitle>{title}</DialogTitle>
+              <div className="flex-1 mt-4">
+                <ResponsiveContainer width="100%" height={600}>
+                  <RechartsLineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted-foreground) / 0.2)" />
+                    <XAxis 
+                      dataKey="turn" 
+                      stroke="hsl(var(--muted-foreground))"
+                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                    />
+                    <YAxis 
+                      stroke="hsl(var(--muted-foreground))"
+                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    {(Object.keys(domainColors) as Domain[]).map(domain => {
+                      if (!visibleDomains[domain]) return null;
+                      return (
+                        <Line
+                          key={domain}
+                          type="monotone"
+                          dataKey={domain}
+                          stroke={domainColors[domain].color}
+                          name={domain}
+                          strokeWidth={3}
+                          dot={{ r: 5 }}
+                          activeDot={{ r: 7 }}
+                        />
+                      );
+                    })}
+                  </RechartsLineChart>
+                </ResponsiveContainer>
+              </div>
+            </DialogContent>
+          </Dialog>
+          <div className="flex gap-1">
+            {(Object.keys(domainColors) as Domain[]).map(domain => (
+              <button
+                key={domain}
+                onClick={() => onToggleDomain(domain)}
+                className={`w-3 h-3 rounded-full transition-opacity ${
+                  visibleDomains[domain] ? 'opacity-100' : 'opacity-30'
+                }`}
+                style={{ backgroundColor: domainColors[domain].color }}
+                title={`Toggle ${domain}`}
+                data-testid={`toggle-${team.toLowerCase()}-${type.toLowerCase()}-${domain}`}
+              />
+            ))}
+          </div>
         </div>
       </div>
       
