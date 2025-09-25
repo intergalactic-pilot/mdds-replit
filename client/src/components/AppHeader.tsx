@@ -86,7 +86,7 @@ export default function AppHeader({
             <img src={logoUrl} alt="MDDS Logo" className="w-8 h-8" />
             <div>
               <h1 className="text-xl font-bold" data-testid="text-app-title">
-                {sanitizeText('MDDS - Multi Domain Deterrence Strategy')}
+                {sanitizeText('MDDS - Multi Dimension Deterrence Strategy')}
               </h1>
               <p className="text-xs text-muted-foreground">
                 {sanitizeText('Strategic Planning Application')}

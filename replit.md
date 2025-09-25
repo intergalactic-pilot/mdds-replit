@@ -1,4 +1,4 @@
-# MDDS - Multi Domain Deterrence Strategy
+# MDDS - Multi Dimension Deterrence Strategy
 
 ## Overview
 

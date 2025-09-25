@@ -72,7 +72,7 @@ export default function TeamPanel({ team, teamState, isActive = false, currentTu
 
         {/* Domain Deterrence */}
         <div className="space-y-3">
-          <h4 className="text-sm font-medium text-muted-foreground">Domain Deterrence</h4>
+          <h4 className="text-sm font-medium text-muted-foreground">Dimensional Deterrence</h4>
           {domainOrder.map(domain => (
             <div key={domain} className="space-y-1">
               <div className="flex items-center justify-between">
