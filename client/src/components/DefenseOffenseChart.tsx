@@ -159,12 +159,11 @@ export default function DefenseOffenseChart() {
           const card = cards.find(c => c.id === cardId);
           
           if (card && card.effects) {
-            // Sum effects on opponent (convert negative delta to positive offensive impact)
+            // Sum effects on opponent (keep negative values to show below zero line)
             card.effects.forEach(effect => {
               if (effect.target === 'opponent') {
-                // Negative effects on opponent are positive offensive impacts
-                const offensiveImpact = Math.abs(effect.delta);
-                effectsByTurn[logEntry.turn][effect.domain] += offensiveImpact;
+                // Keep negative effects as negative to show offensive impact below zero
+                effectsByTurn[logEntry.turn][effect.domain] += effect.delta;
               }
             });
           }
