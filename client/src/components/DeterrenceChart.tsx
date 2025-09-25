@@ -19,7 +19,7 @@ export default function DeterrenceChart({ natoTeam, russiaTeam }: DeterrenceChar
   return (
     <div className="glass-card p-4 lg:p-6" data-testid="deterrence-chart">
       <div className="mb-6">
-        <h2 className="text-xl font-bold text-center mb-2">Overall Deterrence Status</h2>
+        <h2 className="text-xl font-bold text-center mb-2">Total Deterrence Score</h2>
         <div className="flex justify-center gap-8 mb-4">
           <div className="text-center">
             <div className="text-2xl font-bold text-blue-400" data-testid="nato-total-deterrence">
