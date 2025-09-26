@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { sanitizeText } from '../logic/guards';
 import { useMDDSStore } from '@/state/store';
+import StrategyLog from './StrategyLog';
 import { 
   HelpCircle, 
   RotateCcw,
@@ -45,6 +46,7 @@ export default function AppHeader({
   
   // Use store for session management
   const sessionInfo = useMDDSStore(state => state.sessionInfo);
+  const strategyLog = useMDDSStore(state => state.strategyLog);
   const updateSessionName = useMDDSStore(state => state.updateSessionName);
   const updateParticipant = useMDDSStore(state => state.updateParticipant);
   const addParticipant = useMDDSStore(state => state.addParticipant);
@@ -262,33 +264,19 @@ export default function AppHeader({
               </DialogContent>
             </Dialog>
 
-            {/* Settings Modal */}
+            {/* Card Logs Modal */}
             <Dialog open={showSettings} onOpenChange={setShowSettings}>
               <DialogTrigger asChild>
-                <Button variant="ghost" size="icon" data-testid="button-show-settings">
+                <Button variant="ghost" size="icon" data-testid="button-show-card-logs">
                   <Settings className="w-4 h-4" />
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-4xl max-h-[80vh]">
                 <DialogHeader>
-                  <DialogTitle>{sanitizeText('Strategy Settings')}</DialogTitle>
+                  <DialogTitle>{sanitizeText('Card Purchase Logs')}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="max-turns">Maximum Turns</Label>
-                    <Select value={maxTurns.toString()} onValueChange={(value) => onSetMaxTurns(parseInt(value))}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {[1, 2, 3, 4, 5, 6, 7].map(turns => (
-                          <SelectItem key={turns} value={turns.toString()}>
-                            {turns} turn{turns === 1 ? '' : 's'}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <StrategyLog entries={strategyLog} maxHeight="60vh" />
                 </div>
               </DialogContent>
             </Dialog>
