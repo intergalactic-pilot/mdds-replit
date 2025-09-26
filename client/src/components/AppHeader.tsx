@@ -246,7 +246,17 @@ export default function AppHeader({
                   <HelpCircle className="w-4 h-4" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-96 max-h-[70vh] overflow-y-auto" align="end">
+              <PopoverContent 
+                className="w-96 max-h-[70vh] overflow-y-auto" 
+                align="end"
+                onInteractOutside={(e) => {
+                  // Prevent closing when interacting with the select dropdown
+                  const target = e.target as Element;
+                  if (target.closest('[data-radix-popper-content-wrapper]')) {
+                    e.preventDefault();
+                  }
+                }}
+              >
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <h4 className="font-semibold text-sm">Card Reference by Dimension</h4>
@@ -275,34 +285,19 @@ export default function AppHeader({
                         {cardsData
                           .filter((card: any) => card.domain === selectedDimension)
                           .map((card: any) => (
-                            <div key={card.id} className="flex items-center gap-3 p-2 border border-border/30 rounded text-xs hover-elevate">
-                              <Badge variant="outline" className="text-xs font-mono min-w-8">
+                            <div key={card.id} className="flex items-center gap-3 p-2 text-sm">
+                              <span className="font-mono font-medium">
                                 {card.id}
-                              </Badge>
-                              <div className="flex-1 min-w-0">
-                                <span className="font-medium text-sm truncate block">{card.name}</span>
-                              </div>
-                              <Badge variant="secondary" className="text-xs">
-                                {card.type}
-                              </Badge>
-                              <Badge variant="outline" className="text-xs">
-                                {card.baseCostK}K
-                              </Badge>
-                              <div className="flex items-center gap-1">
+                              </span>
+                              <span>-</span>
+                              <span className="text-muted-foreground">
                                 {(card.effects || []).map((effect: any, effectIndex: number) => (
-                                  <div key={effectIndex} className="flex items-center gap-1">
-                                    <span className={`text-xs ${effect.target === 'self' ? 'text-blue-400' : 'text-red-400'}`}>
-                                      {effect.target === 'self' ? '↑' : '↓'}
-                                    </span>
-                                    <DomainBadge domain={effect.domain} className="text-xs scale-75" />
-                                    <span className={`font-mono text-xs ${
-                                      effect.delta > 0 ? 'text-green-400' : 'text-red-400'
-                                    }`}>
-                                      {effect.delta > 0 ? '+' : ''}{effect.delta}
-                                    </span>
-                                  </div>
+                                  <span key={effectIndex}>
+                                    {effectIndex > 0 ? ', ' : ''}
+                                    {effect.target === 'self' ? 'Self' : 'Opponent'} {effect.domain}:{effect.delta > 0 ? '+' : ''}{effect.delta}
+                                  </span>
                                 ))}
-                              </div>
+                              </span>
                             </div>
                           ))
                         }
