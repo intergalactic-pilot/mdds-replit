@@ -56,6 +56,10 @@ interface MDDSStore extends GameState {
   loadFromLocalStorage: () => boolean;
   exportState: () => string;
   importState: (jsonState: string) => boolean;
+  
+  // Session sharing
+  createShareableSession: () => any;
+  shareSession: () => Promise<string | null>;
 }
 
 const createInitialTeamState = (): TeamState => ({
@@ -328,6 +332,57 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
       return true;
     } catch {
       return false;
+    }
+  },
+
+  createShareableSession: () => {
+    const state = get();
+    return {
+      sessionInfo: state.sessionInfo,
+      gameState: {
+        turn: state.turn,
+        maxTurns: state.maxTurns,
+        currentTeam: state.currentTeam,
+        teams: state.teams,
+        phase: state.phase,
+        strategyLog: state.strategyLog
+      },
+      turnStatistics: state.turnStatistics
+    };
+  },
+
+  shareSession: async () => {
+    try {
+      const state = get();
+      const sessionData = {
+        sessionInfo: state.sessionInfo,
+        gameState: {
+          turn: state.turn,
+          maxTurns: state.maxTurns,
+          currentTeam: state.currentTeam,
+          teams: state.teams,
+          phase: state.phase,
+          strategyLog: state.strategyLog
+        },
+        turnStatistics: state.turnStatistics
+      };
+
+      const response = await fetch('/api/sessions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(sessionData),
+      });
+
+      if (response.ok) {
+        const session = await response.json();
+        return session.id;
+      }
+      return null;
+    } catch (error) {
+      console.error('Failed to share session:', error);
+      return null;
     }
   }
 }));

@@ -125,44 +125,109 @@ export const sessionInfoSchema = z.object({
   }))
 });
 
+// Team state schema
+const teamStateSchema = z.object({
+  deterrence: z.object({
+    cyber: z.number(),
+    economy: z.number(),
+    cognitive: z.number(),
+    space: z.number(),
+    joint: z.number()
+  }),
+  totalDeterrence: z.number(),
+  budget: z.number(),
+  ownedPermanents: z.array(cardSchema),
+  permanentsQueue: z.array(z.object({
+    card: cardSchema,
+    availableTurn: z.number()
+  })),
+  expertsQueue: z.array(z.object({
+    card: cardSchema,
+    availableTurn: z.number()
+  })),
+  cart: z.array(cardSchema),
+  recentPurchases: z.array(z.object({
+    cardId: z.string(),
+    purchasedTurn: z.number()
+  }))
+});
+
+// Game state schema
+const gameStateSchema = z.object({
+  turn: z.number(),
+  maxTurns: z.number(),
+  currentTeam: z.enum(['NATO', 'Russia']),
+  teams: z.object({
+    NATO: teamStateSchema,
+    Russia: teamStateSchema
+  }),
+  phase: z.enum(['purchase', 'commit', 'advance']),
+  strategyLog: z.array(z.object({
+    turn: z.number(),
+    team: z.enum(['NATO', 'Russia']),
+    action: z.string(),
+    timestamp: z.date()
+  }))
+});
+
 export const sharedSessionSchema = z.object({
   id: z.string(),
   sessionInfo: sessionInfoSchema,
-  gameState: z.object({
-    turn: z.number(),
-    maxTurns: z.number(),
-    currentTeam: z.enum(['NATO', 'Russia']),
-    teams: z.record(z.enum(['NATO', 'Russia']), z.object({
-      deterrence: z.record(z.enum(['cyber', 'economy', 'cognitive', 'space', 'joint']), z.number()),
-      totalDeterrence: z.number(),
-      budget: z.number(),
-      ownedPermanents: z.array(cardSchema),
-      permanentsQueue: z.array(z.object({
-        card: cardSchema,
-        availableTurn: z.number()
-      })),
-      expertsQueue: z.array(z.object({
-        card: cardSchema,
-        availableTurn: z.number()
-      })),
-      cart: z.array(cardSchema),
-      recentPurchases: z.array(z.object({
-        cardId: z.string(),
-        purchasedTurn: z.number()
-      }))
-    })),
-    phase: z.enum(['purchase', 'commit', 'advance']),
-    strategyLog: z.array(z.object({
-      turn: z.number(),
-      team: z.enum(['NATO', 'Russia']),
-      action: z.string(),
-      timestamp: z.date()
-    }))
-  }),
+  gameState: gameStateSchema,
   turnStatistics: z.array(turnStatisticsSchema),
   createdAt: z.date(),
   lastUpdated: z.date()
 });
 
+// Insert schemas for API validation
+export const createSessionSchema = z.object({
+  sessionInfo: sessionInfoSchema,
+  gameState: z.object({
+    turn: z.number(),
+    maxTurns: z.number(),
+    currentTeam: z.enum(['NATO', 'Russia']),
+    teams: z.object({
+      NATO: teamStateSchema,
+      Russia: teamStateSchema
+    }),
+    phase: z.enum(['purchase', 'commit', 'advance']),
+    strategyLog: z.array(z.object({
+      turn: z.number(),
+      team: z.enum(['NATO', 'Russia']),
+      action: z.string(),
+      timestamp: z.string().transform(str => new Date(str))
+    }))
+  }),
+  turnStatistics: z.array(turnStatisticsSchema.omit({ timestamp: true }).extend({
+    timestamp: z.string().transform(str => new Date(str))
+  }))
+});
+
+export const updateSessionSchema = z.object({
+  sessionInfo: sessionInfoSchema,
+  gameState: z.object({
+    turn: z.number(),
+    maxTurns: z.number(),
+    currentTeam: z.enum(['NATO', 'Russia']),
+    teams: z.object({
+      NATO: teamStateSchema,
+      Russia: teamStateSchema
+    }),
+    phase: z.enum(['purchase', 'commit', 'advance']),
+    strategyLog: z.array(z.object({
+      turn: z.number(),
+      team: z.enum(['NATO', 'Russia']),
+      action: z.string(),
+      timestamp: z.string().transform(str => new Date(str))
+    }))
+  }),
+  turnStatistics: z.array(turnStatisticsSchema.omit({ timestamp: true }).extend({
+    timestamp: z.string().transform(str => new Date(str))
+  })),
+  lastUpdated: z.string().transform(str => new Date(str))
+});
+
 export type InsertSharedSession = z.infer<typeof sharedSessionSchema>;
 export type SelectSharedSession = SharedSession;
+export type CreateSessionInput = z.infer<typeof createSessionSchema>;
+export type UpdateSessionInput = z.infer<typeof updateSessionSchema>;
