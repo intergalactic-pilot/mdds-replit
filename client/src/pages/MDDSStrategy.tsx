@@ -83,8 +83,6 @@ export default function MDDSStrategy() {
   return (
     <div className="min-h-screen pb-20 md:pb-0">
       <AppHeader
-        currentTurn={store.turn}
-        maxTurns={store.maxTurns}
         onSave={() => {
           store.saveToLocalStorage();
           alert('Strategy saved to local storage!');
