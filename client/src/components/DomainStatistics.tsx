@@ -606,7 +606,7 @@ export default function DomainStatistics() {
           {/* Defensive/Offensive Statistics Chart Content */}
           {activeSection === 'defense' && (
             <div className="space-y-4" data-testid="defense-offense-stats-content">
-              <DefenseOffenseChart />
+              <DefenseOffenseChart forceExpanded={true} hideToggle={true} />
             </div>
           )}
         </div>
