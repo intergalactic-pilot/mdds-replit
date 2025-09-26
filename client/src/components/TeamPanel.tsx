@@ -82,7 +82,7 @@ export default function TeamPanel({ team, teamState, isActive = false, currentTu
                 </span>
               </div>
               <Progress 
-                value={teamState.deterrence[domain]} 
+                value={200} 
                 max={200} 
                 className={`h-2 ${team === 'Russia' ? '[&>div]:bg-red-500' : '[&>div]:bg-blue-500'}`}
               />
