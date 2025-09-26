@@ -253,10 +253,6 @@ export default function MDDSStrategy() {
           </div>
         </div>
         
-        {/* Turn-based logs Section */}
-        <div className="mt-6">
-          <TurnBasedLogs />
-        </div>
         
         {/* Statistics Section */}
         <div className="mt-6">
