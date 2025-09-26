@@ -17,6 +17,7 @@ interface TurnStatistics {
 // Session information interface
 interface SessionInfo {
   sessionName: string;
+  sessionStarted: boolean;
   participants: Array<{
     name: string;
     country: string;
@@ -41,6 +42,7 @@ interface MDDSStore extends GameState {
   
   // Session management
   updateSessionName: (name: string) => void;
+  startSession: () => void;
   updateParticipant: (index: number, field: 'name' | 'country', value: string) => void;
   addParticipant: () => void;
   removeParticipant: (index: number) => void;
@@ -88,6 +90,7 @@ const createInitialState = (): Omit<GameState, 'teams'> & { teams: Record<Team, 
     }],
     sessionInfo: {
       sessionName: '',
+      sessionStarted: false,
       participants: [{ name: '', country: '' }, { name: '', country: '' }]
     },
     turnStatistics: [{
@@ -188,6 +191,18 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
     }));
   },
 
+  startSession: () => {
+    set((state) => ({
+      sessionInfo: {
+        ...state.sessionInfo,
+        sessionStarted: true
+      }
+    }));
+    // Auto-save when session is started
+    const saveToLocalStorage = get().saveToLocalStorage;
+    saveToLocalStorage();
+  },
+
   updateParticipant: (index: number, field: 'name' | 'country', value: string) => {
     set((state) => ({
       sessionInfo: {
@@ -252,6 +267,7 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
           ...data,
           sessionInfo: data.sessionInfo ? {
             sessionName: data.sessionInfo.sessionName || '',
+            sessionStarted: data.sessionInfo.sessionStarted || false,
             participants: data.sessionInfo.participants && data.sessionInfo.participants.length > 0 
               ? data.sessionInfo.participants
               : currentState.sessionInfo.participants
@@ -303,6 +319,7 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
         turnStatistics: data.turnStatistics || [],
         sessionInfo: data.sessionInfo ? {
           sessionName: data.sessionInfo.sessionName || '',
+          sessionStarted: data.sessionInfo.sessionStarted || false,
           participants: data.sessionInfo.participants && data.sessionInfo.participants.length > 0 
             ? data.sessionInfo.participants
             : currentState.sessionInfo.participants

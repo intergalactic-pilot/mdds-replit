@@ -50,6 +50,7 @@ export default function AppHeader({
   const sessionInfo = useMDDSStore(state => state.sessionInfo);
   const strategyLog = useMDDSStore(state => state.strategyLog);
   const updateSessionName = useMDDSStore(state => state.updateSessionName);
+  const startSession = useMDDSStore(state => state.startSession);
   const updateParticipant = useMDDSStore(state => state.updateParticipant);
   const addParticipant = useMDDSStore(state => state.addParticipant);
   const removeParticipant = useMDDSStore(state => state.removeParticipant);
@@ -121,8 +122,25 @@ export default function AppHeader({
                 }}
                 placeholder="Enter session name"
                 className="w-48 h-8 text-sm"
+                disabled={sessionInfo.sessionStarted}
                 data-testid="input-session-name-header"
               />
+              {!sessionInfo.sessionStarted && sessionInfo.sessionName.trim() && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={startSession}
+                  className="h-8 px-3"
+                  data-testid="button-start-session"
+                >
+                  Start
+                </Button>
+              )}
+              {sessionInfo.sessionStarted && (
+                <Badge variant="secondary" className="h-8 px-3 flex items-center">
+                  Started
+                </Badge>
+              )}
             </div>
           </div>
 
@@ -158,6 +176,7 @@ export default function AppHeader({
                       value={sessionInfo.sessionName}
                       onChange={(e) => updateSessionName(e.target.value)}
                       placeholder="Enter session name"
+                      disabled={sessionInfo.sessionStarted}
                       data-testid="input-session-name"
                     />
                   </div>
