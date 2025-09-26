@@ -139,7 +139,72 @@ export default function DomainStatistics() {
           
           {/* Overall Statistics Content */}
           {activeSection === 'overall' && (
-            <div className="space-y-4" data-testid="overall-stats-content">
+            <div className="space-y-6" data-testid="overall-stats-content">
+              {/* Domain Selector */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold">Select Dimension for Detailed Analysis</h3>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                  {Object.entries(domainColors).map(([domain, config]) => (
+                    <button
+                      key={domain}
+                      onClick={() => setSelectedDomain(selectedDomain === domain ? null : domain as Domain)}
+                      className={`p-3 rounded-md border transition-all duration-200 text-sm font-medium hover-elevate ${
+                        selectedDomain === domain 
+                          ? `${config.bgClass} border-current ${config.textClass}` 
+                          : 'border-border/50 hover:border-border text-muted-foreground'
+                      }`}
+                      data-testid={`button-select-domain-${domain}`}
+                    >
+                      <div className="capitalize">{domain}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Domain Table when selected */}
+              {selectedDomain && (
+                <div className="glass-panel p-4">
+                  <h4 className="text-sm font-semibold mb-3 capitalize">{selectedDomain} Domain Analysis</h4>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-border/50">
+                          <th className="text-left py-2 px-3 font-medium">Turn</th>
+                          <th className="text-center py-2 px-3 font-medium text-blue-400">NATO Value</th>
+                          <th className="text-center py-2 px-3 font-medium text-red-400">Russia Value</th>
+                          <th className="text-center py-2 px-3 font-medium">Difference</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {getDomainSpecificData(selectedDomain).map((data, index) => (
+                          <tr key={index} className="border-b border-border/20">
+                            <td className="py-2 px-3 font-medium">Turn {data.turn}</td>
+                            <td className="text-center py-2 px-3 text-blue-400 font-semibold">
+                              {data.natoValue}
+                            </td>
+                            <td className="text-center py-2 px-3 text-red-400 font-semibold">
+                              {data.russiaValue}
+                            </td>
+                            <td className={`text-center py-2 px-3 font-semibold ${
+                              data.difference > 0 ? 'text-blue-400' : 
+                              data.difference < 0 ? 'text-red-400' : 
+                              'text-muted-foreground'
+                            }`}>
+                              {data.difference > 0 ? `+${data.difference}` : data.difference}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Dimension-based Statistics Content */}
+          {activeSection === 'dimension' && (
+            <div className="space-y-4" data-testid="domain-based-stats-content">
               {/* Table-based Deterrence Statistics */}
               <div className="space-y-3">
                 <h3 className="font-semibold flex items-center gap-2">
@@ -538,70 +603,6 @@ export default function DomainStatistics() {
             </div>
           )}
 
-          {/* Dimension-based Statistics Content */}
-          {activeSection === 'dimension' && (
-            <div className="space-y-6" data-testid="domain-based-stats-content">
-              {/* Domain Selector */}
-              <div className="space-y-3">
-                <h3 className="text-sm font-semibold">Select Dimension for Detailed Analysis</h3>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                  {Object.entries(domainColors).map(([domain, config]) => (
-                    <button
-                      key={domain}
-                      onClick={() => setSelectedDomain(selectedDomain === domain ? null : domain as Domain)}
-                      className={`p-3 rounded-md border transition-all duration-200 text-sm font-medium hover-elevate ${
-                        selectedDomain === domain 
-                          ? `${config.bgClass} border-current ${config.textClass}` 
-                          : 'border-border/50 hover:border-border text-muted-foreground'
-                      }`}
-                      data-testid={`button-select-domain-${domain}`}
-                    >
-                      <div className="capitalize">{domain}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Domain Table when selected */}
-              {selectedDomain && (
-                <div className="glass-panel p-4">
-                  <h4 className="text-sm font-semibold mb-3 capitalize">{selectedDomain} Domain Analysis</h4>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-border/50">
-                          <th className="text-left py-2 px-3 font-medium">Turn</th>
-                          <th className="text-center py-2 px-3 font-medium text-blue-400">NATO Value</th>
-                          <th className="text-center py-2 px-3 font-medium text-red-400">Russia Value</th>
-                          <th className="text-center py-2 px-3 font-medium">Difference</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {getDomainSpecificData(selectedDomain).map((data, index) => (
-                          <tr key={index} className="border-b border-border/20">
-                            <td className="py-2 px-3 font-medium">Turn {data.turn}</td>
-                            <td className="text-center py-2 px-3 text-blue-400 font-semibold">
-                              {data.natoValue}
-                            </td>
-                            <td className="text-center py-2 px-3 text-red-400 font-semibold">
-                              {data.russiaValue}
-                            </td>
-                            <td className={`text-center py-2 px-3 font-semibold ${
-                              data.difference > 0 ? 'text-blue-400' : 
-                              data.difference < 0 ? 'text-red-400' : 
-                              'text-muted-foreground'
-                            }`}>
-                              {data.difference > 0 ? `+${data.difference}` : data.difference}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
 
           {/* Defensive/Offensive Statistics Chart Content */}
           {activeSection === 'defense' && (
