@@ -369,7 +369,9 @@
     "domain": "cognitive",
     "type": "asset",
     "baseCostK": 200,
-    "effects": []
+    "effects": [
+      { "target": "opponent", "domain": "economy", "delta": -14 }
+    ]
   },
   {
     "id": "CG6",
