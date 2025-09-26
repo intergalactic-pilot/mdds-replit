@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useParams } from 'wouter';
+import { useQuery } from '@tanstack/react-query';
 import { useMDDSStore } from '../state/store';
 import { applyDomainQuotas } from '../logic/filters';
 import { calculateDiscountedPrice, calculateCartTotal } from '../logic/pricing';
@@ -27,12 +29,21 @@ import MobileNavigation, { MobileView } from '../components/MobileNavigation';
 export default function MDDSStrategy() {
   const store = useMDDSStore();
   const isMobile = useIsMobile();
+  const params = useParams();
   const [availableCards, setAvailableCards] = useState(applyDomainQuotas(cardsData as Card[]));
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   
   // Mobile-specific state
   const [mobileView, setMobileView] = useState<MobileView>('overall');
   const [showMobileSessionInput, setShowMobileSessionInput] = useState(false);
+  const [sessionLoaded, setSessionLoaded] = useState(false);
+
+  // Load session data if sessionId is in URL
+  const { data: sessionData, isLoading: sessionLoading } = useQuery({
+    queryKey: ['/api/sessions', params.sessionId],
+    enabled: !!params.sessionId,
+    select: (data) => data
+  });
 
   // Update validation errors when cart or turn changes
   useEffect(() => {

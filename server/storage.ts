@@ -1,37 +1,69 @@
-import { type User, type InsertUser } from "@shared/schema";
+import { type SharedSession } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 // modify the interface with any CRUD methods
 // you might need
 
 export interface IStorage {
-  getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  getSession(id: string): Promise<SharedSession | undefined>;
+  getSessionByName(sessionName: string): Promise<SharedSession | undefined>;
+  createSession(session: Omit<SharedSession, 'id' | 'createdAt' | 'lastUpdated'>): Promise<SharedSession>;
+  updateSession(id: string, session: Omit<SharedSession, 'id' | 'createdAt'>): Promise<SharedSession | undefined>;
+  listSessions(): Promise<SharedSession[]>;
 }
 
 export class MemStorage implements IStorage {
-  private users: Map<string, User>;
+  private sessions: Map<string, SharedSession>;
 
   constructor() {
-    this.users = new Map();
+    this.sessions = new Map();
   }
 
-  async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+  async getSession(id: string): Promise<SharedSession | undefined> {
+    return this.sessions.get(id);
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
+  async getSessionByName(sessionName: string): Promise<SharedSession | undefined> {
+    return Array.from(this.sessions.values()).find(
+      (session) => session.sessionInfo.sessionName === sessionName,
     );
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
+  async createSession(sessionData: Omit<SharedSession, 'id' | 'createdAt' | 'lastUpdated'>): Promise<SharedSession> {
     const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+    const now = new Date();
+    const session: SharedSession = { 
+      sessionInfo: sessionData.sessionInfo,
+      gameState: sessionData.gameState,
+      turnStatistics: sessionData.turnStatistics,
+      id, 
+      createdAt: now,
+      lastUpdated: now
+    };
+    this.sessions.set(id, session);
+    return session;
+  }
+
+  async updateSession(id: string, updateData: Omit<SharedSession, 'id' | 'createdAt'>): Promise<SharedSession | undefined> {
+    const existingSession = this.sessions.get(id);
+    if (!existingSession) {
+      return undefined;
+    }
+    
+    const updatedSession: SharedSession = {
+      ...existingSession,
+      ...updateData,
+      id, // preserve original id
+      createdAt: existingSession.createdAt, // preserve creation date
+      lastUpdated: new Date()
+    };
+    
+    this.sessions.set(id, updatedSession);
+    return updatedSession;
+  }
+
+  async listSessions(): Promise<SharedSession[]> {
+    return Array.from(this.sessions.values());
   }
 }
 
