@@ -77,3 +77,92 @@ export const cardSchema = z.object({
 
 export type InsertCard = z.infer<typeof cardSchema>;
 export type SelectCard = Card;
+
+// Session and statistics schemas
+export interface TurnStatistics {
+  turn: number;
+  natoTotalDeterrence: number;
+  russiaTotalDeterrence: number;
+  natoDeterrence: Record<Domain, number>;
+  russiaDeterrence: Record<Domain, number>;
+  timestamp: Date;
+}
+
+export interface SessionInfo {
+  sessionName: string;
+  sessionStarted: boolean;
+  participants: Array<{
+    name: string;
+    country: string;
+  }>;
+}
+
+export interface SharedSession {
+  id: string;                    // unique session identifier for URLs
+  sessionInfo: SessionInfo;      // session metadata
+  gameState: GameState;          // complete game state
+  turnStatistics: TurnStatistics[]; // historical turn data
+  createdAt: Date;               // when session was created
+  lastUpdated: Date;             // when session was last modified
+}
+
+// Zod schemas for validation
+export const turnStatisticsSchema = z.object({
+  turn: z.number(),
+  natoTotalDeterrence: z.number(),
+  russiaTotalDeterrence: z.number(),
+  natoDeterrence: z.record(z.enum(['cyber', 'economy', 'cognitive', 'space', 'joint']), z.number()),
+  russiaDeterrence: z.record(z.enum(['cyber', 'economy', 'cognitive', 'space', 'joint']), z.number()),
+  timestamp: z.date()
+});
+
+export const sessionInfoSchema = z.object({
+  sessionName: z.string(),
+  sessionStarted: z.boolean(),
+  participants: z.array(z.object({
+    name: z.string(),
+    country: z.string()
+  }))
+});
+
+export const sharedSessionSchema = z.object({
+  id: z.string(),
+  sessionInfo: sessionInfoSchema,
+  gameState: z.object({
+    turn: z.number(),
+    maxTurns: z.number(),
+    currentTeam: z.enum(['NATO', 'Russia']),
+    teams: z.record(z.enum(['NATO', 'Russia']), z.object({
+      deterrence: z.record(z.enum(['cyber', 'economy', 'cognitive', 'space', 'joint']), z.number()),
+      totalDeterrence: z.number(),
+      budget: z.number(),
+      ownedPermanents: z.array(cardSchema),
+      permanentsQueue: z.array(z.object({
+        card: cardSchema,
+        availableTurn: z.number()
+      })),
+      expertsQueue: z.array(z.object({
+        card: cardSchema,
+        availableTurn: z.number()
+      })),
+      cart: z.array(cardSchema),
+      recentPurchases: z.array(z.object({
+        cardId: z.string(),
+        purchasedTurn: z.number()
+      }))
+    })),
+    phase: z.enum(['purchase', 'commit', 'advance']),
+    strategyLog: z.array(z.object({
+      turn: z.number(),
+      team: z.enum(['NATO', 'Russia']),
+      action: z.string(),
+      timestamp: z.date()
+    }))
+  }),
+  turnStatistics: z.array(turnStatisticsSchema),
+  createdAt: z.date(),
+  lastUpdated: z.date()
+});
+
+export type InsertSharedSession = z.infer<typeof sharedSessionSchema>;
+export type SelectSharedSession = SharedSession;
