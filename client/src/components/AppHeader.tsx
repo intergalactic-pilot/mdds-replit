@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { sanitizeText } from '../logic/guards';
 import { useMDDSStore } from '@/state/store';
 import StrategyLog from './StrategyLog';
+import { generateCardLogsPDF } from '@/utils/pdfGenerator';
 import { 
   HelpCircle, 
   RotateCcw,
@@ -51,6 +52,15 @@ export default function AppHeader({
   const updateParticipant = useMDDSStore(state => state.updateParticipant);
   const addParticipant = useMDDSStore(state => state.addParticipant);
   const removeParticipant = useMDDSStore(state => state.removeParticipant);
+
+  const handleDownloadCardLogs = async () => {
+    try {
+      generateCardLogsPDF(strategyLog, sessionInfo);
+    } catch (error) {
+      console.error('Failed to generate Card Logs PDF:', error);
+      alert('Failed to generate Card Logs PDF. Please try again.');
+    }
+  };
 
   const validateSessionInfo = () => {
     const errors: string[] = [];
@@ -273,7 +283,18 @@ export default function AppHeader({
               </DialogTrigger>
               <DialogContent className="max-w-4xl max-h-[80vh]">
                 <DialogHeader>
-                  <DialogTitle>{sanitizeText('Card Purchase Logs')}</DialogTitle>
+                  <div className="flex items-center justify-between">
+                    <DialogTitle>{sanitizeText('Card Purchase Logs')}</DialogTitle>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleDownloadCardLogs}
+                      data-testid="button-download-card-logs"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Download PDF
+                    </Button>
+                  </div>
                 </DialogHeader>
                 <div className="space-y-4">
                   <StrategyLog entries={strategyLog} maxHeight="60vh" />

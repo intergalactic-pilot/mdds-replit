@@ -36,6 +36,116 @@ interface PDFReportData {
   sessionInfo: SessionInfo;
 }
 
+// Generate Card Logs PDF Report
+export const generateCardLogsPDF = (strategyLog: StrategyLogEntry[], sessionInfo: SessionInfo) => {
+  const pdf = new jsPDF();
+  const margin = 20;
+  const contentWidth = 170; // 210 - 40 (margins)
+  let yPosition = margin;
+  
+  // Helper function to check if we need a new page
+  const checkPage = (requiredHeight: number) => {
+    if (yPosition + requiredHeight > 280) {
+      pdf.addPage();
+      yPosition = margin;
+    }
+  };
+
+  // Header
+  pdf.setFontSize(18);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('MDDS - Card Purchase Logs', margin, yPosition);
+  yPosition += 15;
+  
+  // Session info
+  if (sessionInfo.sessionName) {
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(`Session: ${sessionInfo.sessionName}`, margin, yPosition);
+    yPosition += 8;
+  }
+  
+  // Generation timestamp
+  pdf.setFontSize(10);
+  pdf.setFont('helvetica', 'italic');
+  pdf.text(`Generated: ${new Date().toLocaleString()}`, margin, yPosition);
+  yPosition += 15;
+  
+  // Filter only card purchase logs
+  const cardPurchaseLogs = strategyLog.filter(entry => 
+    entry.action.includes('purchased') && !entry.action.includes('Committed purchases')
+  );
+  
+  if (cardPurchaseLogs.length === 0) {
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('No card purchases recorded yet.', margin, yPosition);
+  } else {
+    // Summary
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Summary', margin, yPosition);
+    yPosition += 10;
+    
+    pdf.setFontSize(11);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(`Total Card Purchases: ${cardPurchaseLogs.length}`, margin + 5, yPosition);
+    yPosition += 6;
+    
+    const natoCount = cardPurchaseLogs.filter(log => log.team === 'NATO').length;
+    const russiaCount = cardPurchaseLogs.filter(log => log.team === 'Russia').length;
+    
+    pdf.text(`NATO Purchases: ${natoCount}`, margin + 5, yPosition);
+    yPosition += 6;
+    pdf.text(`Russia Purchases: ${russiaCount}`, margin + 5, yPosition);
+    yPosition += 15;
+    
+    // Card Purchase Logs
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Card Purchase History', margin, yPosition);
+    yPosition += 10;
+    
+    // Group by turn
+    const logByTurn = cardPurchaseLogs.reduce((acc, entry) => {
+      if (!acc[entry.turn]) acc[entry.turn] = [];
+      acc[entry.turn].push(entry);
+      return acc;
+    }, {} as Record<number, StrategyLogEntry[]>);
+    
+    Object.keys(logByTurn).sort((a, b) => parseInt(a) - parseInt(b)).forEach(turn => {
+      checkPage(25);
+      
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(`Turn ${turn}`, margin + 5, yPosition);
+      yPosition += 8;
+      
+      logByTurn[parseInt(turn)].forEach(entry => {
+        checkPage(8);
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'normal');
+        const timeStr = new Date(entry.timestamp).toLocaleTimeString();
+        const teamColor = entry.team === 'NATO' ? '[NATO]' : '[RUS]';
+        const logText = `${teamColor} ${timeStr}: ${entry.action}`;
+        
+        const lines = pdf.splitTextToSize(logText, contentWidth - 20);
+        lines.forEach((line: string) => {
+          pdf.text(line, margin + 10, yPosition);
+          yPosition += 4;
+        });
+        yPosition += 2;
+      });
+      
+      yPosition += 8;
+    });
+  }
+  
+  // Save the PDF
+  const fileName = `MDDS_Card_Logs_${new Date().toISOString().split('T')[0]}.pdf`;
+  pdf.save(fileName);
+};
+
 // Helper function to draw line chart
 const drawLineChart = (
   pdf: jsPDF, 
