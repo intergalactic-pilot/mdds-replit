@@ -271,35 +271,31 @@ export default function AppHeader({
                         <span className="text-sm font-medium">Cards</span>
                       </div>
                       
-                      <div className="space-y-2 max-h-[50vh] overflow-y-auto">
+                      <div className="space-y-1 max-h-[50vh] overflow-y-auto">
                         {cardsData
                           .filter((card: any) => card.domain === selectedDimension)
                           .map((card: any) => (
-                            <div key={card.id} className="p-3 border border-border/50 rounded-md space-y-2">
-                              <div className="flex items-center justify-between">
-                                <span className="font-medium text-sm">{card.name}</span>
-                                <div className="flex items-center gap-2">
-                                  <Badge variant="outline" className="text-xs">
-                                    {card.type}
-                                  </Badge>
-                                  <Badge variant="secondary" className="text-xs">
-                                    {card.baseCostK}K
-                                  </Badge>
-                                </div>
+                            <div key={card.id} className="flex items-center gap-3 p-2 border border-border/30 rounded text-xs hover-elevate">
+                              <Badge variant="outline" className="text-xs font-mono min-w-8">
+                                {card.id}
+                              </Badge>
+                              <div className="flex-1 min-w-0">
+                                <span className="font-medium text-sm truncate block">{card.name}</span>
                               </div>
-                              
-                              <div className="space-y-1">
-                                <h6 className="text-xs font-medium text-muted-foreground">Effects:</h6>
+                              <Badge variant="secondary" className="text-xs">
+                                {card.type}
+                              </Badge>
+                              <Badge variant="outline" className="text-xs">
+                                {card.baseCostK}K
+                              </Badge>
+                              <div className="flex items-center gap-1">
                                 {(card.effects || []).map((effect: any, effectIndex: number) => (
-                                  <div key={effectIndex} className="text-xs flex items-center gap-2">
-                                    <Badge 
-                                      variant={effect.target === 'self' ? 'default' : 'destructive'} 
-                                      className="text-xs px-1 py-0"
-                                    >
-                                      {effect.target}
-                                    </Badge>
+                                  <div key={effectIndex} className="flex items-center gap-1">
+                                    <span className={`text-xs ${effect.target === 'self' ? 'text-blue-400' : 'text-red-400'}`}>
+                                      {effect.target === 'self' ? '↑' : '↓'}
+                                    </span>
                                     <DomainBadge domain={effect.domain} className="text-xs scale-75" />
-                                    <span className={`font-mono ${
+                                    <span className={`font-mono text-xs ${
                                       effect.delta > 0 ? 'text-green-400' : 'text-red-400'
                                     }`}>
                                       {effect.delta > 0 ? '+' : ''}{effect.delta}
