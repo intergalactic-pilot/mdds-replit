@@ -313,7 +313,7 @@ export default function DefenseOffenseChart({ forceExpanded = false, hideToggle 
     cyber: russiaOffensiveEffects[stat.turn]?.cyber || 0
   }));
 
-  const shouldShowContent = forceExpanded || isExpanded;
+  const shouldShowContent = forceExpanded || isExpanded || hideToggle;
 
   return (
     <div className="space-y-3">
