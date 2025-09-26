@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -21,6 +22,9 @@ import {
 } from 'lucide-react';
 import logoUrl from '@assets/Logo_1758524556759.png';
 import { useTheme } from "./ThemeProvider";
+import cardsData from '../data/cards.json';
+import DomainBadge from './DomainBadge';
+import { Domain } from '@shared/schema';
 
 interface AppHeaderProps {
   currentTurn: number;
@@ -40,7 +44,8 @@ export default function AppHeader({
   onDownloadPDF
 }: AppHeaderProps) {
   const { theme, setTheme } = useTheme();
-  const [showRules, setShowRules] = useState(false);
+  const [showCardReference, setShowCardReference] = useState(false);
+  const [selectedDimension, setSelectedDimension] = useState<Domain | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showSessionInfo, setShowSessionInfo] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
@@ -234,45 +239,83 @@ export default function AppHeader({
               <Download className="w-4 h-4" />
             </Button>
 
-            {/* Rules Modal */}
-            <Dialog open={showRules} onOpenChange={setShowRules}>
-              <DialogTrigger asChild>
-                <Button variant="ghost" size="icon" data-testid="button-show-rules">
+            {/* Card Reference */}
+            <Popover open={showCardReference} onOpenChange={setShowCardReference}>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" data-testid="button-show-card-reference">
                   <HelpCircle className="w-4 h-4" />
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>{sanitizeText('Strategy Rules & Guidelines')}</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 text-sm">
-                  <div>
-                    <h4 className="font-semibold">Teams & Domains</h4>
-                    <p>NATO vs Russia across 5 domains: Joint, Economy, Cognitive, Space, Cyber</p>
+              </PopoverTrigger>
+              <PopoverContent className="w-96 max-h-[70vh] overflow-y-auto" align="end">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-sm">Card Reference by Dimension</h4>
+                    <Select value={selectedDimension || ''} onValueChange={(value) => setSelectedDimension(value as Domain)}>
+                      <SelectTrigger data-testid="select-dimension">
+                        <SelectValue placeholder="Select a dimension" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="joint">Joint</SelectItem>
+                        <SelectItem value="economy">Economy</SelectItem>
+                        <SelectItem value="cognitive">Cognitive</SelectItem>
+                        <SelectItem value="space">Space</SelectItem>
+                        <SelectItem value="cyber">Cyber</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <div>
-                    <h4 className="font-semibold">Starting Conditions</h4>
-                    <p>Each team starts with 100 deterrence per domain (500 total)</p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">Turn 1 Budget Rules</h4>
-                    <p>Must spend exactly 200K per domain (1000K total split across 5 lanes)</p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">Turn 2+ Budget Rules</h4>
-                    <p>1000K pooled budget - free allocation across domains</p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">Card Types</h4>
-                    <ul className="list-disc ml-4 space-y-1">
-                      <li><strong>Assets:</strong> Immediate deterrence effects when purchased</li>
-                      <li><strong>Permanents:</strong> Provide -50K discounts to specified cards</li>
-                      <li><strong>Experts:</strong> Skip one turn, become available next turn (informational only)</li>
-                    </ul>
-                  </div>
+                  
+                  {selectedDimension && (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <DomainBadge domain={selectedDimension} />
+                        <span className="text-sm font-medium">Cards</span>
+                      </div>
+                      
+                      <div className="space-y-2 max-h-[50vh] overflow-y-auto">
+                        {cardsData
+                          .filter((card: any) => card.domain === selectedDimension)
+                          .map((card: any) => (
+                            <div key={card.id} className="p-3 border border-border/50 rounded-md space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="font-medium text-sm">{card.name}</span>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="outline" className="text-xs">
+                                    {card.type}
+                                  </Badge>
+                                  <Badge variant="secondary" className="text-xs">
+                                    {card.baseCostK}K
+                                  </Badge>
+                                </div>
+                              </div>
+                              
+                              <div className="space-y-1">
+                                <h6 className="text-xs font-medium text-muted-foreground">Effects:</h6>
+                                {(card.effects || []).map((effect: any, effectIndex: number) => (
+                                  <div key={effectIndex} className="text-xs flex items-center gap-2">
+                                    <Badge 
+                                      variant={effect.target === 'self' ? 'default' : 'destructive'} 
+                                      className="text-xs px-1 py-0"
+                                    >
+                                      {effect.target}
+                                    </Badge>
+                                    <DomainBadge domain={effect.domain} className="text-xs scale-75" />
+                                    <span className={`font-mono ${
+                                      effect.delta > 0 ? 'text-green-400' : 'text-red-400'
+                                    }`}>
+                                      {effect.delta > 0 ? '+' : ''}{effect.delta}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))
+                        }
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </DialogContent>
-            </Dialog>
+              </PopoverContent>
+            </Popover>
 
             {/* Card Logs Modal */}
             <Dialog open={showSettings} onOpenChange={setShowSettings}>
