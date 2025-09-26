@@ -27,8 +27,6 @@ import DomainBadge from './DomainBadge';
 import { Domain } from '@shared/schema';
 
 interface AppHeaderProps {
-  currentTurn: number;
-  maxTurns: number;
   onSave: () => void;
   onResetProgress: () => void;
   onSetMaxTurns: (turns: number) => void;
@@ -36,8 +34,6 @@ interface AppHeaderProps {
 }
 
 export default function AppHeader({
-  currentTurn,
-  maxTurns,
   onSave,
   onResetProgress,
   onSetMaxTurns,
@@ -111,11 +107,23 @@ export default function AppHeader({
             </div>
           </div>
 
-          {/* Turn Info */}
+          {/* Session Name */}
           <div className="hidden md:flex items-center gap-2">
-            <Badge variant="outline" data-testid="badge-turn-info">
-              Turn {currentTurn} of {maxTurns}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Session:</span>
+              <Input
+                value={sessionInfo.sessionName}
+                onChange={(e) => updateSessionName(e.target.value)}
+                onBlur={() => {
+                  // Auto-save when focus leaves the input
+                  const saveToLocalStorage = useMDDSStore.getState().saveToLocalStorage;
+                  saveToLocalStorage();
+                }}
+                placeholder="Enter session name"
+                className="w-48 h-8 text-sm"
+                data-testid="input-session-name-header"
+              />
+            </div>
           </div>
 
           {/* Actions */}
