@@ -60,6 +60,7 @@ interface MDDSStore extends GameState {
   // Session sharing
   createShareableSession: () => any;
   shareSession: () => Promise<string | null>;
+  shareStatistics: () => Promise<string | null>;
   loadSharedSession: (sessionData: any) => void;
 }
 
@@ -403,6 +404,61 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
       }
     } catch (error) {
       console.error('Failed to share session:', error);
+      return null;
+    }
+  },
+
+  shareStatistics: async () => {
+    try {
+      const state = get();
+      const sessionData = {
+        sessionInfo: state.sessionInfo,
+        gameState: {
+          turn: state.turn,
+          maxTurns: state.maxTurns,
+          currentTeam: state.currentTeam,
+          teams: state.teams,
+          phase: state.phase,
+          strategyLog: state.strategyLog
+        },
+        turnStatistics: state.turnStatistics
+      };
+
+      // Create the session
+      const sessionResponse = await fetch('/api/sessions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(sessionData),
+      });
+
+      if (!sessionResponse.ok) {
+        return null;
+      }
+
+      const session = await sessionResponse.json();
+      const fullUrl = `${window.location.origin}/statistics/${session.id}`;
+
+      // Shorten the URL
+      const shortenResponse = await fetch('/api/shorten-url', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url: fullUrl }),
+      });
+
+      if (shortenResponse.ok) {
+        const shortUrlData = await shortenResponse.json();
+        return shortUrlData.shortUrl;
+      } else {
+        // If URL shortening fails, return the original full URL
+        console.warn('URL shortening failed, using full URL');
+        return fullUrl;
+      }
+    } catch (error) {
+      console.error('Failed to share statistics:', error);
       return null;
     }
   },

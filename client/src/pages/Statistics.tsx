@@ -1,7 +1,12 @@
-import { Link } from 'wouter';
-import { ArrowLeft, BarChart3, TrendingUp, Activity } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Link, useParams } from 'wouter';
+import { useQuery } from '@tanstack/react-query';
+import { ArrowLeft, BarChart3, TrendingUp, Activity, Share2, Copy, Check } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useMDDSStore } from '@/state/store';
 import DeterrenceChart from '../components/DeterrenceChart';
 import TurnBasedLogs from '../components/Statistics';
@@ -9,12 +14,106 @@ import DomainStatistics from '../components/DomainStatistics';
 import DefenseOffenseChart from '../components/DefenseOffenseChart';
 
 export default function Statistics() {
+  const params = useParams();
+  const [sessionLoaded, setSessionLoaded] = useState(false);
+  const [loadedSessionId, setLoadedSessionId] = useState<string | null>(null);
+  
+  // Share statistics state
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [isSharing, setIsSharing] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
+  
+  // Load session data if sessionId is in URL
+  const { data: sessionData, isLoading: sessionLoading } = useQuery({
+    queryKey: ['/api/sessions', params.sessionId],
+    enabled: !!params.sessionId,
+    select: (data) => data
+  });
+  
+  // Load shared session data when available
+  useEffect(() => {
+    if (sessionData && params.sessionId && !sessionLoaded && loadedSessionId !== params.sessionId) {
+      console.log('Loading shared session data for sessionId:', params.sessionId);
+      useMDDSStore.getState().loadSharedSession(sessionData);
+      setSessionLoaded(true);
+      setLoadedSessionId(params.sessionId);
+    }
+  }, [sessionData, sessionLoaded, params.sessionId, loadedSessionId]);
+  
+  // Reset sessionLoaded when sessionId changes
+  useEffect(() => {
+    if (loadedSessionId !== params.sessionId) {
+      setSessionLoaded(false);
+      setLoadedSessionId(null);
+    }
+  }, [params.sessionId, loadedSessionId]);
+  
   const sessionInfo = useMDDSStore(state => state.sessionInfo);
   const natoTeam = useMDDSStore(state => state.teams.NATO);
   const russiaTeam = useMDDSStore(state => state.teams.Russia);
   const turnStatistics = useMDDSStore(state => state.turnStatistics);
   const currentTurn = useMDDSStore(state => state.turn);
   const maxTurns = useMDDSStore(state => state.maxTurns);
+  const shareStatistics = useMDDSStore(state => state.shareStatistics);
+  
+  // Handle sharing statistics
+  const handleShareStatistics = async () => {
+    if (!sessionInfo.sessionName.trim()) {
+      alert('Please set a session name before sharing statistics.');
+      return;
+    }
+    
+    setIsSharing(true);
+    setCopySuccess(false);
+    
+    try {
+      const url = await shareStatistics();
+      if (url) {
+        setShareUrl(url);
+        setShowShareDialog(true);
+      } else {
+        alert('Failed to generate shareable statistics link.');
+      }
+    } catch (error) {
+      console.error('Error sharing statistics:', error);
+      alert('Failed to generate shareable statistics link.');
+    } finally {
+      setIsSharing(false);
+    }
+  };
+  
+  const handleCopyUrl = async () => {
+    if (shareUrl) {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        setCopySuccess(true);
+        setTimeout(() => setCopySuccess(false), 2000);
+      } catch (error) {
+        // Fallback for browsers that don't support clipboard API
+        const textArea = document.createElement('textarea');
+        textArea.value = shareUrl;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        setCopySuccess(true);
+        setTimeout(() => setCopySuccess(false), 2000);
+      }
+    }
+  };
+  
+  // Show loading when fetching external session data
+  if (params.sessionId && sessionLoading) {
+    return (
+      <div className="min-h-screen bg-black text-white p-4 flex items-center justify-center">
+        <div className="text-center">
+          <Activity className="w-8 h-8 animate-spin mx-auto mb-4" />
+          <p>Loading session statistics...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -53,6 +152,18 @@ export default function Statistics() {
                   Russia: {russiaTeam.totalDeterrence}
                 </div>
               </div>
+              
+              {/* Share Statistics Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleShareStatistics}
+                disabled={isSharing || !sessionInfo.sessionName.trim()}
+                data-testid="button-share-statistics"
+              >
+                <Share2 className="h-4 w-4 mr-2" />
+                {isSharing ? 'Sharing...' : 'Share Statistics'}
+              </Button>
             </div>
           </div>
         </div>
@@ -185,6 +296,70 @@ export default function Statistics() {
           </Card>
         )}
       </div>
+      
+      {/* Share Statistics Dialog */}
+      <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Share Session Statistics</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex justify-center">
+              <Share2 className="w-16 h-16 text-primary" />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="share-url">Statistics Link</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="share-url"
+                  value={shareUrl || ''}
+                  readOnly
+                  className="flex-1"
+                  data-testid="input-statistics-share-url"
+                />
+                <Button
+                  size="icon"
+                  variant="outline"
+                  onClick={handleCopyUrl}
+                  data-testid="button-copy-statistics-url"
+                >
+                  {copySuccess ? (
+                    <Check className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+              {copySuccess && (
+                <p className="text-sm text-green-600">URL copied to clipboard!</p>
+              )}
+            </div>
+            
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Share this link to let others view your session statistics and analytics on any device.
+              </p>
+              <div className="p-3 bg-muted rounded-lg">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <BarChart3 className="w-3 h-3" />
+                  <span>Statistics include deterrence charts, domain analysis, and turn logs</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex justify-center">
+              <Button
+                onClick={() => setShowShareDialog(false)}
+                variant="outline"
+                data-testid="button-close-share-dialog"
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
