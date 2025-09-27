@@ -60,6 +60,7 @@ interface MDDSStore extends GameState {
   // Session sharing
   createShareableSession: () => any;
   shareSession: () => Promise<string | null>;
+  loadSharedSession: (sessionData: any) => void;
 }
 
 const createInitialTeamState = (): TeamState => ({

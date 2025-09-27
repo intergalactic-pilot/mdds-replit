@@ -63,6 +63,19 @@ export default function MDDSStrategy() {
     store.loadFromLocalStorage();
   }, []);
 
+  // Load shared session data when available
+  useEffect(() => {
+    if (sessionData && !sessionLoaded) {
+      store.loadSharedSession(sessionData);
+      setSessionLoaded(true);
+    }
+  }, [sessionData, sessionLoaded, store]);
+
+  // Reset sessionLoaded when sessionId changes
+  useEffect(() => {
+    setSessionLoaded(false);
+  }, [params.sessionId]);
+
   // Mobile session initialization
   useEffect(() => {
     if (isMobile) {
