@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLocation } from 'wouter';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -49,11 +50,8 @@ export default function AppHeader({
   const [showSessionInfo, setShowSessionInfo] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   
-  // Database save functionality state
-  const [showDatabaseDialog, setShowDatabaseDialog] = useState(false);
-  const [saveMessage, setSaveMessage] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
+  // Navigation
+  const [, setLocation] = useLocation();
   
   // Use store for session management
   const sessionInfo = useMDDSStore(state => state.sessionInfo);
@@ -63,7 +61,6 @@ export default function AppHeader({
   const updateParticipant = useMDDSStore(state => state.updateParticipant);
   const addParticipant = useMDDSStore(state => state.addParticipant);
   const removeParticipant = useMDDSStore(state => state.removeParticipant);
-  const shareSession = useMDDSStore(state => state.shareSession);
 
   const handleDownloadCardLogs = async () => {
     try {
@@ -101,30 +98,8 @@ export default function AppHeader({
     }
   };
 
-  const handleSaveToDatabase = async () => {
-    setIsSaving(true);
-    setSaveSuccess(false);
-    setSaveMessage(null);
-    
-    try {
-      const sessionId = await shareSession(); // Using existing session save functionality
-      if (sessionId) {
-        setSaveMessage(`Session saved successfully! Session ID: ${sessionId}`);
-        setSaveSuccess(true);
-        setShowDatabaseDialog(true);
-      } else {
-        setSaveMessage('Failed to save session to database');
-        setSaveSuccess(false);
-        setShowDatabaseDialog(true);
-      }
-    } catch (error) {
-      console.error('Error saving session to database:', error);
-      setSaveMessage('Failed to save session to database');
-      setSaveSuccess(false);
-      setShowDatabaseDialog(true);
-    } finally {
-      setIsSaving(false);
-    }
+  const handleViewStatistics = () => {
+    setLocation('/statistics');
   };
 
 
@@ -183,14 +158,14 @@ export default function AppHeader({
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            {/* Save to Database */}
+            {/* View Statistics */}
             <Button
               variant="ghost"
               size="icon"
-              onClick={handleSaveToDatabase}
-              disabled={isSaving || !sessionInfo.sessionName.trim()}
-              title="Save Session to Database"
-              data-testid="button-save-database"
+              onClick={handleViewStatistics}
+              disabled={!sessionInfo.sessionName.trim()}
+              title="View Session Statistics"
+              data-testid="button-view-statistics"
             >
               <Database className="h-4 w-4" />
             </Button>
@@ -430,45 +405,6 @@ export default function AppHeader({
         </div>
       </div>
 
-      {/* Database Save Dialog */}
-      <Dialog open={showDatabaseDialog} onOpenChange={setShowDatabaseDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Save Session to Database</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="flex justify-center">
-              <Database className={`w-16 h-16 ${saveSuccess ? 'text-green-600' : 'text-red-600'}`} />
-            </div>
-            
-            {saveMessage && (
-              <div className="space-y-2">
-                <p className={`text-sm text-center ${saveSuccess ? 'text-green-600' : 'text-red-600'}`}>
-                  {saveMessage}
-                </p>
-                {saveSuccess && (
-                  <div className="text-center space-y-2">
-                    <p className="text-xs text-muted-foreground">
-                      Your session data has been stored in the database with all strategy information, 
-                      turn statistics, and participant details.
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-            
-            <div className="flex justify-center">
-              <Button
-                onClick={() => setShowDatabaseDialog(false)}
-                variant="outline"
-                data-testid="button-close-database-dialog"
-              >
-                Close
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </header>
   );
 }
