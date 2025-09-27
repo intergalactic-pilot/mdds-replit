@@ -14,6 +14,7 @@ function Router() {
       <Route path="/" component={MDDSStrategy} />
       <Route path="/session/:sessionId" component={MDDSStrategy} />
       <Route path="/statistics" component={Statistics} />
+      <Route path="/statistics/:sessionId" component={Statistics} />
       <Route component={NotFound} />
     </Switch>
   );
