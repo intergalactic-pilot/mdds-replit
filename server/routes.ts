@@ -140,6 +140,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // URL shortening route
+  app.post("/api/shorten-url", async (req, res) => {
+    try {
+      const { url } = req.body;
+      
+      if (!url || typeof url !== 'string') {
+        return res.status(400).json({ error: "URL is required and must be a string" });
+      }
+
+      // Validate URL format
+      try {
+        new URL(url);
+      } catch {
+        return res.status(400).json({ error: "Invalid URL format" });
+      }
+
+      // Use Ulvis.net free API for URL shortening
+      const response = await fetch('https://ulvis.net/api/v1/urls', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: url
+        })
+      });
+
+      if (!response.ok) {
+        console.error('Ulvis.net API error:', response.status, response.statusText);
+        return res.status(500).json({ error: "URL shortening service unavailable" });
+      }
+
+      const data = await response.json();
+      
+      if (data.short) {
+        res.json({ shortUrl: data.short, originalUrl: url });
+      } else {
+        console.error('Unexpected response from Ulvis.net:', data);
+        res.status(500).json({ error: "Failed to create short URL" });
+      }
+    } catch (error) {
+      console.error('Error shortening URL:', error);
+      res.status(500).json({ error: "Failed to shorten URL" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

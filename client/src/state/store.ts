@@ -367,7 +367,8 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
         turnStatistics: state.turnStatistics
       };
 
-      const response = await fetch('/api/sessions', {
+      // Create the session
+      const sessionResponse = await fetch('/api/sessions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -375,11 +376,30 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
         body: JSON.stringify(sessionData),
       });
 
-      if (response.ok) {
-        const session = await response.json();
-        return session.id;
+      if (!sessionResponse.ok) {
+        return null;
       }
-      return null;
+
+      const session = await sessionResponse.json();
+      const fullUrl = `${window.location.origin}/session/${session.id}`;
+
+      // Shorten the URL
+      const shortenResponse = await fetch('/api/shorten-url', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url: fullUrl }),
+      });
+
+      if (shortenResponse.ok) {
+        const shortUrlData = await shortenResponse.json();
+        return shortUrlData.shortUrl;
+      } else {
+        // If URL shortening fails, return the original full URL
+        console.warn('URL shortening failed, using full URL');
+        return fullUrl;
+      }
     } catch (error) {
       console.error('Failed to share session:', error);
       return null;
