@@ -3,8 +3,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useMDDSStore } from '@/state/store';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { Share2, Copy, Check } from 'lucide-react';
-import { useState } from 'react';
 import DomainBadge from './DomainBadge';
 import { Domain } from '@shared/schema';
 
@@ -12,11 +10,6 @@ export default function MobileOverallView() {
   const sessionInfo = useMDDSStore(state => state.sessionInfo);
   const natoTeam = useMDDSStore(state => state.teams.NATO);
   const russiaTeam = useMDDSStore(state => state.teams.Russia);
-  const shareSession = useMDDSStore(state => state.shareSession);
-  
-  const [shareLink, setShareLink] = useState<string | null>(null);
-  const [isSharing, setIsSharing] = useState(false);
-  const [linkCopied, setLinkCopied] = useState(false);
   
   const domains: Domain[] = ['joint', 'economy', 'cognitive', 'space', 'cyber'];
 
@@ -42,36 +35,6 @@ export default function MobileOverallView() {
     difference: natoTeam.deterrence[domain] - russiaTeam.deterrence[domain]
   }));
 
-  const handleShareSession = async () => {
-    setIsSharing(true);
-    try {
-      const sessionId = await shareSession();
-      if (sessionId) {
-        const link = `${window.location.origin}/session/${sessionId}`;
-        setShareLink(link);
-      } else {
-        alert('Failed to create shareable link');
-      }
-    } catch (error) {
-      console.error('Error sharing session:', error);
-      alert('Failed to create shareable link');
-    } finally {
-      setIsSharing(false);
-    }
-  };
-
-  const handleCopyLink = async () => {
-    if (shareLink) {
-      try {
-        await navigator.clipboard.writeText(shareLink);
-        setLinkCopied(true);
-        setTimeout(() => setLinkCopied(false), 2000);
-      } catch (error) {
-        console.error('Failed to copy link:', error);
-      }
-    }
-  };
-
   return (
     <div className="p-4 space-y-4 pb-20">
       {/* Session Header */}
@@ -82,47 +45,6 @@ export default function MobileOverallView() {
         </CardHeader>
       </Card>
 
-      {/* Share Session */}
-      <Card>
-        <CardContent className="pt-4">
-          {!shareLink ? (
-            <Button 
-              onClick={handleShareSession}
-              disabled={isSharing}
-              className="w-full"
-              variant="outline"
-              data-testid="button-share-session"
-            >
-              <Share2 className="w-4 h-4 mr-2" />
-              {isSharing ? 'Creating link...' : 'Share Session'}
-            </Button>
-          ) : (
-            <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">Share this link with others:</p>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={shareLink}
-                  readOnly
-                  className="flex-1 px-3 py-2 text-xs bg-muted rounded border"
-                  data-testid="input-share-link"
-                />
-                <Button
-                  onClick={handleCopyLink}
-                  size="sm"
-                  variant="outline"
-                  data-testid="button-copy-link"
-                >
-                  {linkCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                </Button>
-              </div>
-              {linkCopied && (
-                <p className="text-xs text-green-600">Link copied to clipboard!</p>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
       {/* Pie Chart */}
       <Card>

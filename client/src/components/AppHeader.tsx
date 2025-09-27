@@ -18,13 +18,17 @@ import {
   Moon,
   Sun,
   Download,
-  Edit
+  Edit,
+  Share2,
+  Copy,
+  Check
 } from 'lucide-react';
 import logoUrl from '@assets/Logo_1758524556759.png';
 import { useTheme } from "./ThemeProvider";
 import cardsData from '../data/cards.json';
 import DomainBadge from './DomainBadge';
 import { Domain } from '@shared/schema';
+import QRCode from 'qrcode';
 
 interface AppHeaderProps {
   onSave: () => void;
@@ -46,6 +50,13 @@ export default function AppHeader({
   const [showSessionInfo, setShowSessionInfo] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   
+  // Share functionality state
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [shareLink, setShareLink] = useState<string | null>(null);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null);
+  const [isSharing, setIsSharing] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+  
   // Use store for session management
   const sessionInfo = useMDDSStore(state => state.sessionInfo);
   const strategyLog = useMDDSStore(state => state.strategyLog);
@@ -54,6 +65,7 @@ export default function AppHeader({
   const updateParticipant = useMDDSStore(state => state.updateParticipant);
   const addParticipant = useMDDSStore(state => state.addParticipant);
   const removeParticipant = useMDDSStore(state => state.removeParticipant);
+  const shareSession = useMDDSStore(state => state.shareSession);
 
   const handleDownloadCardLogs = async () => {
     try {
@@ -88,6 +100,48 @@ export default function AppHeader({
     if (validateSessionInfo()) {
       setShowSessionInfo(false);
       setValidationErrors([]);
+    }
+  };
+
+  const handleShareSession = async () => {
+    setIsSharing(true);
+    try {
+      const sessionId = await shareSession();
+      if (sessionId) {
+        const link = `${window.location.origin}/session/${sessionId}`;
+        setShareLink(link);
+        
+        // Generate QR code
+        const qrCodeUrl = await QRCode.toDataURL(link, {
+          width: 256,
+          margin: 2,
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+          }
+        });
+        setQrCodeDataUrl(qrCodeUrl);
+        setShowShareDialog(true);
+      } else {
+        alert('Failed to create shareable link');
+      }
+    } catch (error) {
+      console.error('Error sharing session:', error);
+      alert('Failed to create shareable link');
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  const handleCopyLink = async () => {
+    if (shareLink) {
+      try {
+        await navigator.clipboard.writeText(shareLink);
+        setLinkCopied(true);
+        setTimeout(() => setLinkCopied(false), 2000);
+      } catch (error) {
+        console.error('Failed to copy link:', error);
+      }
     }
   };
 
@@ -146,6 +200,18 @@ export default function AppHeader({
 
           {/* Actions */}
           <div className="flex items-center gap-2">
+            {/* Share Session */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleShareSession}
+              disabled={isSharing || !sessionInfo.sessionName.trim()}
+              title="Share Session"
+              data-testid="button-share-session-desktop"
+            >
+              <Share2 className="h-4 w-4" />
+            </Button>
+
             {/* Theme Toggle */}
             <Button
               variant="ghost"
@@ -380,6 +446,56 @@ export default function AppHeader({
           </div>
         </div>
       </div>
+
+      {/* Share Session Dialog */}
+      <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Share Session</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {qrCodeDataUrl && (
+              <div className="flex justify-center">
+                <img 
+                  src={qrCodeDataUrl} 
+                  alt="Session QR Code" 
+                  className="w-48 h-48"
+                  data-testid="qr-code-image-desktop"
+                />
+              </div>
+            )}
+            
+            {shareLink && (
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground text-center">
+                  Scan the QR code or share this link:
+                </p>
+                <div className="flex gap-2">
+                  <Input
+                    value={shareLink}
+                    readOnly
+                    className="text-xs"
+                    data-testid="share-link-input-desktop"
+                  />
+                  <Button
+                    onClick={handleCopyLink}
+                    size="sm"
+                    variant="outline"
+                    data-testid="copy-link-button-desktop"
+                  >
+                    {linkCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  </Button>
+                </div>
+                {linkCopied && (
+                  <p className="text-xs text-green-600 text-center">
+                    Link copied to clipboard!
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </header>
   );
 }
