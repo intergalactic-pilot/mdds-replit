@@ -384,5 +384,40 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
       console.error('Failed to share session:', error);
       return null;
     }
+  },
+
+  loadSharedSession: (sessionData: any) => {
+    try {
+      const gameState = sessionData.gameState;
+      // Migrate older save states that don't have permanentsQueue
+      if (gameState.teams) {
+        Object.keys(gameState.teams).forEach(team => {
+          if (!gameState.teams[team].permanentsQueue) {
+            gameState.teams[team].permanentsQueue = [];
+          }
+        });
+      }
+      const currentState = get();
+      set({
+        turn: gameState.turn,
+        maxTurns: gameState.maxTurns,
+        currentTeam: gameState.currentTeam,
+        teams: gameState.teams,
+        phase: gameState.phase,
+        strategyLog: gameState.strategyLog,
+        turnStatistics: sessionData.turnStatistics || [],
+        sessionInfo: sessionData.sessionInfo ? {
+          sessionName: sessionData.sessionInfo.sessionName || '',
+          sessionStarted: true, // Mark as started when loading shared session
+          participants: sessionData.sessionInfo.participants && sessionData.sessionInfo.participants.length > 0 
+            ? sessionData.sessionInfo.participants
+            : currentState.sessionInfo.participants
+        } : currentState.sessionInfo
+      });
+      return true;
+    } catch (error) {
+      console.error('Failed to load shared session:', error);
+      return false;
+    }
   }
 }));
