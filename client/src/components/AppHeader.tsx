@@ -19,7 +19,7 @@ import {
   Sun,
   Download,
   Edit,
-  Share2,
+  Database,
   Copy,
   Check
 } from 'lucide-react';
@@ -28,7 +28,6 @@ import { useTheme } from "./ThemeProvider";
 import cardsData from '../data/cards.json';
 import DomainBadge from './DomainBadge';
 import { Domain } from '@shared/schema';
-import QRCode from 'qrcode';
 
 interface AppHeaderProps {
   onSave: () => void;
@@ -50,12 +49,11 @@ export default function AppHeader({
   const [showSessionInfo, setShowSessionInfo] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   
-  // Share functionality state
-  const [showShareDialog, setShowShareDialog] = useState(false);
-  const [shareLink, setShareLink] = useState<string | null>(null);
-  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null);
-  const [isSharing, setIsSharing] = useState(false);
-  const [linkCopied, setLinkCopied] = useState(false);
+  // Database save functionality state
+  const [showDatabaseDialog, setShowDatabaseDialog] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   
   // Use store for session management
   const sessionInfo = useMDDSStore(state => state.sessionInfo);
@@ -103,47 +101,32 @@ export default function AppHeader({
     }
   };
 
-  const handleShareSession = async () => {
-    setIsSharing(true);
+  const handleSaveToDatabase = async () => {
+    setIsSaving(true);
+    setSaveSuccess(false);
+    setSaveMessage(null);
+    
     try {
-      const sessionId = await shareSession();
+      const sessionId = await shareSession(); // Using existing session save functionality
       if (sessionId) {
-        const link = `${window.location.origin}/session/${sessionId}`;
-        setShareLink(link);
-        
-        // Generate QR code
-        const qrCodeUrl = await QRCode.toDataURL(link, {
-          width: 256,
-          margin: 2,
-          color: {
-            dark: '#000000',
-            light: '#FFFFFF'
-          }
-        });
-        setQrCodeDataUrl(qrCodeUrl);
-        setShowShareDialog(true);
+        setSaveMessage(`Session saved successfully! Session ID: ${sessionId}`);
+        setSaveSuccess(true);
+        setShowDatabaseDialog(true);
       } else {
-        alert('Failed to create shareable link');
+        setSaveMessage('Failed to save session to database');
+        setSaveSuccess(false);
+        setShowDatabaseDialog(true);
       }
     } catch (error) {
-      console.error('Error sharing session:', error);
-      alert('Failed to create shareable link');
+      console.error('Error saving session to database:', error);
+      setSaveMessage('Failed to save session to database');
+      setSaveSuccess(false);
+      setShowDatabaseDialog(true);
     } finally {
-      setIsSharing(false);
+      setIsSaving(false);
     }
   };
 
-  const handleCopyLink = async () => {
-    if (shareLink) {
-      try {
-        await navigator.clipboard.writeText(shareLink);
-        setLinkCopied(true);
-        setTimeout(() => setLinkCopied(false), 2000);
-      } catch (error) {
-        console.error('Failed to copy link:', error);
-      }
-    }
-  };
 
   return (
     <header className="glass-header">
@@ -200,16 +183,16 @@ export default function AppHeader({
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            {/* Share Session */}
+            {/* Save to Database */}
             <Button
               variant="ghost"
               size="icon"
-              onClick={handleShareSession}
-              disabled={isSharing || !sessionInfo.sessionName.trim()}
-              title="Share Session"
-              data-testid="button-share-session-desktop"
+              onClick={handleSaveToDatabase}
+              disabled={isSaving || !sessionInfo.sessionName.trim()}
+              title="Save Session to Database"
+              data-testid="button-save-database"
             >
-              <Share2 className="h-4 w-4" />
+              <Database className="h-4 w-4" />
             </Button>
 
             {/* Theme Toggle */}
@@ -447,52 +430,42 @@ export default function AppHeader({
         </div>
       </div>
 
-      {/* Share Session Dialog */}
-      <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
+      {/* Database Save Dialog */}
+      <Dialog open={showDatabaseDialog} onOpenChange={setShowDatabaseDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Share Session</DialogTitle>
+            <DialogTitle>Save Session to Database</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            {qrCodeDataUrl && (
-              <div className="flex justify-center">
-                <img 
-                  src={qrCodeDataUrl} 
-                  alt="Session QR Code" 
-                  className="w-48 h-48"
-                  data-testid="qr-code-image-desktop"
-                />
-              </div>
-            )}
+            <div className="flex justify-center">
+              <Database className={`w-16 h-16 ${saveSuccess ? 'text-green-600' : 'text-red-600'}`} />
+            </div>
             
-            {shareLink && (
+            {saveMessage && (
               <div className="space-y-2">
-                <p className="text-sm text-muted-foreground text-center">
-                  Scan the QR code or share this link:
+                <p className={`text-sm text-center ${saveSuccess ? 'text-green-600' : 'text-red-600'}`}>
+                  {saveMessage}
                 </p>
-                <div className="flex gap-2">
-                  <Input
-                    value={shareLink}
-                    readOnly
-                    className="text-xs"
-                    data-testid="share-link-input-desktop"
-                  />
-                  <Button
-                    onClick={handleCopyLink}
-                    size="sm"
-                    variant="outline"
-                    data-testid="copy-link-button-desktop"
-                  >
-                    {linkCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                  </Button>
-                </div>
-                {linkCopied && (
-                  <p className="text-xs text-green-600 text-center">
-                    Link copied to clipboard!
-                  </p>
+                {saveSuccess && (
+                  <div className="text-center space-y-2">
+                    <p className="text-xs text-muted-foreground">
+                      Your session data has been stored in the database with all strategy information, 
+                      turn statistics, and participant details.
+                    </p>
+                  </div>
                 )}
               </div>
             )}
+            
+            <div className="flex justify-center">
+              <Button
+                onClick={() => setShowDatabaseDialog(false)}
+                variant="outline"
+                data-testid="button-close-database-dialog"
+              >
+                Close
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
