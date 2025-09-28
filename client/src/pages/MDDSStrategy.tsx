@@ -1,6 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
-import { useParams } from 'wouter';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
 import { useMDDSStore } from '../state/store';
 import { applyDomainQuotas } from '../logic/filters';
 import { calculateDiscountedPrice, calculateCartTotal } from '../logic/pricing';
@@ -19,32 +17,11 @@ import DomainStatistics from '../components/DomainStatistics';
 import cardsData from '../data/cards.json';
 import { Card } from '@shared/schema';
 import { generateMDDSReport } from '../utils/pdfGenerator';
-import { useIsMobile } from '@/hooks/use-mobile';
-import MobileSessionInput from '../components/MobileSessionInput';
-import MobileNATOView from '../components/MobileNATOView';
-import MobileRussiaView from '../components/MobileRussiaView';
-import MobileOverallView from '../components/MobileOverallView';
-import MobileNavigation, { MobileView } from '../components/MobileNavigation';
 
 export default function MDDSStrategy() {
   const store = useMDDSStore();
-  const isMobile = useIsMobile();
-  const params = useParams();
   const [availableCards, setAvailableCards] = useState(applyDomainQuotas(cardsData as Card[]));
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
-  
-  // Mobile-specific state
-  const [mobileView, setMobileView] = useState<MobileView>('overall');
-  const [showMobileSessionInput, setShowMobileSessionInput] = useState(false);
-  const [sessionLoaded, setSessionLoaded] = useState(false);
-  const mobileCacheClearedRef = useRef(false);
-
-  // Load session data if sessionId is in URL
-  const { data: sessionData, isLoading: sessionLoading } = useQuery({
-    queryKey: ['/api/sessions', params.sessionId],
-    enabled: !!params.sessionId,
-    select: (data) => data
-  });
 
   // Update validation errors when cart or turn changes
   useEffect(() => {
@@ -63,38 +40,6 @@ export default function MDDSStrategy() {
   useEffect(() => {
     store.loadFromLocalStorage();
   }, []);
-
-  // Load shared session data when available
-  useEffect(() => {
-    if (sessionData && !sessionLoaded) {
-      store.loadSharedSession(sessionData);
-      setSessionLoaded(true);
-    }
-  }, [sessionData, sessionLoaded, store]);
-
-  // Reset sessionLoaded when sessionId changes
-  useEffect(() => {
-    setSessionLoaded(false);
-  }, [params.sessionId]);
-
-  // Mobile session initialization with cache clearing (once per app load)
-  useEffect(() => {
-    if (isMobile && !mobileCacheClearedRef.current) {
-      // Clear cache for mobile users when they first enter the website
-      localStorage.clear();
-      store.resetStrategy();
-      mobileCacheClearedRef.current = true;
-    }
-  }, [isMobile]);
-
-  // Mobile session input visibility
-  useEffect(() => {
-    if (isMobile) {
-      const hasSessionName = store.sessionInfo.sessionName.trim() !== '';
-      const isSessionStarted = store.sessionInfo.sessionStarted;
-      setShowMobileSessionInput(!hasSessionName || !isSessionStarted);
-    }
-  }, [isMobile, store.sessionInfo.sessionName, store.sessionInfo.sessionStarted]);
 
   const currentTeamState = store.teams[store.currentTeam];
   const opponentTeam = store.currentTeam === 'NATO' ? 'Russia' : 'NATO';
@@ -135,46 +80,11 @@ export default function MDDSStrategy() {
     }
   };
 
-  // Mobile handlers
-  const handleMobileSessionStart = () => {
-    setShowMobileSessionInput(false);
-  };
-
-  const renderMobileContent = () => {
-    switch (mobileView) {
-      case 'nato':
-        return <MobileNATOView />;
-      case 'russia':
-        return <MobileRussiaView />;
-      case 'overall':
-        return <MobileOverallView />;
-      default:
-        return <MobileOverallView />;
-    }
-  };
-
-  // Show mobile session input if needed
-  if (isMobile && showMobileSessionInput) {
-    return <MobileSessionInput onSessionStart={handleMobileSessionStart} />;
-  }
-
-  // Mobile layout
-  if (isMobile) {
-    return (
-      <div className="min-h-screen">
-        {renderMobileContent()}
-        <MobileNavigation 
-          currentView={mobileView}
-          onViewChange={setMobileView}
-        />
-      </div>
-    );
-  }
-
-  // Desktop layout
   return (
     <div className="min-h-screen pb-20 md:pb-0">
       <AppHeader
+        currentTurn={store.turn}
+        maxTurns={store.maxTurns}
         onSave={() => {
           store.saveToLocalStorage();
           alert('Strategy saved to local storage!');

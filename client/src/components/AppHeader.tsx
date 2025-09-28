@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useLocation } from 'wouter';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -19,10 +18,7 @@ import {
   Moon,
   Sun,
   Download,
-  Edit,
-  Database,
-  Copy,
-  Check
+  Edit
 } from 'lucide-react';
 import logoUrl from '@assets/Logo_1758524556759.png';
 import { useTheme } from "./ThemeProvider";
@@ -31,6 +27,8 @@ import DomainBadge from './DomainBadge';
 import { Domain } from '@shared/schema';
 
 interface AppHeaderProps {
+  currentTurn: number;
+  maxTurns: number;
   onSave: () => void;
   onResetProgress: () => void;
   onSetMaxTurns: (turns: number) => void;
@@ -38,6 +36,8 @@ interface AppHeaderProps {
 }
 
 export default function AppHeader({
+  currentTurn,
+  maxTurns,
   onSave,
   onResetProgress,
   onSetMaxTurns,
@@ -50,14 +50,10 @@ export default function AppHeader({
   const [showSessionInfo, setShowSessionInfo] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   
-  // Navigation
-  const [, setLocation] = useLocation();
-  
   // Use store for session management
   const sessionInfo = useMDDSStore(state => state.sessionInfo);
   const strategyLog = useMDDSStore(state => state.strategyLog);
   const updateSessionName = useMDDSStore(state => state.updateSessionName);
-  const startSession = useMDDSStore(state => state.startSession);
   const updateParticipant = useMDDSStore(state => state.updateParticipant);
   const addParticipant = useMDDSStore(state => state.addParticipant);
   const removeParticipant = useMDDSStore(state => state.removeParticipant);
@@ -98,11 +94,6 @@ export default function AppHeader({
     }
   };
 
-  const handleViewStatistics = () => {
-    setLocation('/statistics');
-  };
-
-
   return (
     <header className="glass-header">
       <div className="container mx-auto px-4 py-3">
@@ -120,56 +111,15 @@ export default function AppHeader({
             </div>
           </div>
 
-          {/* Session Name */}
+          {/* Turn Info */}
           <div className="hidden md:flex items-center gap-2">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Session:</span>
-              <Input
-                value={sessionInfo.sessionName}
-                onChange={(e) => updateSessionName(e.target.value)}
-                onBlur={() => {
-                  // Auto-save when focus leaves the input
-                  const saveToLocalStorage = useMDDSStore.getState().saveToLocalStorage;
-                  saveToLocalStorage();
-                }}
-                placeholder="Enter session name"
-                className="w-48 h-8 text-sm"
-                disabled={sessionInfo.sessionStarted}
-                data-testid="input-session-name-header"
-              />
-              {!sessionInfo.sessionStarted && sessionInfo.sessionName.trim() && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={startSession}
-                  className="h-8 px-3"
-                  data-testid="button-start-session"
-                >
-                  Start
-                </Button>
-              )}
-              {sessionInfo.sessionStarted && (
-                <Badge variant="secondary" className="h-8 px-3 flex items-center">
-                  Started
-                </Badge>
-              )}
-            </div>
+            <Badge variant="outline" data-testid="badge-turn-info">
+              Turn {currentTurn} of {maxTurns}
+            </Badge>
           </div>
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            {/* View Statistics */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleViewStatistics}
-              disabled={!sessionInfo.sessionName.trim()}
-              title="View Session Statistics"
-              data-testid="button-view-statistics"
-            >
-              <Database className="h-4 w-4" />
-            </Button>
-
             {/* Theme Toggle */}
             <Button
               variant="ghost"
@@ -200,7 +150,6 @@ export default function AppHeader({
                       value={sessionInfo.sessionName}
                       onChange={(e) => updateSessionName(e.target.value)}
                       placeholder="Enter session name"
-                      disabled={sessionInfo.sessionStarted}
                       data-testid="input-session-name"
                     />
                   </div>
@@ -404,7 +353,6 @@ export default function AppHeader({
           </div>
         </div>
       </div>
-
     </header>
   );
 }
