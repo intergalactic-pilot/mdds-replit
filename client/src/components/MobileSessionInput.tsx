@@ -80,6 +80,17 @@ export default function MobileSessionInput({ onSessionStart }: MobileSessionInpu
     }
   };
 
+  const handleLogout = () => {
+    // Clear all local storage
+    localStorage.clear();
+    // Reset session name
+    setLocalSessionName('');
+    // Clear the input field
+    useMDDSStore.getState().resetStrategy();
+    // Refresh the page to ensure clean state
+    window.location.reload();
+  };
+
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -111,13 +122,13 @@ export default function MobileSessionInput({ onSessionStart }: MobileSessionInpu
               {isLoading ? 'Loading...' : 'View Statistics'}
             </Button>
             <Button 
-              onClick={handleStartSession}
+              onClick={handleLogout}
               className="w-full"
               variant="outline"
-              disabled={!localSessionName.trim() || isLoading}
-              data-testid="button-mobile-start-session"
+              disabled={isLoading}
+              data-testid="button-mobile-logout"
             >
-              {isLoading ? 'Loading...' : 'Load Session'}
+              Logout
             </Button>
           </div>
         </CardContent>

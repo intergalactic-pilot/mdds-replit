@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { useMDDSStore } from '../state/store';
@@ -37,6 +37,7 @@ export default function MDDSStrategy() {
   const [mobileView, setMobileView] = useState<MobileView>('overall');
   const [showMobileSessionInput, setShowMobileSessionInput] = useState(false);
   const [sessionLoaded, setSessionLoaded] = useState(false);
+  const mobileCacheClearedRef = useRef(false);
 
   // Load session data if sessionId is in URL
   const { data: sessionData, isLoading: sessionLoading } = useQuery({
@@ -76,7 +77,17 @@ export default function MDDSStrategy() {
     setSessionLoaded(false);
   }, [params.sessionId]);
 
-  // Mobile session initialization
+  // Mobile session initialization with cache clearing (once per app load)
+  useEffect(() => {
+    if (isMobile && !mobileCacheClearedRef.current) {
+      // Clear cache for mobile users when they first enter the website
+      localStorage.clear();
+      store.resetStrategy();
+      mobileCacheClearedRef.current = true;
+    }
+  }, [isMobile]);
+
+  // Mobile session input visibility
   useEffect(() => {
     if (isMobile) {
       const hasSessionName = store.sessionInfo.sessionName.trim() !== '';
