@@ -17,7 +17,6 @@ interface TurnStatistics {
 // Session information interface
 interface SessionInfo {
   sessionName: string;
-  sessionStarted: boolean;
   participants: Array<{
     name: string;
     country: string;
@@ -42,7 +41,6 @@ interface MDDSStore extends GameState {
   
   // Session management
   updateSessionName: (name: string) => void;
-  startSession: () => void;
   updateParticipant: (index: number, field: 'name' | 'country', value: string) => void;
   addParticipant: () => void;
   removeParticipant: (index: number) => void;
@@ -56,12 +54,6 @@ interface MDDSStore extends GameState {
   loadFromLocalStorage: () => boolean;
   exportState: () => string;
   importState: (jsonState: string) => boolean;
-  
-  // Session sharing
-  createShareableSession: () => any;
-  shareSession: () => Promise<string | null>;
-  shareStatistics: () => Promise<string | null>;
-  loadSharedSession: (sessionData: any) => void;
 }
 
 const createInitialTeamState = (): TeamState => ({
@@ -96,7 +88,6 @@ const createInitialState = (): Omit<GameState, 'teams'> & { teams: Record<Team, 
     }],
     sessionInfo: {
       sessionName: '',
-      sessionStarted: false,
       participants: [{ name: '', country: '' }, { name: '', country: '' }]
     },
     turnStatistics: [{
@@ -197,18 +188,6 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
     }));
   },
 
-  startSession: () => {
-    set((state) => ({
-      sessionInfo: {
-        ...state.sessionInfo,
-        sessionStarted: true
-      }
-    }));
-    // Auto-save when session is started
-    const saveToLocalStorage = get().saveToLocalStorage;
-    saveToLocalStorage();
-  },
-
   updateParticipant: (index: number, field: 'name' | 'country', value: string) => {
     set((state) => ({
       sessionInfo: {
@@ -273,7 +252,6 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
           ...data,
           sessionInfo: data.sessionInfo ? {
             sessionName: data.sessionInfo.sessionName || '',
-            sessionStarted: data.sessionInfo.sessionStarted || false,
             participants: data.sessionInfo.participants && data.sessionInfo.participants.length > 0 
               ? data.sessionInfo.participants
               : currentState.sessionInfo.participants
@@ -325,7 +303,6 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
         turnStatistics: data.turnStatistics || [],
         sessionInfo: data.sessionInfo ? {
           sessionName: data.sessionInfo.sessionName || '',
-          sessionStarted: data.sessionInfo.sessionStarted || false,
           participants: data.sessionInfo.participants && data.sessionInfo.participants.length > 0 
             ? data.sessionInfo.participants
             : currentState.sessionInfo.participants
@@ -333,167 +310,6 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
       });
       return true;
     } catch {
-      return false;
-    }
-  },
-
-  createShareableSession: () => {
-    const state = get();
-    return {
-      sessionInfo: state.sessionInfo,
-      gameState: {
-        turn: state.turn,
-        maxTurns: state.maxTurns,
-        currentTeam: state.currentTeam,
-        teams: state.teams,
-        phase: state.phase,
-        strategyLog: state.strategyLog
-      },
-      turnStatistics: state.turnStatistics
-    };
-  },
-
-  shareSession: async () => {
-    try {
-      const state = get();
-      const sessionData = {
-        sessionInfo: state.sessionInfo,
-        gameState: {
-          turn: state.turn,
-          maxTurns: state.maxTurns,
-          currentTeam: state.currentTeam,
-          teams: state.teams,
-          phase: state.phase,
-          strategyLog: state.strategyLog
-        },
-        turnStatistics: state.turnStatistics
-      };
-
-      // Create the session
-      const sessionResponse = await fetch('/api/sessions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(sessionData),
-      });
-
-      if (!sessionResponse.ok) {
-        return null;
-      }
-
-      const session = await sessionResponse.json();
-      const fullUrl = `${window.location.origin}/session/${session.id}`;
-
-      // Shorten the URL
-      const shortenResponse = await fetch('/api/shorten-url', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ url: fullUrl }),
-      });
-
-      if (shortenResponse.ok) {
-        const shortUrlData = await shortenResponse.json();
-        return shortUrlData.shortUrl;
-      } else {
-        // If URL shortening fails, return the original full URL
-        console.warn('URL shortening failed, using full URL');
-        return fullUrl;
-      }
-    } catch (error) {
-      console.error('Failed to share session:', error);
-      return null;
-    }
-  },
-
-  shareStatistics: async () => {
-    try {
-      const state = get();
-      const sessionData = {
-        sessionInfo: state.sessionInfo,
-        gameState: {
-          turn: state.turn,
-          maxTurns: state.maxTurns,
-          currentTeam: state.currentTeam,
-          teams: state.teams,
-          phase: state.phase,
-          strategyLog: state.strategyLog
-        },
-        turnStatistics: state.turnStatistics
-      };
-
-      // Create the session
-      const sessionResponse = await fetch('/api/sessions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(sessionData),
-      });
-
-      if (!sessionResponse.ok) {
-        return null;
-      }
-
-      const session = await sessionResponse.json();
-      const fullUrl = `${window.location.origin}/statistics/${session.id}`;
-
-      // Shorten the URL
-      const shortenResponse = await fetch('/api/shorten-url', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ url: fullUrl }),
-      });
-
-      if (shortenResponse.ok) {
-        const shortUrlData = await shortenResponse.json();
-        return shortUrlData.shortUrl;
-      } else {
-        // If URL shortening fails, return the original full URL
-        console.warn('URL shortening failed, using full URL');
-        return fullUrl;
-      }
-    } catch (error) {
-      console.error('Failed to share statistics:', error);
-      return null;
-    }
-  },
-
-  loadSharedSession: (sessionData: any) => {
-    try {
-      const gameState = sessionData.gameState;
-      // Migrate older save states that don't have permanentsQueue
-      if (gameState.teams) {
-        Object.keys(gameState.teams).forEach(team => {
-          if (!gameState.teams[team].permanentsQueue) {
-            gameState.teams[team].permanentsQueue = [];
-          }
-        });
-      }
-      const currentState = get();
-      set({
-        turn: gameState.turn,
-        maxTurns: gameState.maxTurns,
-        currentTeam: gameState.currentTeam,
-        teams: gameState.teams,
-        phase: gameState.phase,
-        strategyLog: gameState.strategyLog,
-        turnStatistics: sessionData.turnStatistics || [],
-        sessionInfo: sessionData.sessionInfo ? {
-          sessionName: sessionData.sessionInfo.sessionName || '',
-          sessionStarted: true, // Mark as started when loading shared session
-          participants: sessionData.sessionInfo.participants && sessionData.sessionInfo.participants.length > 0 
-            ? sessionData.sessionInfo.participants
-            : currentState.sessionInfo.participants
-        } : currentState.sessionInfo
-      });
-      return true;
-    } catch (error) {
-      console.error('Failed to load shared session:', error);
       return false;
     }
   }
