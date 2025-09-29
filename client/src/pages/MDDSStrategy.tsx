@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'wouter';
 import { useMDDSStore } from '../state/store';
+import { useIsMobile } from '../hooks/use-mobile';
 import { applyDomainQuotas } from '../logic/filters';
 import { calculateDiscountedPrice, calculateCartTotal } from '../logic/pricing';
 import { validateTurn1Restrictions, validatePooledBudget } from '../logic/turnEngine';
@@ -20,8 +22,17 @@ import { generateMDDSReport } from '../utils/pdfGenerator';
 
 export default function MDDSStrategy() {
   const store = useMDDSStore();
+  const isMobile = useIsMobile();
+  const [, setLocation] = useLocation();
   const [availableCards, setAvailableCards] = useState(applyDomainQuotas(cardsData as Card[]));
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+
+  // Redirect mobile users to mobile login interface
+  useEffect(() => {
+    if (isMobile) {
+      setLocation('/mobile');
+    }
+  }, [isMobile, setLocation]);
 
   // Update validation errors when cart or turn changes
   useEffect(() => {
