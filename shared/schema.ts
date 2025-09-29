@@ -1,5 +1,7 @@
 // MDDS Application Schema
 import { z } from "zod";
+import { pgTable, varchar, jsonb, timestamp, serial } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
 
 export type Domain = 'cyber' | 'economy' | 'cognitive' | 'space' | 'joint';
 export type CardType = 'asset' | 'permanent' | 'expert';
@@ -52,6 +54,14 @@ export interface GameState {
   }>;
 }
 
+// Database Tables
+export const gameSessions = pgTable("game_sessions", {
+  sessionName: varchar("session_name", { length: 255 }).primaryKey(),
+  gameState: jsonb("game_state").$type<GameState>().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Zod schemas for validation
 export const cardEffectSchema = z.object({
   target: z.enum(['self', 'opponent']),
@@ -77,3 +87,15 @@ export const cardSchema = z.object({
 
 export type InsertCard = z.infer<typeof cardSchema>;
 export type SelectCard = Card;
+
+// Game Session schemas
+export const insertGameSessionSchema = createInsertSchema(gameSessions);
+export const selectGameSessionSchema = z.object({
+  sessionName: z.string(),
+  gameState: z.any(),
+  createdAt: z.date(),
+  updatedAt: z.date()
+});
+
+export type InsertGameSession = z.infer<typeof insertGameSessionSchema>;
+export type SelectGameSession = z.infer<typeof selectGameSessionSchema>;
