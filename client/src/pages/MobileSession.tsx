@@ -1,19 +1,39 @@
 import { useParams } from 'wouter';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Shield, Coins } from 'lucide-react';
+import { Loader2, Shield, Coins, RefreshCw } from 'lucide-react';
 import { SelectGameSession } from '@shared/schema';
 import DomainBadge from '@/components/DomainBadge';
+import { useState } from 'react';
 
 export default function MobileSession() {
   const { sessionName } = useParams();
+  const queryClient = useQueryClient();
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { data: session, isLoading, error } = useQuery<SelectGameSession>({
     queryKey: ['/api/sessions', sessionName],
     enabled: !!sessionName,
+    refetchInterval: 5000, // Auto-refresh every 5 seconds
+    refetchIntervalInBackground: false, // Only when tab is active
   });
+
+  const handleManualRefresh = async () => {
+    if (!sessionName) return;
+    
+    setIsRefreshing(true);
+    try {
+      await queryClient.invalidateQueries({ 
+        queryKey: ['/api/sessions', sessionName] 
+      });
+    } catch (error) {
+      console.error('Failed to refresh session:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -55,13 +75,27 @@ export default function MobileSession() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold">{sessionName}</h1>
-            <p className="text-sm text-muted-foreground">
-              Turn {gameState.turn} of {gameState.maxTurns}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm text-muted-foreground">
+                Turn {gameState.turn} of {gameState.maxTurns}
+              </p>
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" title="Auto-refreshing every 5s" />
+            </div>
           </div>
-          <Badge variant="outline">
-            {gameState.currentTeam}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleManualRefresh}
+              disabled={isRefreshing}
+              data-testid="button-refresh-session"
+            >
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </Button>
+            <Badge variant="outline">
+              {gameState.currentTeam}
+            </Badge>
+          </div>
         </div>
       </div>
 
