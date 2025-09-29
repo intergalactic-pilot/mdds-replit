@@ -62,15 +62,6 @@ export default function AppHeader({
   const addParticipant = useMDDSStore(state => state.addParticipant);
   const removeParticipant = useMDDSStore(state => state.removeParticipant);
   
-  // Get current game state for database session creation
-  const gameState = useMDDSStore(state => ({
-    turn: state.turn,
-    maxTurns: state.maxTurns,
-    currentTeam: state.currentTeam,
-    teams: state.teams,
-    phase: state.phase,
-    strategyLog: state.strategyLog
-  }));
 
   const handleDownloadCardLogs = async () => {
     try {
@@ -115,6 +106,17 @@ export default function AppHeader({
     }
 
     try {
+      // Get current game state at execution time
+      const currentState = useMDDSStore.getState();
+      const gameState = {
+        turn: currentState.turn,
+        maxTurns: currentState.maxTurns,
+        currentTeam: currentState.currentTeam,
+        teams: currentState.teams,
+        phase: currentState.phase,
+        strategyLog: currentState.strategyLog
+      };
+
       const response = await apiRequest('POST', '/api/sessions', {
         sessionName: newSessionName.trim(),
         gameState: gameState

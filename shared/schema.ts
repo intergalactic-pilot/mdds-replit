@@ -88,11 +88,57 @@ export const cardSchema = z.object({
 export type InsertCard = z.infer<typeof cardSchema>;
 export type SelectCard = Card;
 
-// Game Session schemas
-export const insertGameSessionSchema = createInsertSchema(gameSessions);
+// Game State validation schema
+export const teamStateSchema = z.object({
+  deterrence: z.object({
+    joint: z.number(),
+    economy: z.number(), 
+    cognitive: z.number(),
+    space: z.number(),
+    cyber: z.number()
+  }),
+  totalDeterrence: z.number(),
+  budget: z.number(),
+  ownedPermanents: z.array(cardSchema),
+  permanentsQueue: z.array(z.object({
+    card: cardSchema,
+    availableTurn: z.number()
+  })),
+  expertsQueue: z.array(z.object({
+    card: cardSchema,
+    availableTurn: z.number()
+  })),
+  cart: z.array(cardSchema),
+  recentPurchases: z.array(z.object({
+    cardId: z.string(),
+    purchasedTurn: z.number()
+  }))
+});
+
+export const gameStateSchema = z.object({
+  turn: z.number(),
+  maxTurns: z.number(),
+  currentTeam: z.enum(['NATO', 'Russia']),
+  teams: z.object({
+    NATO: teamStateSchema,
+    Russia: teamStateSchema
+  }),
+  phase: z.enum(['purchase', 'commit', 'advance']),
+  strategyLog: z.array(z.object({
+    turn: z.number(),
+    team: z.enum(['NATO', 'Russia']),
+    action: z.string(),
+    timestamp: z.union([z.date(), z.string().transform((str) => new Date(str))])
+  }))
+});
+
+// Game Session schemas with proper validation
+export const insertGameSessionSchema = createInsertSchema(gameSessions).extend({
+  gameState: gameStateSchema
+});
 export const selectGameSessionSchema = z.object({
   sessionName: z.string(),
-  gameState: z.any(),
+  gameState: gameStateSchema,
   createdAt: z.date(),
   updatedAt: z.date()
 });

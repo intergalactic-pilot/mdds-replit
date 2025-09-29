@@ -38,11 +38,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a new game session
   app.post("/api/sessions", async (req, res) => {
     try {
-      const { sessionName, gameState } = req.body;
-      
-      if (!sessionName || !gameState) {
-        return res.status(400).json({ error: "Session name and game state are required" });
+      // Validate request body using Zod schema
+      const validationResult = insertGameSessionSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: "Invalid session data", 
+          details: validationResult.error.errors 
+        });
       }
+
+      const { sessionName, gameState } = validationResult.data;
 
       // Check if session already exists
       const existingSession = await storage.getGameSession(sessionName);
@@ -62,12 +67,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/sessions/:sessionName", async (req, res) => {
     try {
       const { sessionName } = req.params;
-      const { gameState } = req.body;
       
-      if (!gameState) {
-        return res.status(400).json({ error: "Game state is required" });
+      // Validate game state
+      const updateSchema = insertGameSessionSchema.pick({ gameState: true });
+      const validationResult = updateSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: "Invalid game state data", 
+          details: validationResult.error.errors 
+        });
       }
 
+      const { gameState } = validationResult.data;
       const session = await storage.updateGameSession(sessionName, gameState);
       res.json(session);
     } catch (error) {
