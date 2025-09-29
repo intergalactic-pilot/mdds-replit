@@ -1,37 +1,58 @@
-import { type User, type InsertUser } from "@shared/schema";
-import { randomUUID } from "crypto";
+import { type InsertGameSession, type SelectGameSession, GameState } from "@shared/schema";
 
-// modify the interface with any CRUD methods
-// you might need
-
+// Storage interface for MDDS game sessions
 export interface IStorage {
-  getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  getGameSession(sessionName: string): Promise<SelectGameSession | undefined>;
+  createGameSession(sessionName: string, gameState: GameState): Promise<SelectGameSession>;
+  updateGameSession(sessionName: string, gameState: GameState): Promise<SelectGameSession>;
+  getAllGameSessions(): Promise<SelectGameSession[]>;
+  deleteGameSession(sessionName: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
-  private users: Map<string, User>;
+  private sessions: Map<string, SelectGameSession>;
 
   constructor() {
-    this.users = new Map();
+    this.sessions = new Map();
   }
 
-  async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+  async getGameSession(sessionName: string): Promise<SelectGameSession | undefined> {
+    return this.sessions.get(sessionName);
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+  async createGameSession(sessionName: string, gameState: GameState): Promise<SelectGameSession> {
+    const now = new Date();
+    const session: SelectGameSession = {
+      sessionName,
+      gameState,
+      createdAt: now,
+      updatedAt: now,
+    };
+    this.sessions.set(sessionName, session);
+    return session;
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+  async updateGameSession(sessionName: string, gameState: GameState): Promise<SelectGameSession> {
+    const existingSession = this.sessions.get(sessionName);
+    if (!existingSession) {
+      throw new Error(`Session ${sessionName} not found`);
+    }
+    
+    const updatedSession: SelectGameSession = {
+      ...existingSession,
+      gameState,
+      updatedAt: new Date(),
+    };
+    this.sessions.set(sessionName, updatedSession);
+    return updatedSession;
+  }
+
+  async getAllGameSessions(): Promise<SelectGameSession[]> {
+    return Array.from(this.sessions.values());
+  }
+
+  async deleteGameSession(sessionName: string): Promise<boolean> {
+    return this.sessions.delete(sessionName);
   }
 }
 

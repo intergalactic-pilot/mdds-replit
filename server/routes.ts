@@ -1,13 +1,100 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { insertGameSessionSchema, selectGameSessionSchema } from "@shared/schema";
+import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // put application routes here
-  // prefix all routes with /api
+  // Game Session Management Routes
+  
+  // Get all game sessions
+  app.get("/api/sessions", async (req, res) => {
+    try {
+      const sessions = await storage.getAllGameSessions();
+      res.json(sessions);
+    } catch (error) {
+      console.error("Error fetching game sessions:", error);
+      res.status(500).json({ error: "Failed to fetch game sessions" });
+    }
+  });
 
-  // use storage to perform CRUD operations on the storage interface
-  // e.g. storage.insertUser(user) or storage.getUserByUsername(username)
+  // Get a specific game session
+  app.get("/api/sessions/:sessionName", async (req, res) => {
+    try {
+      const { sessionName } = req.params;
+      const session = await storage.getGameSession(sessionName);
+      
+      if (!session) {
+        return res.status(404).json({ error: "Session not found" });
+      }
+      
+      res.json(session);
+    } catch (error) {
+      console.error("Error fetching game session:", error);
+      res.status(500).json({ error: "Failed to fetch game session" });
+    }
+  });
+
+  // Create a new game session
+  app.post("/api/sessions", async (req, res) => {
+    try {
+      const { sessionName, gameState } = req.body;
+      
+      if (!sessionName || !gameState) {
+        return res.status(400).json({ error: "Session name and game state are required" });
+      }
+
+      // Check if session already exists
+      const existingSession = await storage.getGameSession(sessionName);
+      if (existingSession) {
+        return res.status(409).json({ error: "Session with this name already exists" });
+      }
+
+      const session = await storage.createGameSession(sessionName, gameState);
+      res.status(201).json(session);
+    } catch (error) {
+      console.error("Error creating game session:", error);
+      res.status(500).json({ error: "Failed to create game session" });
+    }
+  });
+
+  // Update an existing game session
+  app.put("/api/sessions/:sessionName", async (req, res) => {
+    try {
+      const { sessionName } = req.params;
+      const { gameState } = req.body;
+      
+      if (!gameState) {
+        return res.status(400).json({ error: "Game state is required" });
+      }
+
+      const session = await storage.updateGameSession(sessionName, gameState);
+      res.json(session);
+    } catch (error) {
+      if (error.message.includes("not found")) {
+        return res.status(404).json({ error: "Session not found" });
+      }
+      console.error("Error updating game session:", error);
+      res.status(500).json({ error: "Failed to update game session" });
+    }
+  });
+
+  // Delete a game session
+  app.delete("/api/sessions/:sessionName", async (req, res) => {
+    try {
+      const { sessionName } = req.params;
+      const deleted = await storage.deleteGameSession(sessionName);
+      
+      if (!deleted) {
+        return res.status(404).json({ error: "Session not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting game session:", error);
+      res.status(500).json({ error: "Failed to delete game session" });
+    }
+  });
 
   const httpServer = createServer(app);
 
