@@ -119,13 +119,23 @@ export default function AppHeader({
 
       const response = await apiRequest('POST', '/api/sessions', {
         sessionName: newSessionName.trim(),
-        gameState: gameState
+        gameState: gameState,
+        sessionInfo: currentState.sessionInfo,
+        turnStatistics: currentState.turnStatistics,
+        lastUpdated: new Date().toISOString()
       });
+
+      // Establish dynamic link to current game state
+      const sessionName = newSessionName.trim();
+      currentState.setActiveDatabaseSession(sessionName);
+      
+      // Perform initial sync to database
+      await currentState.syncToDatabase();
 
       setShowCreateSession(false);
       setNewSessionName('');
       setValidationErrors([]);
-      const mobileUrl = `/mobile/${encodeURIComponent(newSessionName.trim())}`;
+      const mobileUrl = `/mobile/${encodeURIComponent(sessionName)}`;
       window.location.href = mobileUrl;
     } catch (error) {
       console.error('Error creating database session:', error);

@@ -15,8 +15,8 @@ const db = drizzle(sql);
 // Storage interface for MDDS game sessions
 export interface IStorage {
   getGameSession(sessionName: string): Promise<SelectGameSession | undefined>;
-  createGameSession(sessionName: string, gameState: GameState): Promise<SelectGameSession>;
-  updateGameSession(sessionName: string, gameState: GameState): Promise<SelectGameSession>;
+  createGameSession(sessionName: string, gameState: GameState, sessionInfo?: any, turnStatistics?: any, lastUpdated?: string): Promise<SelectGameSession>;
+  updateGameSession(sessionName: string, gameState: GameState, sessionInfo?: any, turnStatistics?: any, lastUpdated?: string): Promise<SelectGameSession>;
   getAllGameSessions(): Promise<SelectGameSession[]>;
   deleteGameSession(sessionName: string): Promise<boolean>;
 }
@@ -37,13 +37,16 @@ export class DrizzleStorage implements IStorage {
     }
   }
 
-  async createGameSession(sessionName: string, gameState: GameState): Promise<SelectGameSession> {
+  async createGameSession(sessionName: string, gameState: GameState, sessionInfo?: any, turnStatistics?: any, lastUpdated?: string): Promise<SelectGameSession> {
     try {
       const result = await db
         .insert(gameSessions)
         .values({
           sessionName,
           gameState,
+          sessionInfo,
+          turnStatistics,
+          lastUpdated,
         })
         .returning();
       
@@ -54,12 +57,15 @@ export class DrizzleStorage implements IStorage {
     }
   }
 
-  async updateGameSession(sessionName: string, gameState: GameState): Promise<SelectGameSession> {
+  async updateGameSession(sessionName: string, gameState: GameState, sessionInfo?: any, turnStatistics?: any, lastUpdated?: string): Promise<SelectGameSession> {
     try {
       const result = await db
         .update(gameSessions)
         .set({
           gameState,
+          sessionInfo,
+          turnStatistics,
+          lastUpdated,
           updatedAt: new Date(),
         })
         .where(eq(gameSessions.sessionName, sessionName))

@@ -30,6 +30,9 @@ interface MDDSStore extends GameState {
   // Session information
   sessionInfo: SessionInfo;
   
+  // Database session tracking
+  activeDatabaseSession: string | null;
+  
   // Actions
   addToCart: (team: Team, card: Card) => void;
   removeFromCart: (team: Team, cardId: string) => void;
@@ -44,6 +47,10 @@ interface MDDSStore extends GameState {
   updateParticipant: (index: number, field: 'name' | 'country', value: string) => void;
   addParticipant: () => void;
   removeParticipant: (index: number) => void;
+  
+  // Database session management
+  setActiveDatabaseSession: (sessionName: string | null) => void;
+  syncToDatabase: () => Promise<void>;
   
   // UI State
   selectedCard: Card | null;
@@ -67,7 +74,7 @@ const createInitialTeamState = (): TeamState => ({
   recentPurchases: []
 });
 
-const createInitialState = (): Omit<GameState, 'teams'> & { teams: Record<Team, TeamState>; turnStatistics: TurnStatistics[]; sessionInfo: SessionInfo } => {
+const createInitialState = (): Omit<GameState, 'teams'> & { teams: Record<Team, TeamState>; turnStatistics: TurnStatistics[]; sessionInfo: SessionInfo; activeDatabaseSession: string | null } => {
   const natoTeam = createInitialTeamState();
   const russiaTeam = createInitialTeamState();
   
@@ -97,17 +104,23 @@ const createInitialState = (): Omit<GameState, 'teams'> & { teams: Record<Team, 
       natoDeterrence: { ...natoTeam.deterrence },
       russiaDeterrence: { ...russiaTeam.deterrence },
       timestamp: new Date()
-    }]
+    }],
+    activeDatabaseSession: null
   };
 };
 
 export const useMDDSStore = create<MDDSStore>((set, get) => ({
   ...createInitialState(),
   selectedCard: null,
+  activeDatabaseSession: null,
 
   setSelectedCard: (card) => set({ selectedCard: card }),
 
-  setCurrentTeam: (team) => set({ currentTeam: team }),
+  setCurrentTeam: (team) => {
+    set({ currentTeam: team });
+    // Sync to database after state change
+    setTimeout(() => get().syncToDatabase(), 0);
+  },
 
   addToCart: (team, card) => {
     set((state) => {
@@ -118,6 +131,8 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
       };
       return { teams: newTeams };
     });
+    // Sync to database after state change
+    setTimeout(() => get().syncToDatabase(), 0);
   },
 
   removeFromCart: (team, cardId) => {
@@ -129,6 +144,8 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
       };
       return { teams: newTeams };
     });
+    // Sync to database after state change
+    setTimeout(() => get().syncToDatabase(), 0);
   },
 
   commitTeamPurchases: (team) => {
@@ -136,6 +153,8 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
       const newState = commitPurchases(state, team);
       return { ...newState };
     });
+    // Sync to database after state change
+    setTimeout(() => get().syncToDatabase(), 0);
   },
 
   advanceGameTurn: () => {
@@ -157,10 +176,17 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
         turnStatistics: [...state.turnStatistics, newStatistics]
       };
     });
+    // Sync to database after state change
+    setTimeout(() => get().syncToDatabase(), 0);
   },
 
   resetStrategy: () => {
     set(createInitialState());
+    // Clear active database session on reset
+    setTimeout(() => {
+      const state = get();
+      state.setActiveDatabaseSession(null);
+    }, 0);
   },
 
   concludeStrategy: (team) => {
@@ -176,6 +202,8 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
         }
       ]
     }));
+    // Sync to database after state change
+    setTimeout(() => get().syncToDatabase(), 0);
   },
 
   // Session management functions
@@ -186,6 +214,8 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
         sessionName: name
       }
     }));
+    // Sync to database after state change
+    setTimeout(() => get().syncToDatabase(), 0);
   },
 
   updateParticipant: (index: number, field: 'name' | 'country', value: string) => {
@@ -197,6 +227,8 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
         )
       }
     }));
+    // Sync to database after state change
+    setTimeout(() => get().syncToDatabase(), 0);
   },
 
   addParticipant: () => {
@@ -206,6 +238,8 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
         participants: [...state.sessionInfo.participants, { name: '', country: '' }]
       }
     }));
+    // Sync to database after state change
+    setTimeout(() => get().syncToDatabase(), 0);
   },
 
   removeParticipant: (index: number) => {
@@ -217,6 +251,48 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
           : state.sessionInfo.participants
       }
     }));
+    // Sync to database after state change
+    setTimeout(() => get().syncToDatabase(), 0);
+  },
+
+  setActiveDatabaseSession: (sessionName: string | null) => {
+    set({ activeDatabaseSession: sessionName });
+  },
+
+  syncToDatabase: async () => {
+    const state = get();
+    if (!state.activeDatabaseSession) return;
+
+    try {
+      const sessionData = {
+        sessionName: state.activeDatabaseSession,
+        gameState: {
+          turn: state.turn,
+          maxTurns: state.maxTurns,
+          currentTeam: state.currentTeam,
+          teams: state.teams,
+          phase: state.phase,
+          strategyLog: state.strategyLog
+        },
+        sessionInfo: state.sessionInfo,
+        turnStatistics: state.turnStatistics,
+        lastUpdated: new Date().toISOString()
+      };
+
+      const response = await fetch(`/api/sessions/${state.activeDatabaseSession}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(sessionData),
+      });
+
+      if (!response.ok) {
+        console.error('Failed to sync to database:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error syncing to database:', error);
+    }
   },
 
   saveToLocalStorage: () => {

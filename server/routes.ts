@@ -48,6 +48,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { sessionName, gameState } = validationResult.data;
+      const { sessionInfo, turnStatistics, lastUpdated } = req.body;
 
       // Check if session already exists
       const existingSession = await storage.getGameSession(sessionName);
@@ -55,7 +56,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(409).json({ error: "Session with this name already exists" });
       }
 
-      const session = await storage.createGameSession(sessionName, gameState);
+      const session = await storage.createGameSession(sessionName, gameState, sessionInfo, turnStatistics, lastUpdated);
       res.status(201).json(session);
     } catch (error) {
       console.error("Error creating game session:", error);
@@ -68,18 +69,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { sessionName } = req.params;
       
-      // Validate game state
-      const updateSchema = insertGameSessionSchema.pick({ gameState: true });
+      // Validate request body - allow all optional fields
+      const updateSchema = insertGameSessionSchema.partial();
       const validationResult = updateSchema.safeParse(req.body);
       if (!validationResult.success) {
         return res.status(400).json({ 
-          error: "Invalid game state data", 
+          error: "Invalid session data", 
           details: validationResult.error.errors 
         });
       }
 
-      const { gameState } = validationResult.data;
-      const session = await storage.updateGameSession(sessionName, gameState);
+      const { gameState, sessionInfo, turnStatistics, lastUpdated } = validationResult.data;
+      
+      // Only update if gameState is provided
+      if (!gameState) {
+        return res.status(400).json({ error: "gameState is required for updates" });
+      }
+
+      const session = await storage.updateGameSession(
+        sessionName, 
+        gameState, 
+        sessionInfo, 
+        turnStatistics, 
+        lastUpdated || undefined
+      );
       res.json(session);
     } catch (error) {
       if (error instanceof Error && error.message.includes("not found")) {
