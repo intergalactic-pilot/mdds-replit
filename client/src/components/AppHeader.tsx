@@ -123,7 +123,8 @@ export default function AppHeader({
       setShowCreateSession(false);
       setNewSessionName('');
       setValidationErrors([]);
-      alert(`Database session "${newSessionName}" created successfully! Mobile page available.`);
+      const mobileUrl = `${window.location.origin}/mobile/${encodeURIComponent(newSessionName.trim())}`;
+      alert(`Database session "${newSessionName}" created successfully! Mobile page available at: ${mobileUrl}`);
     } catch (error) {
       console.error('Error creating database session:', error);
       setValidationErrors(['Failed to create database session']);
