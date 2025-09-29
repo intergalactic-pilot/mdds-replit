@@ -20,7 +20,8 @@ import {
   Sun,
   Download,
   Edit,
-  Database
+  Database,
+  Trash2
 } from 'lucide-react';
 import logoUrl from '@assets/Logo_1758524556759.png';
 import { useTheme } from "./ThemeProvider";
@@ -207,7 +208,7 @@ export default function AppHeader({
                     <Label>Participants</Label>
                     <div className="space-y-3 mt-2">
                       {sessionInfo.participants.map((participant, index) => (
-                        <div key={index} className="grid grid-cols-2 gap-2">
+                        <div key={index} className="grid grid-cols-[1fr_1fr_auto] gap-2 items-center">
                           <Input
                             value={participant.name}
                             onChange={(e) => updateParticipant(index, 'name', e.target.value)}
@@ -220,6 +221,15 @@ export default function AppHeader({
                             placeholder="Country"
                             data-testid={`input-participant-country-${index}`}
                           />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeParticipant(index)}
+                            disabled={sessionInfo.participants.length <= 2}
+                            data-testid={`button-remove-participant-${index}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       ))}
                     </div>
@@ -233,16 +243,6 @@ export default function AppHeader({
                       >
                         Add Participant
                       </Button>
-                      {sessionInfo.participants.length > 2 && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeParticipant(sessionInfo.participants.length - 1)}
-                          data-testid="button-remove-participant"
-                        >
-                          Remove Last
-                        </Button>
-                      )}
                     </div>
                   </div>
                   
