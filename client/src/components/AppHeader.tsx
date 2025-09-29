@@ -76,10 +76,6 @@ export default function AppHeader({
   const validateSessionInfo = () => {
     const errors: string[] = [];
     
-    if (!sessionInfo.sessionName.trim()) {
-      errors.push('Session name is required');
-    }
-    
     sessionInfo.participants.forEach((participant, index) => {
       if (!participant.name.trim()) {
         errors.push(`Participant ${index + 1} name is required`);
@@ -109,29 +105,35 @@ export default function AppHeader({
     try {
       // Get current game state at execution time
       const currentState = useMDDSStore.getState();
+      
+      // Update the session name in the store to match what user entered
+      const sessionName = newSessionName.trim();
+      currentState.updateSessionName(sessionName);
+      
+      // Get updated state after session name change
+      const updatedState = useMDDSStore.getState();
       const gameState = {
-        turn: currentState.turn,
-        maxTurns: currentState.maxTurns,
-        currentTeam: currentState.currentTeam,
-        teams: currentState.teams,
-        phase: currentState.phase,
-        strategyLog: currentState.strategyLog
+        turn: updatedState.turn,
+        maxTurns: updatedState.maxTurns,
+        currentTeam: updatedState.currentTeam,
+        teams: updatedState.teams,
+        phase: updatedState.phase,
+        strategyLog: updatedState.strategyLog
       };
 
       const response = await apiRequest('POST', '/api/sessions', {
-        sessionName: newSessionName.trim(),
+        sessionName: sessionName,
         gameState: gameState,
-        sessionInfo: currentState.sessionInfo,
-        turnStatistics: currentState.turnStatistics,
+        sessionInfo: updatedState.sessionInfo,
+        turnStatistics: updatedState.turnStatistics,
         lastUpdated: new Date().toISOString()
       });
 
       // Establish dynamic link to current game state
-      const sessionName = newSessionName.trim();
-      currentState.setActiveDatabaseSession(sessionName);
+      updatedState.setActiveDatabaseSession(sessionName);
       
       // Perform initial sync to database
-      await currentState.syncToDatabase();
+      await updatedState.syncToDatabase();
 
       setShowCreateSession(false);
       setNewSessionName('');
@@ -193,17 +195,6 @@ export default function AppHeader({
                   <DialogTitle>{sanitizeText('Session Information')}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="session-name">Session Name</Label>
-                    <Input
-                      id="session-name"
-                      value={sessionInfo.sessionName}
-                      onChange={(e) => updateSessionName(e.target.value)}
-                      placeholder="Enter session name"
-                      data-testid="input-session-name"
-                    />
-                  </div>
-                  
                   <div>
                     <Label>Participants</Label>
                     <div className="space-y-3 mt-2">
