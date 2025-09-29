@@ -10,6 +10,7 @@ import { sanitizeText } from '../logic/guards';
 import { useMDDSStore } from '@/state/store';
 import StrategyLog from './StrategyLog';
 import { generateCardLogsPDF } from '@/utils/pdfGenerator';
+import { apiRequest } from '@/lib/queryClient';
 import { 
   HelpCircle, 
   RotateCcw,
@@ -18,7 +19,8 @@ import {
   Moon,
   Sun,
   Download,
-  Edit
+  Edit,
+  Database
 } from 'lucide-react';
 import logoUrl from '@assets/Logo_1758524556759.png';
 import { useTheme } from "./ThemeProvider";
@@ -48,6 +50,8 @@ export default function AppHeader({
   const [selectedDimension, setSelectedDimension] = useState<Domain | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showSessionInfo, setShowSessionInfo] = useState(false);
+  const [showCreateSession, setShowCreateSession] = useState(false);
+  const [newSessionName, setNewSessionName] = useState('');
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   
   // Use store for session management
@@ -57,6 +61,16 @@ export default function AppHeader({
   const updateParticipant = useMDDSStore(state => state.updateParticipant);
   const addParticipant = useMDDSStore(state => state.addParticipant);
   const removeParticipant = useMDDSStore(state => state.removeParticipant);
+  
+  // Get current game state for database session creation
+  const gameState = useMDDSStore(state => ({
+    turn: state.turn,
+    maxTurns: state.maxTurns,
+    currentTeam: state.currentTeam,
+    teams: state.teams,
+    phase: state.phase,
+    strategyLog: state.strategyLog
+  }));
 
   const handleDownloadCardLogs = async () => {
     try {
@@ -91,6 +105,28 @@ export default function AppHeader({
     if (validateSessionInfo()) {
       setShowSessionInfo(false);
       setValidationErrors([]);
+    }
+  };
+
+  const handleCreateDatabaseSession = async () => {
+    if (!newSessionName.trim()) {
+      setValidationErrors(['Session name is required']);
+      return;
+    }
+
+    try {
+      const response = await apiRequest('POST', '/api/sessions', {
+        sessionName: newSessionName.trim(),
+        gameState: gameState
+      });
+
+      setShowCreateSession(false);
+      setNewSessionName('');
+      setValidationErrors([]);
+      alert(`Database session "${newSessionName}" created successfully! Mobile page available.`);
+    } catch (error) {
+      console.error('Error creating database session:', error);
+      setValidationErrors(['Failed to create database session']);
     }
   };
 
@@ -332,6 +368,61 @@ export default function AppHeader({
                 </DialogHeader>
                 <div className="space-y-4">
                   <StrategyLog entries={strategyLog} maxHeight="60vh" />
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            {/* Database Session */}
+            <Dialog open={showCreateSession} onOpenChange={setShowCreateSession}>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="icon" data-testid="button-create-database-session">
+                  <Database className="w-4 h-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>{sanitizeText('Create Database Session')}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="new-session-name">Session Name</Label>
+                    <Input
+                      id="new-session-name"
+                      value={newSessionName}
+                      onChange={(e) => setNewSessionName(e.target.value)}
+                      placeholder="Enter session name"
+                      data-testid="input-new-session-name"
+                    />
+                  </div>
+                  
+                  {validationErrors.length > 0 && (
+                    <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-md p-3">
+                      <div className="text-sm text-red-600 dark:text-red-400">
+                        <div className="font-medium mb-1">Please fix the following errors:</div>
+                        <ul className="list-disc list-inside space-y-1">
+                          {validationErrors.map((error, index) => (
+                            <li key={index}>{error}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-end gap-2 pt-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowCreateSession(false)}
+                      data-testid="button-cancel-database-session"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleCreateDatabaseSession}
+                      data-testid="button-save-database-session"
+                    >
+                      Create Session
+                    </Button>
+                  </div>
                 </div>
               </DialogContent>
             </Dialog>
