@@ -29,10 +29,27 @@ export default function MDDSStrategy() {
 
   // Redirect mobile users to mobile login interface
   useEffect(() => {
+    // Check screen size immediately and redirect if mobile
+    const checkMobile = () => {
+      const isMobileDevice = window.innerWidth < 768;
+      if (isMobileDevice) {
+        setLocation('/mobile');
+      }
+    };
+
+    // Check immediately
+    checkMobile();
+    
+    // Also check when the hook updates
     if (isMobile) {
       setLocation('/mobile');
     }
   }, [isMobile, setLocation]);
+
+  // Early return for mobile to prevent flashing
+  if (typeof window !== 'undefined' && window.innerWidth < 768) {
+    return null;
+  }
 
   // Update validation errors when cart or turn changes
   useEffect(() => {
