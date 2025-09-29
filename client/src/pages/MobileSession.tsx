@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Shield, Coins } from 'lucide-react';
 import { SelectGameSession } from '@shared/schema';
+import DomainBadge from '@/components/DomainBadge';
 
 export default function MobileSession() {
   const { sessionName } = useParams();
@@ -148,6 +149,31 @@ export default function MobileSession() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Dimensional Deterrence */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Dimensional Deterrence</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {(['joint', 'economy', 'cognitive', 'space', 'cyber'] as const).map((domain) => (
+              <div key={domain} className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <DomainBadge domain={domain} />
+                  <span className="text-sm font-medium capitalize">{domain}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <div className="text-blue-500">
+                    NATO: {gameState.teams.NATO.deterrence[domain]}
+                  </div>
+                  <div className="text-red-500">
+                    Russia: {gameState.teams.Russia.deterrence[domain]}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
 
         {/* Action Button */}
         <div className="pb-8">
