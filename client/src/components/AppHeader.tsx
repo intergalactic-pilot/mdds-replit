@@ -20,7 +20,6 @@ import {
   Sun,
   Download,
   Edit,
-  Database,
   Trash2
 } from 'lucide-react';
 import logoUrl from '@assets/Logo_1758524556759.png';
@@ -51,8 +50,6 @@ export default function AppHeader({
   const [selectedDimension, setSelectedDimension] = useState<Domain | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showSessionInfo, setShowSessionInfo] = useState(false);
-  const [showCreateSession, setShowCreateSession] = useState(false);
-  const [newSessionName, setNewSessionName] = useState('');
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   
   // Use store for session management
@@ -76,6 +73,10 @@ export default function AppHeader({
   const validateSessionInfo = () => {
     const errors: string[] = [];
     
+    if (!sessionInfo.sessionName.trim()) {
+      errors.push('Session name is required');
+    }
+    
     sessionInfo.participants.forEach((participant, index) => {
       if (!participant.name.trim()) {
         errors.push(`Participant ${index + 1} name is required`);
@@ -96,47 +97,39 @@ export default function AppHeader({
     }
   };
 
-  const handleCreateDatabaseSession = async () => {
-    if (!newSessionName.trim()) {
-      setValidationErrors(['Session name is required']);
+  const handleCreateSessionFromInfo = async () => {
+    if (!validateSessionInfo()) {
       return;
     }
 
     try {
       // Get current game state at execution time
       const currentState = useMDDSStore.getState();
-      
-      // Update the session name in the store to match what user entered
-      const sessionName = newSessionName.trim();
-      currentState.updateSessionName(sessionName);
-      
-      // Get updated state after session name change
-      const updatedState = useMDDSStore.getState();
       const gameState = {
-        turn: updatedState.turn,
-        maxTurns: updatedState.maxTurns,
-        currentTeam: updatedState.currentTeam,
-        teams: updatedState.teams,
-        phase: updatedState.phase,
-        strategyLog: updatedState.strategyLog
+        turn: currentState.turn,
+        maxTurns: currentState.maxTurns,
+        currentTeam: currentState.currentTeam,
+        teams: currentState.teams,
+        phase: currentState.phase,
+        strategyLog: currentState.strategyLog
       };
 
       const response = await apiRequest('POST', '/api/sessions', {
-        sessionName: sessionName,
+        sessionName: sessionInfo.sessionName.trim(),
         gameState: gameState,
-        sessionInfo: updatedState.sessionInfo,
-        turnStatistics: updatedState.turnStatistics,
+        sessionInfo: currentState.sessionInfo,
+        turnStatistics: currentState.turnStatistics,
         lastUpdated: new Date().toISOString()
       });
 
       // Establish dynamic link to current game state
-      updatedState.setActiveDatabaseSession(sessionName);
+      const sessionName = sessionInfo.sessionName.trim();
+      currentState.setActiveDatabaseSession(sessionName);
       
       // Perform initial sync to database
-      await updatedState.syncToDatabase();
+      await currentState.syncToDatabase();
 
-      setShowCreateSession(false);
-      setNewSessionName('');
+      setShowSessionInfo(false);
       setValidationErrors([]);
       const mobileUrl = `/mobile/${encodeURIComponent(sessionName)}`;
       window.location.href = mobileUrl;
@@ -145,6 +138,7 @@ export default function AppHeader({
       setValidationErrors(['Failed to create database session']);
     }
   };
+
 
   return (
     <header className="glass-header">
@@ -195,6 +189,17 @@ export default function AppHeader({
                   <DialogTitle>{sanitizeText('Session Information')}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="session-name">Session Name</Label>
+                    <Input
+                      id="session-name"
+                      value={sessionInfo.sessionName}
+                      onChange={(e) => updateSessionName(e.target.value)}
+                      placeholder="Enter session name"
+                      data-testid="input-session-name"
+                    />
+                  </div>
+                  
                   <div>
                     <Label>Participants</Label>
                     <div className="space-y-3 mt-2">
@@ -253,16 +258,26 @@ export default function AppHeader({
                   <div className="flex justify-end gap-2 pt-4">
                     <Button
                       variant="outline"
-                      onClick={() => setShowSessionInfo(false)}
+                      onClick={() => {
+                        setShowSessionInfo(false);
+                        setValidationErrors([]);
+                      }}
                       data-testid="button-cancel-session"
                     >
                       Cancel
                     </Button>
                     <Button
+                      variant="outline"
                       onClick={handleSessionSave}
                       data-testid="button-save-session"
                     >
                       Save
+                    </Button>
+                    <Button
+                      onClick={handleCreateSessionFromInfo}
+                      data-testid="button-create-session"
+                    >
+                      Create Session
                     </Button>
                   </div>
                 </div>
@@ -376,60 +391,6 @@ export default function AppHeader({
               </DialogContent>
             </Dialog>
 
-            {/* Database Session */}
-            <Dialog open={showCreateSession} onOpenChange={setShowCreateSession}>
-              <DialogTrigger asChild>
-                <Button variant="ghost" size="icon" data-testid="button-create-database-session">
-                  <Database className="w-4 h-4" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>{sanitizeText('Create Database Session')}</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="new-session-name">Session Name</Label>
-                    <Input
-                      id="new-session-name"
-                      value={newSessionName}
-                      onChange={(e) => setNewSessionName(e.target.value)}
-                      placeholder="Enter session name"
-                      data-testid="input-new-session-name"
-                    />
-                  </div>
-                  
-                  {validationErrors.length > 0 && (
-                    <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-md p-3">
-                      <div className="text-sm text-red-600 dark:text-red-400">
-                        <div className="font-medium mb-1">Please fix the following errors:</div>
-                        <ul className="list-disc list-inside space-y-1">
-                          {validationErrors.map((error, index) => (
-                            <li key={index}>{error}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div className="flex justify-end gap-2 pt-4">
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowCreateSession(false)}
-                      data-testid="button-cancel-database-session"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={handleCreateDatabaseSession}
-                      data-testid="button-save-database-session"
-                    >
-                      Create Session
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
 
             {/* Save */}
             <Button variant="ghost" size="icon" onClick={onSave} data-testid="button-save">
