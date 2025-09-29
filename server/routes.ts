@@ -71,7 +71,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const session = await storage.updateGameSession(sessionName, gameState);
       res.json(session);
     } catch (error) {
-      if (error.message.includes("not found")) {
+      if (error instanceof Error && error.message.includes("not found")) {
         return res.status(404).json({ error: "Session not found" });
       }
       console.error("Error updating game session:", error);
