@@ -416,6 +416,7 @@ export default function DatabaseSessions() {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDeleteClick(session.sessionName)}
+                      disabled={deleteMutation.isPending}
                       data-testid={`button-delete-${session.sessionName}`}
                     >
                       <Trash2 className="w-4 h-4" />
