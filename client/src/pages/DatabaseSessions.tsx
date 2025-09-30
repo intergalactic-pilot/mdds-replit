@@ -48,6 +48,7 @@ interface GameSession {
   }> | null;
   lastUpdated: string | null;
   createdAt: string;
+  finalReport: string | null;
 }
 
 export default function DatabaseSessions() {
@@ -136,6 +137,32 @@ export default function DatabaseSessions() {
   };
 
   const handleDownloadReport = async (session: GameSession) => {
+    // If finalReport exists in database, download that
+    if (session.finalReport) {
+      try {
+        // Convert base64 to blob and download
+        const byteCharacters = atob(session.finalReport);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${session.sessionName}_Final_Report.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        return;
+      } catch (error) {
+        console.error('Failed to download stored report, generating new one:', error);
+      }
+    }
+    
+    // Otherwise generate a new report
     const scores = getLatestDeterrenceScores(session);
     const winner = getWinner(session);
     await generateSessionReportPDF(session, scores, winner);
