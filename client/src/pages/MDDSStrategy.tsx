@@ -9,7 +9,7 @@ import AppHeader from '../components/AppHeader';
 import TeamPanel from '../components/TeamPanel';
 import CardShop from '../components/CardShop';
 import CardDetailModal from '../components/CardDetailModal';
-import { SkipForward } from 'lucide-react';
+import { SkipForward, FileCheck } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import DeterrenceChart from '../components/DeterrenceChart';
 import CartDisplay from '../components/CartDisplay';
@@ -18,8 +18,20 @@ import TurnBasedLogs from '../components/Statistics';
 import DomainStatistics from '../components/DomainStatistics';
 import cardsData from '../data/cards.json';
 import { Card } from '@shared/schema';
-import { generateMDDSReport } from '../utils/pdfGenerator';
+import { generateMDDSReport, generateMDDSReportBase64 } from '../utils/pdfGenerator';
 import LoginScreen from '../components/LoginScreen';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function MDDSStrategy() {
   const store = useMDDSStore();
@@ -28,6 +40,9 @@ export default function MDDSStrategy() {
   const [, setLocation] = useLocation();
   const [availableCards, setAvailableCards] = useState(applyDomainQuotas(cardsData as Card[]));
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [showFinishDialog, setShowFinishDialog] = useState(false);
+  const [isFinishing, setIsFinishing] = useState(false);
+  const { toast } = useToast();
 
   // Redirect mobile users to mobile login interface
   useEffect(() => {
@@ -107,6 +122,55 @@ export default function MDDSStrategy() {
     } catch (error) {
       console.error('Failed to generate PDF:', error);
       alert('Failed to generate PDF report. Please try again.');
+    }
+  };
+
+  const handleFinishGameSession = async () => {
+    setIsFinishing(true);
+    try {
+      // Generate PDF as base64
+      const pdfData = await generateMDDSReportBase64({
+        currentTurn: store.turn,
+        maxTurns: store.maxTurns,
+        natoTeam: store.teams.NATO,
+        russiaTeam: store.teams.Russia,
+        turnStatistics: store.turnStatistics,
+        strategyLog: store.strategyLog,
+        sessionInfo: store.sessionInfo
+      });
+
+      // Save PDF to database
+      const sessionName = store.sessionInfo.sessionName;
+      await apiRequest('PUT', `/api/sessions/${encodeURIComponent(sessionName)}`, {
+        finalReport: pdfData,
+        gameState: {
+          turn: store.turn,
+          maxTurns: store.maxTurns,
+          currentTeam: store.currentTeam,
+          teams: store.teams,
+          phase: store.phase,
+          strategyLog: store.strategyLog
+        },
+        sessionInfo: store.sessionInfo,
+        turnStatistics: store.turnStatistics,
+        lastUpdated: new Date().toISOString()
+      });
+
+      toast({
+        title: "Game session completed",
+        description: "Final report has been saved to the database.",
+      });
+
+      setShowFinishDialog(false);
+    } catch (error) {
+      console.error('Failed to finish game session:', error);
+      toast({
+        title: "Failed to save report",
+        description: "Please try again or contact support.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsFinishing(false);
     }
   };
 
@@ -266,7 +330,7 @@ export default function MDDSStrategy() {
                 </div>
 
                 {/* Finish Turn Button - Hidden on Mobile */}
-                <div className="glass-panel p-3 lg:p-4 hidden md:block">
+                <div className="glass-panel p-3 lg:p-4 hidden md:block space-y-2">
                   <Button
                     onClick={() => {
                       store.advanceGameTurn();
@@ -279,6 +343,17 @@ export default function MDDSStrategy() {
                   >
                     <SkipForward className="w-4 h-4 mr-2" />
                     Finish Turn {store.turn}/{store.maxTurns}
+                  </Button>
+
+                  <Button
+                    onClick={() => setShowFinishDialog(true)}
+                    size="lg"
+                    variant="default"
+                    className="w-full"
+                    data-testid="button-finish-game-session"
+                  >
+                    <FileCheck className="w-4 h-4 mr-2" />
+                    Finish the Game Session
                   </Button>
                 </div>
               </div>
@@ -320,6 +395,28 @@ export default function MDDSStrategy() {
       
       {/* Mobile Footer Navigation */}
       <MobileFooter />
+
+      {/* Finish Game Session Confirmation Dialog */}
+      <AlertDialog open={showFinishDialog} onOpenChange={setShowFinishDialog}>
+        <AlertDialogContent data-testid="dialog-finish-game">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Finish the Game Session?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure? This will generate a final PDF report and save it to the database. You can continue playing after this.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-finish">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleFinishGameSession}
+              disabled={isFinishing}
+              data-testid="button-confirm-finish"
+            >
+              {isFinishing ? "Generating..." : "Yes, Finish Session"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

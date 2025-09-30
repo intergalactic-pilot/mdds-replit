@@ -16,7 +16,7 @@ const db = drizzle(sql);
 export interface IStorage {
   getGameSession(sessionName: string): Promise<SelectGameSession | undefined>;
   createGameSession(sessionName: string, gameState: GameState, sessionInfo?: any, turnStatistics?: any, lastUpdated?: string): Promise<SelectGameSession>;
-  updateGameSession(sessionName: string, gameState: GameState, sessionInfo?: any, turnStatistics?: any, lastUpdated?: string): Promise<SelectGameSession>;
+  updateGameSession(sessionName: string, gameState: GameState, sessionInfo?: any, turnStatistics?: any, finalReport?: string, lastUpdated?: string): Promise<SelectGameSession>;
   getAllGameSessions(): Promise<SelectGameSession[]>;
   deleteGameSession(sessionName: string): Promise<boolean>;
 }
@@ -57,7 +57,7 @@ export class DrizzleStorage implements IStorage {
     }
   }
 
-  async updateGameSession(sessionName: string, gameState: GameState, sessionInfo?: any, turnStatistics?: any, lastUpdated?: string): Promise<SelectGameSession> {
+  async updateGameSession(sessionName: string, gameState: GameState, sessionInfo?: any, turnStatistics?: any, finalReport?: string, lastUpdated?: string): Promise<SelectGameSession> {
     try {
       const result = await db
         .update(gameSessions)
@@ -65,6 +65,7 @@ export class DrizzleStorage implements IStorage {
           gameState,
           sessionInfo,
           turnStatistics,
+          finalReport,
           lastUpdated,
           updatedAt: new Date(),
         })

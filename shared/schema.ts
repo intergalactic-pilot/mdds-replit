@@ -60,6 +60,7 @@ export const gameSessions = pgTable("game_sessions", {
   gameState: jsonb("game_state").$type<GameState>().notNull(),
   sessionInfo: jsonb("session_info"),
   turnStatistics: jsonb("turn_statistics"),
+  finalReport: varchar("final_report"),
   lastUpdated: varchar("last_updated"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

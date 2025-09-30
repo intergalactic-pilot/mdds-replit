@@ -996,3 +996,104 @@ export const generateMDDSReport = async (data: PDFReportData) => {
   const dateString = new Date().toISOString().split('T')[0];
   pdf.save(`MDDS_Report_${sessionNameClean}_${dateString}.pdf`);
 };
+
+// Generate MDDS report and return as base64 string for database storage
+export const generateMDDSReportBase64 = async (data: PDFReportData): Promise<string> => {
+  const pdf = new jsPDF('p', 'mm', 'a4');
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const margin = 20;
+  const contentWidth = pageWidth - (2 * margin);
+  
+  let yPosition = margin;
+  let pageNumber = 1;
+  
+  // Helper function to add page footer
+  const addFooter = () => {
+    pdf.setFontSize(9);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(`Page ${pageNumber}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+  };
+  
+  // Helper function to add new page
+  const addNewPage = () => {
+    addFooter();
+    pdf.addPage();
+    pageNumber++;
+    yPosition = margin;
+  };
+  
+  // Helper function to check page space
+  const checkPage = (requiredHeight: number) => {
+    if (yPosition + requiredHeight > pageHeight - 20) {
+      addNewPage();
+    }
+  };
+  
+  // TITLE
+  pdf.setFontSize(20);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('MDDS Strategic Analysis Report', pageWidth / 2, yPosition, { align: 'center' });
+  yPosition += 20;
+  
+  // Date
+  pdf.setFontSize(12);
+  pdf.setFont('helvetica', 'normal');
+  const reportDate = new Date().toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+  pdf.text(`Generated: ${reportDate}`, pageWidth / 2, yPosition, { align: 'center' });
+  yPosition += 30;
+  
+  // SESSION INFORMATION
+  pdf.setFontSize(16);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Session Information', margin, yPosition);
+  yPosition += 10;
+  
+  pdf.setFontSize(12);
+  pdf.setFont('helvetica', 'normal');
+  
+  if (data.sessionInfo && data.sessionInfo.sessionName) {
+    pdf.text(`Session: ${data.sessionInfo.sessionName}`, margin, yPosition);
+    yPosition += 8;
+  }
+  
+  pdf.text(`Turn: ${data.currentTurn} / ${data.maxTurns}`, margin, yPosition);
+  yPosition += 8;
+  
+  // Determine winner
+  const natoScore = data.natoTeam.totalDeterrence;
+  const russiaScore = data.russiaTeam.totalDeterrence;
+  let winner = 'TIE';
+  if (natoScore > russiaScore) winner = 'NATO';
+  if (russiaScore > natoScore) winner = 'Russia';
+  
+  pdf.text(`Winner: ${winner}`, margin, yPosition);
+  yPosition += 20;
+  
+  // FINAL SCORES
+  pdf.setFontSize(16);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Final Deterrence Scores', margin, yPosition);
+  yPosition += 10;
+  
+  pdf.setFontSize(14);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setTextColor(59, 130, 246); // NATO blue
+  pdf.text(`NATO: ${natoScore}`, margin, yPosition);
+  yPosition += 8;
+  
+  pdf.setTextColor(239, 68, 68); // Russia red
+  pdf.text(`Russia: ${russiaScore}`, margin, yPosition);
+  yPosition += 15;
+  
+  pdf.setTextColor(0, 0, 0); // Reset to black
+  
+  addFooter();
+  
+  // Return PDF as base64 string
+  return pdf.output('datauristring');
+};
