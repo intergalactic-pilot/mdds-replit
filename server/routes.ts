@@ -79,7 +79,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const { gameState, sessionInfo, turnStatistics, lastUpdated } = validationResult.data;
+      const { gameState, sessionInfo, turnStatistics, finalReport, lastUpdated } = req.body;
       
       // Only update if gameState is provided
       if (!gameState) {
@@ -90,7 +90,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sessionName, 
         gameState, 
         sessionInfo, 
-        turnStatistics, 
+        turnStatistics,
+        finalReport,
         lastUpdated || undefined
       );
       res.json(session);
