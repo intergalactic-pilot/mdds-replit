@@ -33,6 +33,9 @@ interface MDDSStore extends GameState {
   // Database session tracking
   activeDatabaseSession: string | null;
   
+  // UI State
+  showLoginScreen: boolean;
+  
   // Actions
   addToCart: (team: Team, card: Card) => void;
   removeFromCart: (team: Team, cardId: string) => void;
@@ -55,6 +58,7 @@ interface MDDSStore extends GameState {
   // UI State
   selectedCard: Card | null;
   setSelectedCard: (card: Card | null) => void;
+  setShowLoginScreen: (show: boolean) => void;
   
   // Persistence
   saveToLocalStorage: () => void;
@@ -113,8 +117,11 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
   ...createInitialState(),
   selectedCard: null,
   activeDatabaseSession: null,
+  showLoginScreen: true,
 
   setSelectedCard: (card) => set({ selectedCard: card }),
+  
+  setShowLoginScreen: (show) => set({ showLoginScreen: show }),
 
   setCurrentTeam: (team) => {
     set({ currentTeam: team });
@@ -181,11 +188,13 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
   },
 
   resetStrategy: () => {
-    set(createInitialState());
+    set({ ...createInitialState(), showLoginScreen: true });
     // Clear active database session on reset
     setTimeout(() => {
       const state = get();
       state.setActiveDatabaseSession(null);
+      // Save to localStorage to persist the reset state including showLoginScreen: true
+      state.saveToLocalStorage();
     }, 0);
   },
 
@@ -305,7 +314,8 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
       phase: state.phase,
       strategyLog: state.strategyLog,
       turnStatistics: state.turnStatistics,
-      sessionInfo: state.sessionInfo
+      sessionInfo: state.sessionInfo,
+      showLoginScreen: state.showLoginScreen
     };
     localStorage.setItem('mdds-strategy', JSON.stringify(saveData));
   },
@@ -331,12 +341,16 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
             participants: data.sessionInfo.participants && data.sessionInfo.participants.length > 0 
               ? data.sessionInfo.participants
               : currentState.sessionInfo.participants
-          } : currentState.sessionInfo
+          } : currentState.sessionInfo,
+          showLoginScreen: data.showLoginScreen !== undefined ? data.showLoginScreen : false // Use saved value or default to false if there's saved data
         });
         return true;
       }
+      // Show login screen if no saved data
+      set({ showLoginScreen: true });
       return false;
     } catch {
+      set({ showLoginScreen: true });
       return false;
     }
   },
