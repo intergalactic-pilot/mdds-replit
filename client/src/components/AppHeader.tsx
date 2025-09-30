@@ -311,7 +311,7 @@ export default function AppHeader({
               <DialogContent className="max-w-4xl max-h-[80vh]">
                 <DialogHeader>
                   <div className="flex items-center justify-between">
-                    <DialogTitle>{sanitizeText('Card Purchase Logs')}</DialogTitle>
+                    <DialogTitle>{sanitizeText('Settings')}</DialogTitle>
                     <Button 
                       variant="outline" 
                       size="sm" 
@@ -334,7 +334,7 @@ export default function AppHeader({
                         className="w-full justify-between p-3 gap-2"
                         data-testid="button-toggle-strategy-log"
                       >
-                        <span className="font-medium">{sanitizeText('Strategy Log')}</span>
+                        <span className="font-medium">{sanitizeText('Card Purchase Logs')}</span>
                         <ChevronDown
                           className={`h-4 w-4 transition-transform ${
                             isStrategyLogExpanded ? 'rotate-180' : ''
