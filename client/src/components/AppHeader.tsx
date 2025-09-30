@@ -20,7 +20,7 @@ import {
   Moon,
   Sun,
   Download,
-  Edit,
+  Users,
   Trash2,
   ChevronDown
 } from 'lucide-react';
@@ -76,10 +76,6 @@ export default function AppHeader({
   const validateSessionInfo = () => {
     const errors: string[] = [];
     
-    if (!sessionInfo.sessionName.trim()) {
-      errors.push('Session name is required');
-    }
-    
     sessionInfo.participants.forEach((participant, index) => {
       if (!participant.name.trim()) {
         errors.push(`Participant ${index + 1} name is required`);
@@ -99,49 +95,6 @@ export default function AppHeader({
       setValidationErrors([]);
     }
   };
-
-  const handleCreateSessionFromInfo = async () => {
-    if (!validateSessionInfo()) {
-      return;
-    }
-
-    try {
-      // Get current game state at execution time
-      const currentState = useMDDSStore.getState();
-      const gameState = {
-        turn: currentState.turn,
-        maxTurns: currentState.maxTurns,
-        currentTeam: currentState.currentTeam,
-        teams: currentState.teams,
-        phase: currentState.phase,
-        strategyLog: currentState.strategyLog
-      };
-
-      const response = await apiRequest('POST', '/api/sessions', {
-        sessionName: sessionInfo.sessionName.trim(),
-        gameState: gameState,
-        sessionInfo: currentState.sessionInfo,
-        turnStatistics: currentState.turnStatistics,
-        lastUpdated: new Date().toISOString()
-      });
-
-      // Establish dynamic link to current game state
-      const sessionName = sessionInfo.sessionName.trim();
-      currentState.setActiveDatabaseSession(sessionName);
-      
-      // Perform initial sync to database
-      await currentState.syncToDatabase();
-
-      setShowSessionInfo(false);
-      setValidationErrors([]);
-      const mobileUrl = `/mobile/${encodeURIComponent(sessionName)}`;
-      window.location.href = mobileUrl;
-    } catch (error) {
-      console.error('Error creating database session:', error);
-      setValidationErrors(['Failed to create database session']);
-    }
-  };
-
 
   return (
     <header className="glass-header">
@@ -180,29 +133,18 @@ export default function AppHeader({
               <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
             </Button>
 
-            {/* Session Info */}
+            {/* Participants */}
             <Dialog open={showSessionInfo} onOpenChange={setShowSessionInfo}>
               <DialogTrigger asChild>
-                <Button variant="ghost" size="icon" data-testid="button-session-info">
-                  <Edit className="w-4 h-4" />
+                <Button variant="ghost" size="icon" data-testid="button-participants">
+                  <Users className="w-4 h-4" />
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-md">
                 <DialogHeader>
-                  <DialogTitle>{sanitizeText('Session Information')}</DialogTitle>
+                  <DialogTitle>{sanitizeText('Participants')}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="session-name">Session Name</Label>
-                    <Input
-                      id="session-name"
-                      value={sessionInfo.sessionName}
-                      onChange={(e) => updateSessionName(e.target.value)}
-                      placeholder="Enter session name"
-                      data-testid="input-session-name"
-                    />
-                  </div>
-                  
                   <div>
                     <Label>Participants</Label>
                     <div className="space-y-3 mt-2">
@@ -265,22 +207,15 @@ export default function AppHeader({
                         setShowSessionInfo(false);
                         setValidationErrors([]);
                       }}
-                      data-testid="button-cancel-session"
+                      data-testid="button-cancel-participants"
                     >
                       Cancel
                     </Button>
                     <Button
-                      variant="outline"
                       onClick={handleSessionSave}
-                      data-testid="button-save-session"
+                      data-testid="button-save-participants"
                     >
                       Save
-                    </Button>
-                    <Button
-                      onClick={handleCreateSessionFromInfo}
-                      data-testid="button-create-session"
-                    >
-                      Create Session
                     </Button>
                   </div>
                 </div>
