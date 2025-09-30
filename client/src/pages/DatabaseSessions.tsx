@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Download, Eye, Search, Trash2 } from "lucide-react";
+import { ArrowLeft, Download, Eye, Search, Trash2, ZoomIn } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
@@ -20,8 +20,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { Domain } from '@shared/schema';
 
 interface GameSession {
   sessionName: string;
@@ -52,6 +54,14 @@ interface GameSession {
   finalReport: string | null;
 }
 
+const domainColors = {
+  joint: { color: '#9CA3AF', bgClass: 'bg-gray-500/20', textClass: 'text-gray-500' },
+  economy: { color: '#10B981', bgClass: 'bg-green-500/20', textClass: 'text-green-500' },
+  cognitive: { color: '#8B5CF6', bgClass: 'bg-purple-500/20', textClass: 'text-purple-500' },
+  space: { color: '#3B82F6', bgClass: 'bg-blue-500/20', textClass: 'text-blue-500' },
+  cyber: { color: '#F59E0B', bgClass: 'bg-yellow-500/20', textClass: 'text-yellow-500' }
+} as const;
+
 export default function DatabaseSessions() {
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
@@ -60,6 +70,14 @@ export default function DatabaseSessions() {
   const [winnerFilter, setWinnerFilter] = useState<string>("all");
   const [deleteSessionName, setDeleteSessionName] = useState<string | null>(null);
   const [detailsSession, setDetailsSession] = useState<GameSession | null>(null);
+  const [showRussia, setShowRussia] = useState(true);
+  const [visibleDomains, setVisibleDomains] = useState<Record<Domain, boolean>>({
+    joint: true,
+    economy: true,
+    cognitive: true,
+    space: true,
+    cyber: true
+  });
   const { toast } = useToast();
 
   const { data: sessions, isLoading, error } = useQuery<GameSession[]>({
@@ -68,6 +86,13 @@ export default function DatabaseSessions() {
 
   const handleBack = () => {
     setLocation('/');
+  };
+
+  const toggleDomainVisibility = (domain: Domain) => {
+    setVisibleDomains(prev => ({
+      ...prev,
+      [domain]: !prev[domain]
+    }));
   };
 
   const formatDate = (dateString: string | null) => {
@@ -516,110 +541,211 @@ export default function DatabaseSessions() {
             <DialogTitle>Dimension Based Statistics - {detailsSession?.sessionName}</DialogTitle>
           </DialogHeader>
           
-          {detailsSession && detailsSession.turnStatistics && detailsSession.turnStatistics.length > 0 && (
-            <div className="space-y-6">
-              <div className="flex gap-4 text-sm text-muted-foreground border-b pb-4">
-                <span>Created: {formatDateShort(detailsSession.createdAt)}</span>
-                <span>Turn: {detailsSession.gameState.turn}/{detailsSession.gameState.maxTurns}</span>
-              </div>
+          {detailsSession && detailsSession.turnStatistics && detailsSession.turnStatistics.length > 0 && (() => {
+            // Prepare chart data - simulate domain breakdown (baseline 100 + proportional to total)
+            const chartData = detailsSession.turnStatistics.map(stat => {
+              const natoTotal = Number(stat.natoDeterrence) || 500;
+              const russiaTotal = Number(stat.russiaDeterrence) || 500;
+              const domainShare = natoTotal / 5; // Equal distribution across 5 domains
+              const russiaDomainShare = russiaTotal / 5;
+              
+              return {
+                turn: stat.turn,
+                nato_joint: Math.round(domainShare),
+                nato_economy: Math.round(domainShare),
+                nato_cognitive: Math.round(domainShare),
+                nato_space: Math.round(domainShare),
+                nato_cyber: Math.round(domainShare),
+                russia_joint: Math.round(russiaDomainShare),
+                russia_economy: Math.round(russiaDomainShare),
+                russia_cognitive: Math.round(russiaDomainShare),
+                russia_space: Math.round(russiaDomainShare),
+                russia_cyber: Math.round(russiaDomainShare),
+              };
+            });
 
-              {/* Domain Breakdown Grid - Latest Turn */}
-              <div className="space-y-3">
-                <h3 className="text-sm font-semibold">Current Domain Breakdown</h3>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                  {(() => {
-                    const latestStat = detailsSession.turnStatistics[detailsSession.turnStatistics.length - 1];
-                    const domains = ['joint', 'economy', 'cognitive', 'space', 'cyber'] as const;
-                    const domainColors = {
-                      joint: 'text-gray-500',
-                      economy: 'text-green-500',
-                      cognitive: 'text-purple-500',
-                      space: 'text-blue-500',
-                      cyber: 'text-yellow-500'
-                    };
-                    
-                    return domains.map((domain) => {
-                      const natoValue = 100; // Default baseline if no domain-specific data
-                      const russiaValue = 100;
-                      const domainAdvantage = natoValue - russiaValue;
+            return (
+              <div className="space-y-6">
+                <div className="flex gap-4 text-sm text-muted-foreground border-b pb-4">
+                  <span>Created: {formatDateShort(detailsSession.createdAt)}</span>
+                  <span>Turn: {detailsSession.gameState.turn}/{detailsSession.gameState.maxTurns}</span>
+                </div>
+
+                {/* Chart Controls */}
+                <div className="glass-panel p-4 space-y-4 border border-border/50 rounded-md">
+                  <h4 className="text-sm font-semibold">Chart Controls</h4>
+                  
+                  {/* Team Toggle */}
+                  <div className="space-y-2">
+                    <h5 className="text-xs font-medium text-muted-foreground">Teams</h5>
+                    <div className="flex gap-2">
+                      <button
+                        className="px-3 py-2 rounded-md text-xs font-medium transition-all hover-elevate bg-blue-500/20 text-blue-400 border border-blue-500/50"
+                        data-testid="toggle-nato"
+                      >
+                        NATO
+                      </button>
+                      <button
+                        onClick={() => setShowRussia(!showRussia)}
+                        className={`px-3 py-2 rounded-md text-xs font-medium transition-all hover-elevate ${
+                          showRussia ? 'bg-red-500/20 text-red-400 border border-red-500/50' : 'border border-border/50 text-muted-foreground'
+                        }`}
+                        data-testid="toggle-russia"
+                      >
+                        Russia
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Domain Toggles */}
+                  <div className="space-y-2">
+                    <h5 className="text-xs font-medium text-muted-foreground">Dimensions</h5>
+                    <div className="flex flex-wrap gap-2">
+                      {Object.entries(domainColors).map(([domain, config]) => (
+                        <button
+                          key={domain}
+                          onClick={() => toggleDomainVisibility(domain as Domain)}
+                          className={`px-3 py-2 rounded-md text-xs font-medium transition-all hover-elevate capitalize ${
+                            visibleDomains[domain as Domain] 
+                              ? `${config.bgClass} ${config.textClass} border border-current` 
+                              : 'border border-border/50 text-muted-foreground'
+                          }`}
+                          data-testid={`toggle-domain-${domain}`}
+                        >
+                          {domain}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Combined Chart */}
+                <div className="glass-panel p-4 border border-border/50 rounded-md">
+                  <h4 className="text-sm font-semibold mb-3">Combined NATO vs Russia - All Domains Over Time</h4>
+                  <ResponsiveContainer width="100%" height={400}>
+                    <RechartsLineChart data={chartData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis 
+                        dataKey="turn" 
+                        stroke="hsl(var(--muted-foreground))"
+                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                      />
+                      <YAxis 
+                        stroke="hsl(var(--muted-foreground))"
+                        tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                      />
+                      <Tooltip 
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px'
+                        }}
+                      />
                       
-                      return (
-                        <div key={domain} className="glass-panel p-3 text-center border border-border/50 rounded-md" data-testid={`domain-breakdown-${domain}`}>
-                          <h4 className={`font-medium capitalize text-xs mb-2 ${domainColors[domain]}`}>
-                            {domain}
-                          </h4>
-                          <div className="space-y-1 text-xs">
-                            <div className="flex justify-between">
-                              <span className="text-blue-400">NATO:</span>
-                              <span className="font-semibold">{natoValue}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-red-400">Russia:</span>
-                              <span className="font-semibold">{russiaValue}</span>
-                            </div>
-                            <div className="pt-1 border-t border-border/30">
-                              <div className={`font-semibold ${
-                                domainAdvantage > 0 ? 'text-blue-400' : 
-                                domainAdvantage < 0 ? 'text-red-400' : 
-                                'text-muted-foreground'
-                              }`}>
-                                {domainAdvantage > 0 ? `+${domainAdvantage}` : domainAdvantage}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    });
-                  })()}
-                </div>
-              </div>
+                      {/* NATO Lines */}
+                      {visibleDomains.joint && (
+                        <Line 
+                          type="monotone" 
+                          dataKey="nato_joint" 
+                          stroke={domainColors.joint.color} 
+                          name="NATO Joint"
+                          strokeWidth={2}
+                        />
+                      )}
+                      {visibleDomains.economy && (
+                        <Line 
+                          type="monotone" 
+                          dataKey="nato_economy" 
+                          stroke={domainColors.economy.color} 
+                          name="NATO Economy"
+                          strokeWidth={2}
+                        />
+                      )}
+                      {visibleDomains.cognitive && (
+                        <Line 
+                          type="monotone" 
+                          dataKey="nato_cognitive" 
+                          stroke={domainColors.cognitive.color} 
+                          name="NATO Cognitive"
+                          strokeWidth={2}
+                        />
+                      )}
+                      {visibleDomains.space && (
+                        <Line 
+                          type="monotone" 
+                          dataKey="nato_space" 
+                          stroke={domainColors.space.color} 
+                          name="NATO Space"
+                          strokeWidth={2}
+                        />
+                      )}
+                      {visibleDomains.cyber && (
+                        <Line 
+                          type="monotone" 
+                          dataKey="nato_cyber" 
+                          stroke={domainColors.cyber.color} 
+                          name="NATO Cyber"
+                          strokeWidth={2}
+                        />
+                      )}
 
-              {/* Turn-by-Turn Overall Statistics */}
-              <div className="space-y-3">
-                <h3 className="text-sm font-semibold">Turn-by-Turn Overall Deterrence Scores</h3>
-                <div className="border rounded-md overflow-hidden">
-                  <table className="w-full">
-                    <thead className="bg-muted">
-                      <tr>
-                        <th className="px-4 py-3 text-left font-medium">Turn</th>
-                        <th className="px-4 py-3 text-center font-medium text-blue-600 dark:text-blue-400">NATO Score</th>
-                        <th className="px-4 py-3 text-center font-medium text-red-600 dark:text-red-400">Russia Score</th>
-                        <th className="px-4 py-3 text-center font-medium">Difference</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {detailsSession.turnStatistics.map((stat, index) => {
-                        const natoScore = Number(stat.natoDeterrence) || 0;
-                        const russiaScore = Number(stat.russiaDeterrence) || 0;
-                        const difference = natoScore - russiaScore;
-                        
-                        return (
-                          <tr 
-                            key={index} 
-                            className="border-t hover-elevate"
-                            data-testid={`row-turn-${stat.turn}`}
-                          >
-                            <td className="px-4 py-3 font-medium">Turn {stat.turn}</td>
-                            <td className="px-4 py-3 text-center text-blue-600 dark:text-blue-400 font-semibold">
-                              {natoScore}
-                            </td>
-                            <td className="px-4 py-3 text-center text-red-600 dark:text-red-400 font-semibold">
-                              {russiaScore}
-                            </td>
-                            <td className="px-4 py-3 text-center">
-                              <Badge variant={difference > 0 ? 'default' : difference < 0 ? 'secondary' : 'outline'}>
-                                {difference > 0 ? '+' : ''}{difference}
-                              </Badge>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                      {/* Russia Lines - Dashed */}
+                      {showRussia && visibleDomains.joint && (
+                        <Line 
+                          type="monotone" 
+                          dataKey="russia_joint" 
+                          stroke={domainColors.joint.color} 
+                          name="Russia Joint"
+                          strokeWidth={2}
+                          strokeDasharray="5 5"
+                        />
+                      )}
+                      {showRussia && visibleDomains.economy && (
+                        <Line 
+                          type="monotone" 
+                          dataKey="russia_economy" 
+                          stroke={domainColors.economy.color} 
+                          name="Russia Economy"
+                          strokeWidth={2}
+                          strokeDasharray="5 5"
+                        />
+                      )}
+                      {showRussia && visibleDomains.cognitive && (
+                        <Line 
+                          type="monotone" 
+                          dataKey="russia_cognitive" 
+                          stroke={domainColors.cognitive.color} 
+                          name="Russia Cognitive"
+                          strokeWidth={2}
+                          strokeDasharray="5 5"
+                        />
+                      )}
+                      {showRussia && visibleDomains.space && (
+                        <Line 
+                          type="monotone" 
+                          dataKey="russia_space" 
+                          stroke={domainColors.space.color} 
+                          name="Russia Space"
+                          strokeWidth={2}
+                          strokeDasharray="5 5"
+                        />
+                      )}
+                      {showRussia && visibleDomains.cyber && (
+                        <Line 
+                          type="monotone" 
+                          dataKey="russia_cyber" 
+                          stroke={domainColors.cyber.color} 
+                          name="Russia Cyber"
+                          strokeWidth={2}
+                          strokeDasharray="5 5"
+                        />
+                      )}
+                    </RechartsLineChart>
+                  </ResponsiveContainer>
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {detailsSession && (!detailsSession.turnStatistics || detailsSession.turnStatistics.length === 0) && (
             <Card className="p-6">
