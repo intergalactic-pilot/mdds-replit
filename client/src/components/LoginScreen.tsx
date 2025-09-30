@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useMDDSStore } from '@/state/store';
 import { sanitizeText } from '../logic/guards';
 import { apiRequest } from '@/lib/queryClient';
@@ -9,6 +10,7 @@ import logoUrl from '@assets/Logo_1758524556759.png';
 
 export default function LoginScreen() {
   const [sessionName, setSessionName] = useState('');
+  const [skipTurn1, setSkipTurn1] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
@@ -30,10 +32,12 @@ export default function LoginScreen() {
       // Update session name in store
       updateSessionName(sessionName.trim());
       
-      // Get current game state
+      // Get current game state (do not mutate yet)
       const currentState = useMDDSStore.getState();
+      
+      // Build the game state for database - if skip turn 1, use turn 2
       const gameState = {
-        turn: currentState.turn,
+        turn: skipTurn1 ? 2 : currentState.turn,
         maxTurns: currentState.maxTurns,
         currentTeam: currentState.currentTeam,
         teams: currentState.teams,
@@ -41,7 +45,7 @@ export default function LoginScreen() {
         strategyLog: currentState.strategyLog
       };
 
-      // Create database session
+      // Create database session with the appropriate turn
       await apiRequest('POST', '/api/sessions', {
         sessionName: sessionName.trim(),
         gameState: gameState,
@@ -49,6 +53,12 @@ export default function LoginScreen() {
         turnStatistics: currentState.turnStatistics,
         lastUpdated: new Date().toISOString()
       });
+
+      // Only NOW that the API call succeeded, advance the turn in the store if skip was selected
+      if (skipTurn1) {
+        const state = useMDDSStore.getState();
+        state.advanceGameTurn();
+      }
 
       // Establish dynamic link to current game state
       setActiveDatabaseSession(sessionName.trim());
@@ -105,6 +115,22 @@ export default function LoginScreen() {
                 data-testid="input-session-name-login"
                 disabled={isLoading}
               />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="skip-turn-1"
+                checked={skipTurn1}
+                onCheckedChange={(checked) => setSkipTurn1(checked === true)}
+                disabled={isLoading}
+                data-testid="checkbox-skip-turn-1"
+              />
+              <Label
+                htmlFor="skip-turn-1"
+                className="text-sm font-normal cursor-pointer"
+              >
+                {sanitizeText('Skip Turn 1 (Start from Turn 2)')}
+              </Label>
             </div>
 
             {error && (
