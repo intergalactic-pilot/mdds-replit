@@ -19,10 +19,12 @@ import DomainStatistics from '../components/DomainStatistics';
 import cardsData from '../data/cards.json';
 import { Card } from '@shared/schema';
 import { generateMDDSReport } from '../utils/pdfGenerator';
+import LoginScreen from '../components/LoginScreen';
 
 export default function MDDSStrategy() {
   const store = useMDDSStore();
   const isMobile = useIsMobile();
+  const showLoginScreen = useMDDSStore(state => state.showLoginScreen);
   const [, setLocation] = useLocation();
   const [availableCards, setAvailableCards] = useState(applyDomainQuotas(cardsData as Card[]));
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
@@ -110,6 +112,9 @@ export default function MDDSStrategy() {
 
   return (
     <div className="min-h-screen pb-20 md:pb-0">
+      {/* Show login screen on first load or after reset */}
+      {showLoginScreen && <LoginScreen />}
+      
       <AppHeader
         currentTurn={store.turn}
         maxTurns={store.maxTurns}
