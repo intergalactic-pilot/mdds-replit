@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -20,7 +21,8 @@ import {
   Sun,
   Download,
   Edit,
-  Trash2
+  Trash2,
+  ChevronDown
 } from 'lucide-react';
 import logoUrl from '@assets/Logo_1758524556759.png';
 import { useTheme } from "./ThemeProvider";
@@ -51,6 +53,7 @@ export default function AppHeader({
   const [showSettings, setShowSettings] = useState(false);
   const [showSessionInfo, setShowSessionInfo] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [isStrategyLogExpanded, setIsStrategyLogExpanded] = useState(false);
   
   // Use store for session management
   const sessionInfo = useMDDSStore(state => state.sessionInfo);
@@ -386,7 +389,28 @@ export default function AppHeader({
                   </div>
                 </DialogHeader>
                 <div className="space-y-4">
-                  <StrategyLog entries={strategyLog} maxHeight="60vh" />
+                  <Collapsible
+                    open={isStrategyLogExpanded}
+                    onOpenChange={setIsStrategyLogExpanded}
+                  >
+                    <CollapsibleTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-between p-3 gap-2"
+                        data-testid="button-toggle-strategy-log"
+                      >
+                        <span className="font-medium">{sanitizeText('Strategy Log')}</span>
+                        <ChevronDown
+                          className={`h-4 w-4 transition-transform ${
+                            isStrategyLogExpanded ? 'rotate-180' : ''
+                          }`}
+                        />
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pt-2">
+                      <StrategyLog entries={strategyLog} maxHeight="60vh" />
+                    </CollapsibleContent>
+                  </Collapsible>
                 </div>
               </DialogContent>
             </Dialog>
