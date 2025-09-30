@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Download, Search, Trash2 } from "lucide-react";
+import { ArrowLeft, Download, Eye, Search, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
@@ -19,6 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -58,6 +59,7 @@ export default function DatabaseSessions() {
   const [dateTo, setDateTo] = useState("");
   const [winnerFilter, setWinnerFilter] = useState<string>("all");
   const [deleteSessionName, setDeleteSessionName] = useState<string | null>(null);
+  const [detailsSession, setDetailsSession] = useState<GameSession | null>(null);
   const { toast } = useToast();
 
   const { data: sessions, isLoading, error } = useQuery<GameSession[]>({
@@ -455,6 +457,14 @@ export default function DatabaseSessions() {
                     <Button
                       variant="ghost"
                       size="icon"
+                      onClick={() => setDetailsSession(session)}
+                      data-testid={`button-details-${session.sessionName}`}
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => handleDownloadReport(session)}
                       data-testid={`button-download-${session.sessionName}`}
                     >
@@ -498,6 +508,76 @@ export default function DatabaseSessions() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Session Details Dialog */}
+      <Dialog open={!!detailsSession} onOpenChange={(open) => !open && setDetailsSession(null)}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto" data-testid="dialog-session-details">
+          <DialogHeader>
+            <DialogTitle>Turn-Based Dimensional Deterrence Scores</DialogTitle>
+          </DialogHeader>
+          
+          {detailsSession && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <h3 className="font-semibold text-lg">{detailsSession.sessionName}</h3>
+                <div className="flex gap-4 text-sm text-muted-foreground">
+                  <span>Created: {formatDateShort(detailsSession.createdAt)}</span>
+                  <span>Turn: {detailsSession.gameState.turn}/{detailsSession.gameState.maxTurns}</span>
+                </div>
+              </div>
+
+              {detailsSession.turnStatistics && detailsSession.turnStatistics.length > 0 ? (
+                <div className="border rounded-md overflow-hidden">
+                  <table className="w-full">
+                    <thead className="bg-muted">
+                      <tr>
+                        <th className="px-4 py-3 text-left font-medium">Turn</th>
+                        <th className="px-4 py-3 text-center font-medium text-blue-600 dark:text-blue-400">NATO Score</th>
+                        <th className="px-4 py-3 text-center font-medium text-red-600 dark:text-red-400">Russia Score</th>
+                        <th className="px-4 py-3 text-center font-medium">Difference</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {detailsSession.turnStatistics.map((stat, index) => {
+                        const natoScore = Number(stat.natoDeterrence) || 0;
+                        const russiaScore = Number(stat.russiaDeterrence) || 0;
+                        const difference = natoScore - russiaScore;
+                        
+                        return (
+                          <tr 
+                            key={index} 
+                            className="border-t hover-elevate"
+                            data-testid={`row-turn-${stat.turn}`}
+                          >
+                            <td className="px-4 py-3 font-medium">Turn {stat.turn}</td>
+                            <td className="px-4 py-3 text-center text-blue-600 dark:text-blue-400 font-semibold">
+                              {natoScore}
+                            </td>
+                            <td className="px-4 py-3 text-center text-red-600 dark:text-red-400 font-semibold">
+                              {russiaScore}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <Badge variant={difference > 0 ? 'default' : difference < 0 ? 'secondary' : 'outline'}>
+                                {difference > 0 ? '+' : ''}{difference}
+                              </Badge>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <Card className="p-6">
+                  <p className="text-muted-foreground text-center">
+                    No turn statistics available for this session.
+                  </p>
+                </Card>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
