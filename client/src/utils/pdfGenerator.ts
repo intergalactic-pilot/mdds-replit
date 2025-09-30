@@ -1094,6 +1094,7 @@ export const generateMDDSReportBase64 = async (data: PDFReportData): Promise<str
   
   addFooter();
   
-  // Return PDF as base64 string
-  return pdf.output('datauristring');
+  // Return PDF as raw base64 string (strip data URI prefix)
+  const dataUri = pdf.output('datauristring');
+  return dataUri.split(',')[1]; // Remove "data:application/pdf;filename=generated.pdf;base64," prefix
 };

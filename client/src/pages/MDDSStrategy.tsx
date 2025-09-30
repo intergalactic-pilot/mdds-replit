@@ -138,8 +138,7 @@ export default function MDDSStrategy() {
 
     setIsFinishing(true);
     try {
-      // Generate PDF as base64
-      const pdfData = await generateMDDSReportBase64({
+      const reportData = {
         currentTurn: store.turn,
         maxTurns: store.maxTurns,
         natoTeam: store.teams.NATO,
@@ -147,7 +146,13 @@ export default function MDDSStrategy() {
         turnStatistics: store.turnStatistics,
         strategyLog: store.strategyLog,
         sessionInfo: store.sessionInfo
-      });
+      };
+
+      // Generate and download PDF
+      await generateMDDSReport(reportData);
+
+      // Generate PDF as base64 for database
+      const pdfData = await generateMDDSReportBase64(reportData);
 
       // Save PDF to database
       const sessionName = store.sessionInfo.sessionName;
@@ -168,7 +173,7 @@ export default function MDDSStrategy() {
 
       toast({
         title: "Game session completed",
-        description: "Final report has been saved to the database.",
+        description: "Report downloaded and saved to the database.",
         duration: 5000,
       });
 
