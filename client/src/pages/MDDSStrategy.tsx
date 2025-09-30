@@ -353,7 +353,7 @@ export default function MDDSStrategy() {
                     data-testid="button-finish-turn"
                   >
                     <SkipForward className="w-4 h-4 mr-2" />
-                    Finish Turn {store.turn}/{store.maxTurns}
+                    Finish Turn
                   </Button>
 
                   <Button

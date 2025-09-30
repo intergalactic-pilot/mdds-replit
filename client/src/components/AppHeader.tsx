@@ -116,10 +116,10 @@ export default function AppHeader({
             </div>
           </div>
 
-          {/* Turn Info */}
+          {/* Session Name */}
           <div className="hidden md:flex items-center gap-2">
-            <Badge variant="outline" data-testid="badge-turn-info">
-              Turn {currentTurn} of {maxTurns}
+            <Badge variant="outline" data-testid="badge-session-name">
+              {sessionInfo.sessionName || 'MDDS Session'}
             </Badge>
           </div>
 
