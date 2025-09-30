@@ -1,14 +1,26 @@
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Download, Search } from "lucide-react";
+import { ArrowLeft, Download, Search, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import { generateSessionReportPDF } from "@/utils/sessionReportGenerator";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface GameSession {
   sessionName: string;
@@ -44,6 +56,8 @@ export default function DatabaseSessions() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [winnerFilter, setWinnerFilter] = useState<string>("all");
+  const [deleteSessionName, setDeleteSessionName] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const { data: sessions, isLoading, error } = useQuery<GameSession[]>({
     queryKey: ['/api/sessions'],
@@ -125,6 +139,38 @@ export default function DatabaseSessions() {
     const scores = getLatestDeterrenceScores(session);
     const winner = getWinner(session);
     await generateSessionReportPDF(session, scores, winner);
+  };
+
+  const deleteMutation = useMutation({
+    mutationFn: async (sessionName: string) => {
+      await apiRequest('DELETE', `/api/sessions/${encodeURIComponent(sessionName)}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/sessions'] });
+      toast({
+        title: "Session deleted",
+        description: "The session has been removed from the database.",
+      });
+      setDeleteSessionName(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Delete failed",
+        description: "Failed to delete the session. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Delete error:", error);
+    },
+  });
+
+  const handleDeleteClick = (sessionName: string) => {
+    setDeleteSessionName(sessionName);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (deleteSessionName) {
+      deleteMutation.mutate(deleteSessionName);
+    }
   };
 
   const filteredSessions = useMemo(() => {
@@ -357,7 +403,7 @@ export default function DatabaseSessions() {
                     </div>
                   </div>
 
-                  <div className="col-span-1 flex justify-end">
+                  <div className="col-span-1 flex justify-end gap-1">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -366,6 +412,14 @@ export default function DatabaseSessions() {
                     >
                       <Download className="w-4 h-4" />
                     </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteClick(session.sessionName)}
+                      data-testid={`button-delete-${session.sessionName}`}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
                 </div>
               );
@@ -373,6 +427,28 @@ export default function DatabaseSessions() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteSessionName} onOpenChange={(open) => !open && setDeleteSessionName(null)}>
+        <AlertDialogContent data-testid="dialog-delete-session">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Session</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the session "{deleteSessionName}"? This action cannot be undone and will permanently remove all session data from the database.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              data-testid="button-confirm-delete"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
