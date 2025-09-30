@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLocation } from 'wouter';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -22,7 +23,8 @@ import {
   Download,
   Users,
   Trash2,
-  ChevronDown
+  ChevronDown,
+  Database
 } from 'lucide-react';
 import logoUrl from '@assets/Logo_1758524556759.png';
 import { useTheme } from "./ThemeProvider";
@@ -47,6 +49,7 @@ export default function AppHeader({
   onSetMaxTurns,
   onDownloadPDF
 }: AppHeaderProps) {
+  const [, setLocation] = useLocation();
   const { theme, setTheme } = useTheme();
   const [showCardReference, setShowCardReference] = useState(false);
   const [selectedDimension, setSelectedDimension] = useState<Domain | null>(null);
@@ -324,6 +327,19 @@ export default function AppHeader({
                   </div>
                 </DialogHeader>
                 <div className="space-y-4">
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start gap-2"
+                    onClick={() => {
+                      setShowSettings(false);
+                      setLocation('/database');
+                    }}
+                    data-testid="button-navigate-database"
+                  >
+                    <Database className="w-4 h-4" />
+                    <span>Database</span>
+                  </Button>
+
                   <Collapsible
                     open={isStrategyLogExpanded}
                     onOpenChange={setIsStrategyLogExpanded}

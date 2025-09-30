@@ -17,9 +17,15 @@ The application is built using a modern React-based architecture with TypeScript
 - **State Management**: Zustand store for global game state management
 - **Styling**: Tailwind CSS with shadcn/ui component library for consistent design
 - **UI Components**: Radix UI primitives providing accessible, customizable components
-- **Routing**: Wouter for lightweight client-side routing
+- **Routing**: Wouter for lightweight client-side routing with routes for main game (/), database sessions (/database), and mobile views (/mobile)
 
 The frontend follows a component-based architecture with clear separation of concerns between presentation components, state logic, and business rules.
+
+### Key Features
+- **Database Sessions View**: Accessible from Settings dialog, displays all stored game sessions with session name, turn information, participants, current phase/team, and deterrence scores. Features robust type safety with comprehensive data normalization to handle various API response structures.
+- **Settings Dialog**: Centralized settings interface with collapsible Card Purchase Logs and navigation to database sessions
+- **Login Screen**: Glassmorphism interface with session creation and optional "Skip Turn 1" configuration
+- **Mobile Interface**: Dedicated mobile views for session management
 
 ### Design System
 The application implements a Material Design-inspired system with:

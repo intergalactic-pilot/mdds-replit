@@ -7,12 +7,14 @@ import { ThemeProvider } from "./components/ThemeProvider";
 import MDDSStrategy from "./pages/MDDSStrategy";
 import MobileSession from "./pages/MobileSession";
 import MobileLogin from "./pages/MobileLogin";
+import DatabaseSessions from "./pages/DatabaseSessions";
 import NotFound from "@/pages/not-found";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={MDDSStrategy} />
+      <Route path="/database" component={DatabaseSessions} />
       <Route path="/mobile" component={MobileLogin} />
       <Route path="/mobile/:sessionName" component={MobileSession} />
       <Route component={NotFound} />
