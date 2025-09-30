@@ -126,6 +126,16 @@ export default function MDDSStrategy() {
   };
 
   const handleFinishGameSession = async () => {
+    // Guard against missing session name
+    if (!store.sessionInfo?.sessionName) {
+      toast({
+        title: "Session name missing",
+        description: "Cannot finish session without a valid session name.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsFinishing(true);
     try {
       // Generate PDF as base64
@@ -159,6 +169,7 @@ export default function MDDSStrategy() {
       toast({
         title: "Game session completed",
         description: "Final report has been saved to the database.",
+        duration: 5000,
       });
 
       setShowFinishDialog(false);
