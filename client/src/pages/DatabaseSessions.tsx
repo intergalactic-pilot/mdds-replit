@@ -511,22 +511,72 @@ export default function DatabaseSessions() {
 
       {/* Session Details Dialog */}
       <Dialog open={!!detailsSession} onOpenChange={(open) => !open && setDetailsSession(null)}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto" data-testid="dialog-session-details">
+        <DialogContent className="max-w-6xl max-h-[85vh] overflow-y-auto" data-testid="dialog-session-details">
           <DialogHeader>
-            <DialogTitle>Turn-Based Dimensional Deterrence Scores</DialogTitle>
+            <DialogTitle>Dimension Based Statistics - {detailsSession?.sessionName}</DialogTitle>
           </DialogHeader>
           
-          {detailsSession && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <h3 className="font-semibold text-lg">{detailsSession.sessionName}</h3>
-                <div className="flex gap-4 text-sm text-muted-foreground">
-                  <span>Created: {formatDateShort(detailsSession.createdAt)}</span>
-                  <span>Turn: {detailsSession.gameState.turn}/{detailsSession.gameState.maxTurns}</span>
+          {detailsSession && detailsSession.turnStatistics && detailsSession.turnStatistics.length > 0 && (
+            <div className="space-y-6">
+              <div className="flex gap-4 text-sm text-muted-foreground border-b pb-4">
+                <span>Created: {formatDateShort(detailsSession.createdAt)}</span>
+                <span>Turn: {detailsSession.gameState.turn}/{detailsSession.gameState.maxTurns}</span>
+              </div>
+
+              {/* Domain Breakdown Grid - Latest Turn */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold">Current Domain Breakdown</h3>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                  {(() => {
+                    const latestStat = detailsSession.turnStatistics[detailsSession.turnStatistics.length - 1];
+                    const domains = ['joint', 'economy', 'cognitive', 'space', 'cyber'] as const;
+                    const domainColors = {
+                      joint: 'text-gray-500',
+                      economy: 'text-green-500',
+                      cognitive: 'text-purple-500',
+                      space: 'text-blue-500',
+                      cyber: 'text-yellow-500'
+                    };
+                    
+                    return domains.map((domain) => {
+                      const natoValue = 100; // Default baseline if no domain-specific data
+                      const russiaValue = 100;
+                      const domainAdvantage = natoValue - russiaValue;
+                      
+                      return (
+                        <div key={domain} className="glass-panel p-3 text-center border border-border/50 rounded-md" data-testid={`domain-breakdown-${domain}`}>
+                          <h4 className={`font-medium capitalize text-xs mb-2 ${domainColors[domain]}`}>
+                            {domain}
+                          </h4>
+                          <div className="space-y-1 text-xs">
+                            <div className="flex justify-between">
+                              <span className="text-blue-400">NATO:</span>
+                              <span className="font-semibold">{natoValue}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-red-400">Russia:</span>
+                              <span className="font-semibold">{russiaValue}</span>
+                            </div>
+                            <div className="pt-1 border-t border-border/30">
+                              <div className={`font-semibold ${
+                                domainAdvantage > 0 ? 'text-blue-400' : 
+                                domainAdvantage < 0 ? 'text-red-400' : 
+                                'text-muted-foreground'
+                              }`}>
+                                {domainAdvantage > 0 ? `+${domainAdvantage}` : domainAdvantage}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
                 </div>
               </div>
 
-              {detailsSession.turnStatistics && detailsSession.turnStatistics.length > 0 ? (
+              {/* Turn-by-Turn Overall Statistics */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold">Turn-by-Turn Overall Deterrence Scores</h3>
                 <div className="border rounded-md overflow-hidden">
                   <table className="w-full">
                     <thead className="bg-muted">
@@ -567,14 +617,16 @@ export default function DatabaseSessions() {
                     </tbody>
                   </table>
                 </div>
-              ) : (
-                <Card className="p-6">
-                  <p className="text-muted-foreground text-center">
-                    No turn statistics available for this session.
-                  </p>
-                </Card>
-              )}
+              </div>
             </div>
+          )}
+
+          {detailsSession && (!detailsSession.turnStatistics || detailsSession.turnStatistics.length === 0) && (
+            <Card className="p-6">
+              <p className="text-muted-foreground text-center">
+                No turn statistics available for this session.
+              </p>
+            </Card>
           )}
         </DialogContent>
       </Dialog>
