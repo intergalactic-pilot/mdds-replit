@@ -8,7 +8,7 @@ import { ArrowLeft, Download, Search, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
-import { generateSessionReportPDF } from "@/utils/sessionReportGenerator";
+import { generateMDDSReport } from "@/utils/pdfGenerator";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -162,10 +162,31 @@ export default function DatabaseSessions() {
       }
     }
     
-    // Otherwise generate a new report
-    const scores = getLatestDeterrenceScores(session);
-    const winner = getWinner(session);
-    await generateSessionReportPDF(session, scores, winner);
+    // Otherwise generate a new report using the same format as "Finish Game Session"
+    // Map turnStatistics to match the expected format
+    const turnStats = (session.turnStatistics || []).map(stat => ({
+      turn: stat.turn,
+      natoTotalDeterrence: stat.natoDeterrence,
+      russiaTotalDeterrence: stat.russiaDeterrence,
+      natoDeterrence: {} as any, // Domain-specific data not available
+      russiaDeterrence: {} as any, // Domain-specific data not available
+      timestamp: new Date()
+    }));
+
+    await generateMDDSReport({
+      currentTurn: session.gameState.turn,
+      maxTurns: session.gameState.maxTurns,
+      natoTeam: session.gameState.teams?.NATO as any,
+      russiaTeam: session.gameState.teams?.Russia as any,
+      turnStatistics: turnStats,
+      strategyLog: (session.gameState as any).strategyLog || [],
+      sessionInfo: {
+        sessionName: session.sessionName,
+        participants: (session.sessionInfo?.participants || []).map((p: any) => 
+          typeof p === 'string' ? { name: p, country: '' } : p
+        )
+      }
+    });
   };
 
   const deleteMutation = useMutation({
