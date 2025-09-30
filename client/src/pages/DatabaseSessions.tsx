@@ -1,10 +1,14 @@
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, Users, TrendingUp } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, Download, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card } from "@/components/ui/card";
+import { generateSessionReportPDF } from "@/utils/sessionReportGenerator";
 
 interface GameSession {
   sessionName: string;
@@ -36,6 +40,10 @@ interface GameSession {
 
 export default function DatabaseSessions() {
   const [, setLocation] = useLocation();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [winnerFilter, setWinnerFilter] = useState<string>("all");
 
   const { data: sessions, isLoading, error } = useQuery<GameSession[]>({
     queryKey: ['/api/sessions'],
@@ -50,29 +58,23 @@ export default function DatabaseSessions() {
     return new Date(dateString).toLocaleString();
   };
 
+  const formatDateShort = (dateString: string | null) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString();
+  };
+
   const getLatestDeterrenceScores = (session: GameSession) => {
-    // Helper to ensure we get a number from any value
     const ensureNumber = (val: any): number => {
-      // Return 0 for null/undefined
       if (val === null || val === undefined) return 0;
-      
-      // If it's already a number, return it
       if (typeof val === 'number') return val;
-      
-      // Try to parse strings
       if (typeof val === 'string') {
         const parsed = parseFloat(val);
         return isNaN(parsed) ? 0 : parsed;
       }
-      
-      // Handle objects - try to extract a number
       if (typeof val === 'object') {
-        // Check for totalDeterrence property first
         if ('totalDeterrence' in val && typeof val.totalDeterrence === 'number') {
           return val.totalDeterrence;
         }
-        
-        // Check for deterrence property (nested object with domains)
         if ('deterrence' in val && typeof val.deterrence === 'object' && val.deterrence !== null) {
           const det = val.deterrence;
           if ('cyber' in det && 'joint' in det) {
@@ -83,8 +85,6 @@ export default function DatabaseSessions() {
             }, 0);
           }
         }
-        
-        // Check if it's directly a domain object (has cyber, joint, etc.)
         if ('cyber' in val && 'joint' in val) {
           const domains = ['cyber', 'joint', 'space', 'economy', 'cognitive'];
           return domains.reduce((sum, domain) => {
@@ -93,12 +93,9 @@ export default function DatabaseSessions() {
           }, 0);
         }
       }
-      
-      // Fallback to 0
       return 0;
     };
 
-    // Try turnStatistics first
     if (session.turnStatistics && Array.isArray(session.turnStatistics) && session.turnStatistics.length > 0) {
       const latest = session.turnStatistics[session.turnStatistics.length - 1];
       return {
@@ -107,7 +104,6 @@ export default function DatabaseSessions() {
       };
     }
 
-    // Fall back to gameState teams
     if (session.gameState?.teams) {
       return {
         nato: ensureNumber(session.gameState.teams.NATO),
@@ -117,6 +113,55 @@ export default function DatabaseSessions() {
 
     return { nato: 0, russia: 0 };
   };
+
+  const getWinner = (session: GameSession): string => {
+    const scores = getLatestDeterrenceScores(session);
+    if (scores.nato > scores.russia) return 'NATO';
+    if (scores.russia > scores.nato) return 'Russia';
+    return 'Tie';
+  };
+
+  const handleDownloadReport = async (session: GameSession) => {
+    const scores = getLatestDeterrenceScores(session);
+    const winner = getWinner(session);
+    await generateSessionReportPDF(session, scores, winner);
+  };
+
+  const filteredSessions = useMemo(() => {
+    if (!sessions) return [];
+
+    return sessions.filter((session) => {
+      // Filter by session name
+      if (searchQuery && !session.sessionName.toLowerCase().includes(searchQuery.toLowerCase())) {
+        return false;
+      }
+
+      // Filter by date range
+      if (dateFrom || dateTo) {
+        const sessionDate = new Date(session.createdAt);
+        if (dateFrom && sessionDate < new Date(dateFrom)) {
+          return false;
+        }
+        if (dateTo) {
+          const endDate = new Date(dateTo);
+          endDate.setHours(23, 59, 59, 999);
+          if (sessionDate > endDate) {
+            return false;
+          }
+        }
+      }
+
+      // Filter by winner
+      if (winnerFilter !== 'all') {
+        const winner = getWinner(session);
+        if (winner !== winnerFilter) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [sessions, searchQuery, dateFrom, dateTo, winnerFilter]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -133,111 +178,196 @@ export default function DatabaseSessions() {
           <div>
             <h1 className="text-3xl font-bold">Database Sessions</h1>
             <p className="text-muted-foreground">
-              View all stored strategy sessions
+              View and filter all stored strategy sessions
             </p>
           </div>
         </div>
 
+        {/* Filters */}
+        <Card className="p-4">
+          <div className="grid gap-4 md:grid-cols-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Session Name</label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search sessions..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                  data-testid="input-search-session"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">From Date</label>
+              <Input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                data-testid="input-date-from"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">To Date</label>
+              <Input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                data-testid="input-date-to"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Winner</label>
+              <Select value={winnerFilter} onValueChange={setWinnerFilter}>
+                <SelectTrigger data-testid="select-winner-filter">
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="NATO">NATO</SelectItem>
+                  <SelectItem value="Russia">Russia</SelectItem>
+                  <SelectItem value="Tie">Tie</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {(searchQuery || dateFrom || dateTo || winnerFilter !== 'all') && (
+            <div className="mt-4 flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">
+                Showing {filteredSessions.length} of {sessions?.length || 0} sessions
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSearchQuery("");
+                  setDateFrom("");
+                  setDateTo("");
+                  setWinnerFilter("all");
+                }}
+                data-testid="button-clear-filters"
+              >
+                Clear Filters
+              </Button>
+            </div>
+          )}
+        </Card>
+
+        {/* Loading State */}
         {isLoading && (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="space-y-2">
             {[1, 2, 3].map((i) => (
-              <Card key={i}>
-                <CardHeader>
-                  <Skeleton className="h-6 w-3/4" />
-                  <Skeleton className="h-4 w-1/2" />
-                </CardHeader>
-                <CardContent>
-                  <Skeleton className="h-20 w-full" />
-                </CardContent>
-              </Card>
+              <Skeleton key={i} className="h-16 w-full" />
             ))}
           </div>
         )}
 
+        {/* Error State */}
         {error && (
-          <Card className="border-destructive">
-            <CardHeader>
-              <CardTitle className="text-destructive">Error Loading Sessions</CardTitle>
-              <CardDescription>
-                Failed to fetch database sessions. Please try again.
-              </CardDescription>
-            </CardHeader>
+          <Card className="p-6 border-destructive">
+            <p className="text-destructive font-medium">Error Loading Sessions</p>
+            <p className="text-sm text-muted-foreground">
+              Failed to fetch database sessions. Please try again.
+            </p>
           </Card>
         )}
 
+        {/* Empty State */}
         {!isLoading && !error && sessions && sessions.length === 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>No Sessions Found</CardTitle>
-              <CardDescription>
-                There are no stored sessions in the database yet.
-              </CardDescription>
-            </CardHeader>
+          <Card className="p-6">
+            <p className="font-medium">No Sessions Found</p>
+            <p className="text-sm text-muted-foreground">
+              There are no stored sessions in the database yet.
+            </p>
           </Card>
         )}
 
-        {!isLoading && !error && sessions && sessions.length > 0 && (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {sessions.map((session) => {
-              const scores = getLatestDeterrenceScores(session);
-              return (
-                <Card key={session.sessionName} className="hover-elevate" data-testid={`card-session-${session.sessionName}`}>
-                  <CardHeader>
-                    <CardTitle className="flex items-start justify-between gap-2">
-                      <span className="truncate">{String(session.sessionName)}</span>
-                      <Badge variant="outline" data-testid={`badge-turn-${session.sessionName}`}>
-                        Turn {Number(session.gameState.turn)}/{Number(session.gameState.maxTurns)}
-                      </Badge>
-                    </CardTitle>
-                    <CardDescription className="space-y-1">
-                      {session.lastUpdated && (
-                        <div className="flex items-center gap-2 text-xs">
-                          <Calendar className="w-3 h-3" />
-                          <span>Updated: {formatDate(session.lastUpdated)}</span>
-                        </div>
-                      )}
-                      {session.sessionInfo?.participants && Array.isArray(session.sessionInfo.participants) && session.sessionInfo.participants.length > 0 && (
-                        <div className="flex items-center gap-2 text-xs">
-                          <Users className="w-3 h-3" />
-                          <span>{session.sessionInfo.participants.length} participants</span>
-                        </div>
-                      )}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Phase:</span>
-                        <Badge variant="secondary">{String(session.gameState.phase)}</Badge>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Current Team:</span>
-                        <span className="font-medium">{String(session.gameState.currentTeam)}</span>
-                      </div>
-                    </div>
+        {/* No Results After Filtering */}
+        {!isLoading && !error && sessions && sessions.length > 0 && filteredSessions.length === 0 && (
+          <Card className="p-6">
+            <p className="font-medium">No Matching Sessions</p>
+            <p className="text-sm text-muted-foreground">
+              No sessions match your filter criteria. Try adjusting your filters.
+            </p>
+          </Card>
+        )}
 
-                    <div className="pt-3 border-t space-y-2">
-                      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                        <TrendingUp className="w-3 h-3" />
-                        Latest Deterrence Scores
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="p-2 rounded-md bg-muted">
-                          <div className="text-xs text-muted-foreground">NATO</div>
-                          <div className="text-lg font-bold" data-testid={`score-nato-${session.sessionName}`}>
-                            {Number(scores.nato) || 0}
-                          </div>
-                        </div>
-                        <div className="p-2 rounded-md bg-muted">
-                          <div className="text-xs text-muted-foreground">Russia</div>
-                          <div className="text-lg font-bold" data-testid={`score-russia-${session.sessionName}`}>
-                            {Number(scores.russia) || 0}
-                          </div>
-                        </div>
-                      </div>
+        {/* Sessions List */}
+        {!isLoading && !error && filteredSessions.length > 0 && (
+          <div className="space-y-2">
+            {/* Table Header */}
+            <div className="grid grid-cols-12 gap-4 px-4 py-2 text-sm font-medium text-muted-foreground border-b">
+              <div className="col-span-3">Session Name</div>
+              <div className="col-span-2">Created</div>
+              <div className="col-span-2">Turn Progress</div>
+              <div className="col-span-2">NATO Score</div>
+              <div className="col-span-2">Russia Score</div>
+              <div className="col-span-1 text-right">Actions</div>
+            </div>
+
+            {/* Table Rows */}
+            {filteredSessions.map((session) => {
+              const scores = getLatestDeterrenceScores(session);
+              const winner = getWinner(session);
+
+              return (
+                <div
+                  key={session.sessionName}
+                  className="grid grid-cols-12 gap-4 px-4 py-3 items-center hover-elevate rounded-md border"
+                  data-testid={`row-session-${session.sessionName}`}
+                >
+                  <div className="col-span-3">
+                    <div className="font-medium">{String(session.sessionName)}</div>
+                    {winner !== 'Tie' && (
+                      <Badge variant={winner === 'NATO' ? 'default' : 'secondary'} className="text-xs mt-1">
+                        Winner: {winner}
+                      </Badge>
+                    )}
+                    {winner === 'Tie' && (
+                      <Badge variant="outline" className="text-xs mt-1">
+                        Tie
+                      </Badge>
+                    )}
+                  </div>
+
+                  <div className="col-span-2 text-sm text-muted-foreground">
+                    {formatDateShort(session.createdAt)}
+                  </div>
+
+                  <div className="col-span-2">
+                    <Badge variant="outline" data-testid={`badge-turn-${session.sessionName}`}>
+                      Turn {Number(session.gameState.turn)}/{Number(session.gameState.maxTurns)}
+                    </Badge>
+                  </div>
+
+                  <div className="col-span-2">
+                    <div className="text-lg font-bold" data-testid={`score-nato-${session.sessionName}`}>
+                      {Number(scores.nato) || 0}
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+
+                  <div className="col-span-2">
+                    <div className="text-lg font-bold" data-testid={`score-russia-${session.sessionName}`}>
+                      {Number(scores.russia) || 0}
+                    </div>
+                  </div>
+
+                  <div className="col-span-1 flex justify-end">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDownloadReport(session)}
+                      data-testid={`button-download-${session.sessionName}`}
+                    >
+                      <Download className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
               );
             })}
           </div>
