@@ -251,37 +251,42 @@ export default function DatabaseSessions() {
   const filteredSessions = useMemo(() => {
     if (!sessions) return [];
 
-    return sessions.filter((session) => {
-      // Filter by session name
-      if (searchQuery && !session.sessionName.toLowerCase().includes(searchQuery.toLowerCase())) {
-        return false;
-      }
-
-      // Filter by date range
-      if (dateFrom || dateTo) {
-        const sessionDate = new Date(session.createdAt);
-        if (dateFrom && sessionDate < new Date(dateFrom)) {
+    return sessions
+      .filter((session) => {
+        // Filter by session name
+        if (searchQuery && !session.sessionName.toLowerCase().includes(searchQuery.toLowerCase())) {
           return false;
         }
-        if (dateTo) {
-          const endDate = new Date(dateTo);
-          endDate.setHours(23, 59, 59, 999);
-          if (sessionDate > endDate) {
+
+        // Filter by date range
+        if (dateFrom || dateTo) {
+          const sessionDate = new Date(session.createdAt);
+          if (dateFrom && sessionDate < new Date(dateFrom)) {
+            return false;
+          }
+          if (dateTo) {
+            const endDate = new Date(dateTo);
+            endDate.setHours(23, 59, 59, 999);
+            if (sessionDate > endDate) {
+              return false;
+            }
+          }
+        }
+
+        // Filter by winner
+        if (winnerFilter !== 'all') {
+          const winner = getWinner(session);
+          if (winner !== winnerFilter) {
             return false;
           }
         }
-      }
 
-      // Filter by winner
-      if (winnerFilter !== 'all') {
-        const winner = getWinner(session);
-        if (winner !== winnerFilter) {
-          return false;
-        }
-      }
-
-      return true;
-    });
+        return true;
+      })
+      .sort((a, b) => {
+        // Sort by creation date, latest first
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
   }, [sessions, searchQuery, dateFrom, dateTo, winnerFilter]);
 
   return (
