@@ -24,7 +24,8 @@ import {
   Users,
   Trash2,
   ChevronDown,
-  Database
+  Database,
+  CreditCard
 } from 'lucide-react';
 import logoUrl from '@assets/Logo_1758524556759.png';
 import { useTheme } from "./ThemeProvider";
@@ -342,7 +343,10 @@ export default function AppHeader({
                           className="flex-1 justify-between p-3 gap-2"
                           data-testid="button-toggle-strategy-log"
                         >
-                          <span className="font-medium">{sanitizeText('Card Purchase Logs')}</span>
+                          <div className="flex items-center gap-2">
+                            <CreditCard className="w-4 h-4" />
+                            <span className="font-medium">{sanitizeText('Card Purchase Logs')}</span>
+                          </div>
                           <ChevronDown
                             className={`h-4 w-4 transition-transform ${
                               isStrategyLogExpanded ? 'rotate-180' : ''
