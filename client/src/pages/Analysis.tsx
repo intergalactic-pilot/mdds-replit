@@ -1,16 +1,18 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Target, Brain, TrendingUp, Lightbulb, Filter, CheckSquare, Square, Sparkles } from "lucide-react";
+import { ArrowLeft, Target, Brain, TrendingUp, Lightbulb, Filter, CheckSquare, Square, Sparkles, Send, MessageSquare } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { analyzeSelectedSessions, analyzeGenericPatterns, type SessionData } from "@/utils/sessionAnalyzer";
+import { answerQuestion, type Message } from "@/utils/questionAnswerer";
 
 interface GameSession {
   sessionName: string;
@@ -24,10 +26,18 @@ export default function Analysis() {
   const [selectedSessions, setSelectedSessions] = useState<string[]>([]);
   const [sessionSearch, setSessionSearch] = useState("");
   const [dateFilter, setDateFilter] = useState<string>("all");
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [questionInput, setQuestionInput] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { data: sessions, isLoading } = useQuery<GameSession[]>({
     queryKey: ['/api/sessions'],
   });
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const handleBack = () => {
     setLocation('/database');
@@ -104,6 +114,44 @@ export default function Analysis() {
   const predeterminedAnalysisResult = useMemo(() => {
     return analyzeSelectedSessions(selectedSessionsData);
   }, [selectedSessionsData]);
+
+  const handleAskQuestion = () => {
+    if (!questionInput.trim()) return;
+
+    // Add user message
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: questionInput,
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+
+    // Get answer based on selected sessions data
+    const answer = answerQuestion(questionInput, selectedSessionsData);
+
+    // Add assistant response
+    const assistantMessage: Message = {
+      id: (Date.now() + 1).toString(),
+      role: 'assistant',
+      content: answer,
+      timestamp: new Date()
+    };
+
+    setTimeout(() => {
+      setMessages(prev => [...prev, assistantMessage]);
+    }, 300);
+
+    setQuestionInput("");
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleAskQuestion();
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -248,12 +296,15 @@ export default function Analysis() {
 
         {/* Main Content */}
         <Tabs defaultValue="generic" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsList className="grid w-full max-w-2xl grid-cols-3">
             <TabsTrigger value="generic" data-testid="tab-generic-pattern">
               Generic Patternization
             </TabsTrigger>
             <TabsTrigger value="predetermined" data-testid="tab-predetermined-pattern">
               Predetermined Considerations
+            </TabsTrigger>
+            <TabsTrigger value="questions" data-testid="tab-ask-questions">
+              Ask Questions
             </TabsTrigger>
           </TabsList>
 
@@ -419,6 +470,98 @@ export default function Analysis() {
                           </p>
                         </CardContent>
                       </Card>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Ask Questions Section */}
+          <TabsContent value="questions" className="space-y-6">
+            <Card className="flex flex-col" style={{ height: 'calc(100vh - 400px)', minHeight: '500px' }}>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="rounded-lg bg-green-500/10 p-2">
+                    <MessageSquare className="w-6 h-6 text-green-500" />
+                  </div>
+                  <div>
+                    <CardTitle>Ask Questions About Selected Sessions</CardTitle>
+                    <CardDescription>
+                      {selectedSessions.length > 0 
+                        ? `Ask questions based on ${selectedSessions.length} selected session${selectedSessions.length > 1 ? 's' : ''} - answers are derived from real game data`
+                        : 'Select sessions above to start asking questions'}
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="flex-1 flex flex-col overflow-hidden">
+                {selectedSessions.length === 0 ? (
+                  <div className="flex-1 flex items-center justify-center text-center py-12 text-muted-foreground">
+                    <div>
+                      <MessageSquare className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                      <p className="text-lg">Select game sessions above to start asking questions</p>
+                      <p className="text-sm mt-2">All answers will be based on authentic data from your selected sessions</p>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {/* Messages Area */}
+                    <ScrollArea className="flex-1 pr-4 mb-4">
+                      <div className="space-y-4">
+                        {messages.length === 0 && (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <p className="text-sm">Start by asking a question about your selected sessions.</p>
+                            <p className="text-xs mt-2">Try: "Who won the games?" or "What were the final scores?"</p>
+                          </div>
+                        )}
+                        
+                        {messages.map((message) => (
+                          <div
+                            key={message.id}
+                            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                            data-testid={`message-${message.role}-${message.id}`}
+                          >
+                            <div
+                              className={`max-w-[80%] rounded-lg p-4 ${
+                                message.role === 'user'
+                                  ? 'bg-primary text-primary-foreground'
+                                  : 'bg-muted'
+                              }`}
+                            >
+                              <p className="text-sm whitespace-pre-line">{message.content}</p>
+                              <p className="text-xs opacity-70 mt-2">
+                                {new Date(message.timestamp).toLocaleTimeString()}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                        <div ref={messagesEndRef} />
+                      </div>
+                    </ScrollArea>
+
+                    {/* Input Area */}
+                    <div className="border-t pt-4">
+                      <div className="flex gap-2">
+                        <Input
+                          value={questionInput}
+                          onChange={(e) => setQuestionInput(e.target.value)}
+                          onKeyPress={handleKeyPress}
+                          placeholder="Ask a question about the selected sessions..."
+                          className="flex-1"
+                          data-testid="input-question"
+                        />
+                        <Button
+                          onClick={handleAskQuestion}
+                          disabled={!questionInput.trim()}
+                          data-testid="button-send-question"
+                        >
+                          <Send className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Press Enter to send • All answers based on real session data
+                      </p>
                     </div>
                   </>
                 )}

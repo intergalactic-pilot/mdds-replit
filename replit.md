@@ -23,6 +23,10 @@ The frontend follows a component-based architecture with clear separation of con
 
 ### Key Features
 - **Database Sessions View**: Accessible from Settings dialog, displays all stored game sessions with session name, turn information, participants, current phase/team, and deterrence scores. Features robust type safety with comprehensive data normalization to handle various API response structures.
+- **Analysis Dashboard**: Multi-tab interface (/analysis) featuring:
+  - **Generic Patternization**: Discovers all winning strategies and correlations across 7 analysis categories (winning strategies, domain correlations, budget patterns, card effectiveness, timing patterns, turn-by-turn patterns, team-specific formulas)
+  - **Predetermined Considerations**: Answers 7 strategic questions about card timing, momentum swings, team asymmetry, comeback triggers, dimension correlation, strategy consistency, and cross-session recurrence
+  - **Ask Questions**: Interactive Q&A interface with LLM-style chat experience for querying selected sessions. Provides authentic, data-driven answers based on real session data (winners, scores, domains, budgets, cards, turns, comparisons)
 - **Settings Dialog**: Centralized settings interface with collapsible Card Purchase Logs and navigation to database sessions
 - **Login Screen**: Glassmorphism interface with session creation and optional "Skip Turn 1" configuration
 - **Mobile Interface**: Dedicated mobile views for session management
