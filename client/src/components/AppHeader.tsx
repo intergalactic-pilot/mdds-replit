@@ -381,16 +381,6 @@ export default function AppHeader({
               <Save className="w-4 h-4" />
             </Button>
 
-            {/* Finish Game Session */}
-            <Button 
-              variant="default" 
-              onClick={onFinishGameSession}
-              data-testid="button-finish-game-session"
-            >
-              <FileCheck className="w-4 h-4 mr-2" />
-              {sanitizeText('Finish the Game Session')}
-            </Button>
-
             {/* Reset Progress */}
             <Button 
               variant="outline" 
@@ -399,6 +389,16 @@ export default function AppHeader({
             >
               <RotateCcw className="w-4 h-4 mr-2" />
               {sanitizeText('Reset Progress')}
+            </Button>
+
+            {/* Finish Game */}
+            <Button 
+              variant="destructive" 
+              onClick={onFinishGameSession}
+              data-testid="button-finish-game-session"
+            >
+              <FileCheck className="w-4 h-4 mr-2" />
+              {sanitizeText('Finish Game')}
             </Button>
           </div>
         </div>
