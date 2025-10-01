@@ -1,16 +1,90 @@
+import { useState, useMemo } from "react";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Target, Brain, TrendingUp, Lightbulb } from "lucide-react";
+import { ArrowLeft, Target, Brain, TrendingUp, Lightbulb, Filter, CheckSquare, Square } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+
+interface GameSession {
+  sessionName: string;
+  gameState: {
+    turn: number;
+    maxTurns: number;
+  };
+  createdAt: string;
+}
 
 export default function Analysis() {
   const [, setLocation] = useLocation();
+  const [selectedSessions, setSelectedSessions] = useState<string[]>([]);
+  const [sessionSearch, setSessionSearch] = useState("");
+  const [dateFilter, setDateFilter] = useState<string>("all");
+
+  const { data: sessions, isLoading } = useQuery<GameSession[]>({
+    queryKey: ['/api/sessions'],
+  });
 
   const handleBack = () => {
     setLocation('/database');
   };
+
+  const filteredSessions = useMemo(() => {
+    if (!sessions) return [];
+    
+    let filtered = [...sessions];
+    
+    // Search filter
+    if (sessionSearch) {
+      filtered = filtered.filter(s => 
+        s.sessionName.toLowerCase().includes(sessionSearch.toLowerCase())
+      );
+    }
+    
+    // Date filter
+    if (dateFilter !== "all") {
+      const now = new Date();
+      const filterDate = new Date();
+      
+      if (dateFilter === "week") {
+        filterDate.setDate(now.getDate() - 7);
+      } else if (dateFilter === "month") {
+        filterDate.setMonth(now.getMonth() - 1);
+      } else if (dateFilter === "3months") {
+        filterDate.setMonth(now.getMonth() - 3);
+      }
+      
+      filtered = filtered.filter(s => new Date(s.createdAt) >= filterDate);
+    }
+    
+    // Sort by date (latest first)
+    return filtered.sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }, [sessions, sessionSearch, dateFilter]);
+
+  const handleToggleSession = (sessionName: string) => {
+    setSelectedSessions(prev => 
+      prev.includes(sessionName)
+        ? prev.filter(s => s !== sessionName)
+        : [...prev, sessionName]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedSessions.length === filteredSessions.length) {
+      setSelectedSessions([]);
+    } else {
+      setSelectedSessions(filteredSessions.map(s => s.sessionName));
+    }
+  };
+
+  const allSelected = filteredSessions.length > 0 && selectedSessions.length === filteredSessions.length;
 
   return (
     <div className="min-h-screen bg-background">
@@ -32,6 +106,126 @@ export default function Analysis() {
             </p>
           </div>
         </div>
+
+        {/* Session Selection Filter */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-primary/10 p-2">
+                  <Filter className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle>Select Sessions for Analysis</CardTitle>
+                  <CardDescription>
+                    Choose which game sessions to include in the AI pattern analysis
+                  </CardDescription>
+                </div>
+              </div>
+              <Badge variant="secondary" className="text-sm" data-testid="badge-selected-count">
+                {selectedSessions.length} selected
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Filter Controls */}
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Search Sessions</label>
+                <Input
+                  placeholder="Search by name..."
+                  value={sessionSearch}
+                  onChange={(e) => setSessionSearch(e.target.value)}
+                  data-testid="input-session-search"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Date Range</label>
+                <Select value={dateFilter} onValueChange={setDateFilter}>
+                  <SelectTrigger data-testid="select-date-filter">
+                    <SelectValue placeholder="All time" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All time</SelectItem>
+                    <SelectItem value="week">Last 7 days</SelectItem>
+                    <SelectItem value="month">Last month</SelectItem>
+                    <SelectItem value="3months">Last 3 months</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Quick Actions</label>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleSelectAll}
+                  data-testid="button-select-all"
+                >
+                  {allSelected ? (
+                    <>
+                      <CheckSquare className="w-4 h-4 mr-2" />
+                      Deselect All
+                    </>
+                  ) : (
+                    <>
+                      <Square className="w-4 h-4 mr-2" />
+                      Select All
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            {/* Session List */}
+            {isLoading && (
+              <div className="space-y-2">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-12 w-full" />
+                ))}
+              </div>
+            )}
+
+            {!isLoading && filteredSessions.length > 0 && (
+              <div className="border rounded-lg max-h-64 overflow-y-auto">
+                <div className="divide-y">
+                  {filteredSessions.map((session) => (
+                    <div
+                      key={session.sessionName}
+                      className="flex items-center gap-3 p-3 hover-elevate"
+                      data-testid={`session-item-${session.sessionName}`}
+                    >
+                      <Checkbox
+                        checked={selectedSessions.includes(session.sessionName)}
+                        onCheckedChange={() => handleToggleSession(session.sessionName)}
+                        data-testid={`checkbox-session-${session.sessionName}`}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate">{session.sessionName}</div>
+                        <div className="text-xs text-muted-foreground">
+                          Turn {session.gameState.turn}/{session.gameState.maxTurns} • {new Date(session.createdAt).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {!isLoading && filteredSessions.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                No sessions found matching your filters
+              </div>
+            )}
+
+            {!isLoading && sessions && sessions.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                No game sessions available. Play some games first to enable analysis.
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Main Content */}
         <Tabs defaultValue="generic" className="space-y-6">
@@ -55,7 +249,9 @@ export default function Analysis() {
                   <div>
                     <CardTitle>Generic Patternization for the Best Strategy to Win</CardTitle>
                     <CardDescription>
-                      Analysis of winning patterns across all game sessions
+                      {selectedSessions.length > 0 
+                        ? `Analysis of winning patterns based on ${selectedSessions.length} selected session${selectedSessions.length > 1 ? 's' : ''}`
+                        : 'Select sessions above to analyze winning patterns'}
                     </CardDescription>
                   </div>
                 </div>
@@ -200,7 +396,9 @@ export default function Analysis() {
                   <div>
                     <CardTitle>Patternization based on Predetermined Considerations</CardTitle>
                     <CardDescription>
-                      Context-specific analysis based on strategic constraints and scenarios
+                      {selectedSessions.length > 0 
+                        ? `Context-specific analysis based on ${selectedSessions.length} selected session${selectedSessions.length > 1 ? 's' : ''}`
+                        : 'Select sessions above to analyze context-specific patterns'}
                     </CardDescription>
                   </div>
                 </div>
