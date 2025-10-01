@@ -18,6 +18,14 @@ export default function LoginScreen() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
+  // Get today's date in a readable format
+  const today = new Date();
+  const formattedDate = today.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+  
   const setShowLoginScreen = useMDDSStore(state => state.setShowLoginScreen);
   const updateSessionName = useMDDSStore(state => state.updateSessionName);
   const updateCourse = useMDDSStore(state => state.updateCourse);
@@ -221,6 +229,17 @@ export default function LoginScreen() {
                   <SelectItem value="Not applicable">Not applicable</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="game-date-login">Date of the Strategy</Label>
+              <Input
+                id="game-date-login"
+                value={formattedDate}
+                readOnly
+                className="bg-muted cursor-not-allowed"
+                data-testid="input-game-date-login"
+              />
             </div>
 
             <div className="flex items-center space-x-2">
