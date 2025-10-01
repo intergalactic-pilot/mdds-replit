@@ -17,7 +17,7 @@ interface TurnStatistics {
 // Session information interface
 interface SessionInfo {
   sessionName: string;
-  committeeNumber: number | null;
+  committeeNumber: number | string | null;
   participants: Array<{
     name: string;
     country: string;
@@ -48,7 +48,7 @@ interface MDDSStore extends GameState {
   
   // Session management
   updateSessionName: (name: string) => void;
-  updateCommitteeNumber: (committeeNumber: number | null) => void;
+  updateCommitteeNumber: (committeeNumber: number | string | null) => void;
   updateParticipant: (index: number, field: 'name' | 'country', value: string) => void;
   addParticipant: () => void;
   removeParticipant: (index: number) => void;
@@ -230,7 +230,7 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
     setTimeout(() => get().syncToDatabase(), 0);
   },
 
-  updateCommitteeNumber: (committeeNumber: number | null) => {
+  updateCommitteeNumber: (committeeNumber: number | string | null) => {
     set((state) => ({
       sessionInfo: {
         ...state.sessionInfo,
