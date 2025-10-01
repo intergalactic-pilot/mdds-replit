@@ -10,12 +10,14 @@ import logoUrl from '@assets/Logo_1758524556759.png';
 
 export default function LoginScreen() {
   const [sessionName, setSessionName] = useState('');
+  const [committeeNumber, setCommitteeNumber] = useState('');
   const [skipTurn1, setSkipTurn1] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
   const setShowLoginScreen = useMDDSStore(state => state.setShowLoginScreen);
   const updateSessionName = useMDDSStore(state => state.updateSessionName);
+  const updateCommitteeNumber = useMDDSStore(state => state.updateCommitteeNumber);
   const setActiveDatabaseSession = useMDDSStore(state => state.setActiveDatabaseSession);
   const syncToDatabase = useMDDSStore(state => state.syncToDatabase);
 
@@ -25,12 +27,19 @@ export default function LoginScreen() {
       return;
     }
 
+    const committeeNum = committeeNumber ? parseInt(committeeNumber) : null;
+    if (committeeNumber && (committeeNum === null || committeeNum < 1 || committeeNum > 10)) {
+      setError('Committee number must be between 1 and 10');
+      return;
+    }
+
     setIsLoading(true);
     setError('');
 
     try {
-      // Update session name in store
+      // Update session name and committee number in store
       updateSessionName(sessionName.trim());
+      updateCommitteeNumber(committeeNum);
       
       // Get current game state (do not mutate yet)
       const currentState = useMDDSStore.getState();
@@ -113,6 +122,24 @@ export default function LoginScreen() {
                 }}
                 placeholder="Enter session name"
                 data-testid="input-session-name-login"
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="committee-number-login">Committee Number (1-10)</Label>
+              <Input
+                id="committee-number-login"
+                type="number"
+                min="1"
+                max="10"
+                value={committeeNumber}
+                onChange={(e) => {
+                  setCommitteeNumber(e.target.value);
+                  setError('');
+                }}
+                placeholder="Optional"
+                data-testid="input-committee-number-login"
                 disabled={isLoading}
               />
             </div>
