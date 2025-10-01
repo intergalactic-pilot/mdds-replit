@@ -17,9 +17,6 @@ interface TurnStatistics {
 // Session information interface
 interface SessionInfo {
   sessionName: string;
-  course: string | null;
-  committeeNumber: number | string | null;
-  gameDate: string;
   participants: Array<{
     name: string;
     country: string;
@@ -50,8 +47,6 @@ interface MDDSStore extends GameState {
   
   // Session management
   updateSessionName: (name: string) => void;
-  updateCourse: (course: string | null) => void;
-  updateCommitteeNumber: (committeeNumber: number | string | null) => void;
   updateParticipant: (index: number, field: 'name' | 'country', value: string) => void;
   addParticipant: () => void;
   removeParticipant: (index: number) => void;
@@ -104,9 +99,6 @@ const createInitialState = (): Omit<GameState, 'teams'> & { teams: Record<Team, 
     }],
     sessionInfo: {
       sessionName: '',
-      course: null,
-      committeeNumber: null,
-      gameDate: new Date().toISOString().split('T')[0],
       participants: [{ name: '', country: '' }, { name: '', country: '' }]
     },
     turnStatistics: [{
@@ -235,28 +227,6 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
     setTimeout(() => get().syncToDatabase(), 0);
   },
 
-  updateCourse: (course: string | null) => {
-    set((state) => ({
-      sessionInfo: {
-        ...state.sessionInfo,
-        course
-      }
-    }));
-    // Sync to database after state change
-    setTimeout(() => get().syncToDatabase(), 0);
-  },
-
-  updateCommitteeNumber: (committeeNumber: number | string | null) => {
-    set((state) => ({
-      sessionInfo: {
-        ...state.sessionInfo,
-        committeeNumber
-      }
-    }));
-    // Sync to database after state change
-    setTimeout(() => get().syncToDatabase(), 0);
-  },
-
   updateParticipant: (index: number, field: 'name' | 'country', value: string) => {
     set((state) => ({
       sessionInfo: {
@@ -368,9 +338,6 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
           ...data,
           sessionInfo: data.sessionInfo ? {
             sessionName: data.sessionInfo.sessionName || '',
-            course: data.sessionInfo.course ?? null,
-            committeeNumber: data.sessionInfo.committeeNumber ?? null,
-            gameDate: data.sessionInfo.gameDate || new Date().toISOString().split('T')[0],
             participants: data.sessionInfo.participants && data.sessionInfo.participants.length > 0 
               ? data.sessionInfo.participants
               : currentState.sessionInfo.participants
@@ -426,9 +393,6 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
         turnStatistics: data.turnStatistics || [],
         sessionInfo: data.sessionInfo ? {
           sessionName: data.sessionInfo.sessionName || '',
-          course: data.sessionInfo.course ?? null,
-          committeeNumber: data.sessionInfo.committeeNumber ?? null,
-          gameDate: data.sessionInfo.gameDate || new Date().toISOString().split('T')[0],
           participants: data.sessionInfo.participants && data.sessionInfo.participants.length > 0 
             ? data.sessionInfo.participants
             : currentState.sessionInfo.participants
