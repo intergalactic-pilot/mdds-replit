@@ -313,23 +313,13 @@ export default function AppHeader({
               </DialogTrigger>
               <DialogContent className="max-w-4xl max-h-[80vh]">
                 <DialogHeader>
-                  <div className="flex items-center justify-between">
-                    <DialogTitle>{sanitizeText('Settings')}</DialogTitle>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={handleDownloadCardLogs}
-                      data-testid="button-download-card-logs"
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      Download PDF
-                    </Button>
-                  </div>
+                  <DialogTitle>{sanitizeText('Settings')}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
+                  {/* Database Button */}
                   <Button
-                    variant="outline"
-                    className="w-full justify-start gap-2"
+                    variant="ghost"
+                    className="w-full justify-start p-3 gap-2"
                     onClick={() => {
                       setShowSettings(false);
                       setLocation('/database');
@@ -337,27 +327,39 @@ export default function AppHeader({
                     data-testid="button-navigate-database"
                   >
                     <Database className="w-4 h-4" />
-                    <span>Database</span>
+                    <span className="font-medium">Database</span>
                   </Button>
 
+                  {/* Card Purchase Logs */}
                   <Collapsible
                     open={isStrategyLogExpanded}
                     onOpenChange={setIsStrategyLogExpanded}
                   >
-                    <CollapsibleTrigger asChild>
-                      <Button
+                    <div className="flex items-center gap-2">
+                      <CollapsibleTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className="flex-1 justify-between p-3 gap-2"
+                          data-testid="button-toggle-strategy-log"
+                        >
+                          <span className="font-medium">{sanitizeText('Card Purchase Logs')}</span>
+                          <ChevronDown
+                            className={`h-4 w-4 transition-transform ${
+                              isStrategyLogExpanded ? 'rotate-180' : ''
+                            }`}
+                          />
+                        </Button>
+                      </CollapsibleTrigger>
+                      <Button 
                         variant="ghost"
-                        className="w-full justify-between p-3 gap-2"
-                        data-testid="button-toggle-strategy-log"
+                        size="sm" 
+                        onClick={handleDownloadCardLogs}
+                        data-testid="button-download-card-logs"
                       >
-                        <span className="font-medium">{sanitizeText('Card Purchase Logs')}</span>
-                        <ChevronDown
-                          className={`h-4 w-4 transition-transform ${
-                            isStrategyLogExpanded ? 'rotate-180' : ''
-                          }`}
-                        />
+                        <Download className="w-4 h-4 mr-2" />
+                        Download PDF
                       </Button>
-                    </CollapsibleTrigger>
+                    </div>
                     <CollapsibleContent className="pt-2">
                       <StrategyLog entries={strategyLog} maxHeight="60vh" />
                     </CollapsibleContent>
