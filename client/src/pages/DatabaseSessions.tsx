@@ -546,57 +546,153 @@ export default function DatabaseSessions() {
 
       {/* Session Details Dialog */}
       <Dialog open={!!detailsSession} onOpenChange={(open) => !open && setDetailsSession(null)}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto" data-testid="dialog-session-details">
+        <DialogContent className="max-w-6xl max-h-[85vh] overflow-y-auto" data-testid="dialog-session-details">
           <DialogHeader>
-            <DialogTitle>Dimension Based Deterrence Scores - {detailsSession?.sessionName}</DialogTitle>
+            <DialogTitle>Turn-Based Dimension Statistics - {detailsSession?.sessionName}</DialogTitle>
           </DialogHeader>
           
           {detailsSession && detailsSession.turnStatistics && detailsSession.turnStatistics.length > 0 && (
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="flex gap-4 text-sm text-muted-foreground border-b pb-4">
                 <span>Created: {formatDateShort(detailsSession.createdAt)}</span>
                 <span>Turn: {detailsSession.gameState.turn}/{detailsSession.gameState.maxTurns}</span>
+                <span>Participants: {detailsSession.sessionInfo?.participants?.length || 0}</span>
               </div>
 
-              <div className="border rounded-md overflow-hidden">
-                <table className="w-full">
-                  <thead className="bg-muted">
-                    <tr>
-                      <th className="px-4 py-3 text-left font-medium">Turn</th>
-                      <th className="px-4 py-3 text-center font-medium text-blue-600 dark:text-blue-400">NATO Score</th>
-                      <th className="px-4 py-3 text-center font-medium text-red-600 dark:text-red-400">Russia Score</th>
-                      <th className="px-4 py-3 text-center font-medium">Difference</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {detailsSession.turnStatistics.map((stat, index) => {
-                      const natoScore = Number(stat.natoDeterrence) || 0;
-                      const russiaScore = Number(stat.russiaDeterrence) || 0;
-                      const difference = natoScore - russiaScore;
-                      
-                      return (
-                        <tr 
-                          key={index} 
-                          className="border-t hover-elevate"
-                          data-testid={`row-turn-${stat.turn}`}
-                        >
-                          <td className="px-4 py-3 font-medium">Turn {stat.turn}</td>
-                          <td className="px-4 py-3 text-center text-blue-600 dark:text-blue-400 font-semibold">
-                            {natoScore}
-                          </td>
-                          <td className="px-4 py-3 text-center text-red-600 dark:text-red-400 font-semibold">
-                            {russiaScore}
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            <Badge variant={difference > 0 ? 'default' : difference < 0 ? 'secondary' : 'outline'}>
-                              {difference > 0 ? '+' : ''}{difference}
-                            </Badge>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+              {/* Overall Deterrence Chart */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-lg">Overall Deterrence Scores</h3>
+                  <div className="flex items-center gap-4 text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                      <span>NATO</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                      <span>Russia</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="h-64 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RechartsLineChart
+                      data={detailsSession.turnStatistics.map((stat: any) => ({
+                        turn: stat.turn,
+                        NATO: typeof stat.natoTotalDeterrence === 'number' ? stat.natoTotalDeterrence : (typeof stat.natoDeterrence === 'number' ? stat.natoDeterrence : 0),
+                        Russia: typeof stat.russiaTotalDeterrence === 'number' ? stat.russiaTotalDeterrence : (typeof stat.russiaDeterrence === 'number' ? stat.russiaDeterrence : 0)
+                      }))}
+                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                      <XAxis 
+                        dataKey="turn" 
+                        label={{ value: 'Turn', position: 'insideBottom', offset: -5 }}
+                        className="text-sm"
+                      />
+                      <YAxis 
+                        label={{ value: 'Total Deterrence', angle: -90, position: 'insideLeft' }}
+                        className="text-sm"
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--background))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '6px'
+                        }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="NATO" 
+                        stroke="#3B82F6" 
+                        strokeWidth={2}
+                        dot={{ fill: '#3B82F6', r: 4 }}
+                        activeDot={{ r: 6 }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="Russia" 
+                        stroke="#EF4444" 
+                        strokeWidth={2}
+                        dot={{ fill: '#EF4444', r: 4 }}
+                        activeDot={{ r: 6 }}
+                      />
+                    </RechartsLineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Domain-Specific Charts */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg border-t pt-4">Dimension-Based Deterrence</h3>
+                <div className="grid gap-6">
+                  {(['joint', 'economy', 'cognitive', 'space', 'cyber'] as Domain[]).map((domain) => {
+                    const hasData = detailsSession.turnStatistics?.some((stat: any) => 
+                      stat.natoDeterrence && typeof stat.natoDeterrence === 'object' && domain in stat.natoDeterrence
+                    );
+                    
+                    if (!hasData) return null;
+
+                    const chartData = detailsSession.turnStatistics?.map((stat: any) => {
+                      const natoVal = stat.natoDeterrence && typeof stat.natoDeterrence === 'object' ? (stat.natoDeterrence[domain] || 0) : 0;
+                      const russiaVal = stat.russiaDeterrence && typeof stat.russiaDeterrence === 'object' ? (stat.russiaDeterrence[domain] || 0) : 0;
+                      return {
+                        turn: stat.turn,
+                        NATO: natoVal,
+                        Russia: russiaVal
+                      };
+                    });
+
+                    return (
+                      <div key={domain} className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2 h-2 rounded-full ${domainColors[domain].bgClass}`} style={{ backgroundColor: domainColors[domain].color }}></div>
+                          <h4 className="font-medium capitalize">{domain} Domain</h4>
+                        </div>
+                        <div className="h-48 w-full">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <RechartsLineChart
+                              data={chartData}
+                              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                            >
+                              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                              <XAxis 
+                                dataKey="turn" 
+                                label={{ value: 'Turn', position: 'insideBottom', offset: -5 }}
+                                className="text-xs"
+                              />
+                              <YAxis 
+                                label={{ value: 'Deterrence', angle: -90, position: 'insideLeft' }}
+                                className="text-xs"
+                              />
+                              <Tooltip
+                                contentStyle={{
+                                  backgroundColor: 'hsl(var(--background))',
+                                  border: '1px solid hsl(var(--border))',
+                                  borderRadius: '6px'
+                                }}
+                              />
+                              <Line 
+                                type="monotone" 
+                                dataKey="NATO" 
+                                stroke="#3B82F6" 
+                                strokeWidth={2}
+                                dot={{ fill: '#3B82F6', r: 3 }}
+                              />
+                              <Line 
+                                type="monotone" 
+                                dataKey="Russia" 
+                                stroke="#EF4444" 
+                                strokeWidth={2}
+                                dot={{ fill: '#EF4444', r: 3 }}
+                              />
+                            </RechartsLineChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           )}
