@@ -10,7 +10,6 @@ import { apiRequest } from '@/lib/queryClient';
 import logoUrl from '@assets/Logo_1758524556759.png';
 
 export default function LoginScreen() {
-  const [sessionName, setSessionName] = useState('');
   const [course, setCourse] = useState('');
   const [customCourse, setCustomCourse] = useState('');
   const [committeeNumber, setCommitteeNumber] = useState('');
@@ -18,13 +17,42 @@ export default function LoginScreen() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
-  // Get today's date in a readable format
+  // Get today's date in different formats
   const today = new Date();
   const formattedDate = today.toLocaleDateString('en-US', { 
     year: 'numeric', 
     month: 'long', 
     day: 'numeric' 
   });
+  const dateForSessionName = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+  
+  // Auto-generate session name
+  const generateSessionName = () => {
+    let coursePart = '';
+    let committeePart = '';
+    
+    // Get course name
+    if (course) {
+      if (course === 'Others' && customCourse) {
+        coursePart = customCourse.trim().replace(/\s+/g, '');
+      } else if (course !== 'Others') {
+        coursePart = course.replace(/\s+/g, '');
+      }
+    }
+    
+    // Get committee number
+    if (committeeNumber) {
+      committeePart = committeeNumber.toString();
+    }
+    
+    // Build session name
+    if (coursePart || committeePart) {
+      return `${coursePart}${committeePart}-${dateForSessionName}`;
+    }
+    return '';
+  };
+  
+  const sessionName = generateSessionName();
   
   const setShowLoginScreen = useMDDSStore(state => state.setShowLoginScreen);
   const updateSessionName = useMDDSStore(state => state.updateSessionName);
@@ -34,11 +62,6 @@ export default function LoginScreen() {
   const syncToDatabase = useMDDSStore(state => state.syncToDatabase);
 
   const handleStart = async () => {
-    if (!sessionName.trim()) {
-      setError('Session name is required');
-      return;
-    }
-
     // Determine the final course value
     let courseValue: string | null = null;
     if (course) {
@@ -143,23 +166,8 @@ export default function LoginScreen() {
             </div>
           </div>
 
-          {/* Session name input */}
+          {/* Input fields */}
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="session-name-login">Session Name</Label>
-              <Input
-                id="session-name-login"
-                value={sessionName}
-                onChange={(e) => {
-                  setSessionName(e.target.value);
-                  setError('');
-                }}
-                placeholder="Enter session name"
-                data-testid="input-session-name-login"
-                disabled={isLoading}
-              />
-            </div>
-
             <div className="space-y-2">
               <Label htmlFor="course-login">Course</Label>
               <Select
@@ -240,6 +248,19 @@ export default function LoginScreen() {
                 disabled
                 className="bg-muted text-muted-foreground cursor-not-allowed opacity-60"
                 data-testid="input-game-date-login"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="session-name-login" className="text-muted-foreground">Session Name</Label>
+              <Input
+                id="session-name-login"
+                value={sessionName || 'Auto-generated from selections above'}
+                readOnly
+                disabled
+                className="bg-muted text-muted-foreground cursor-not-allowed opacity-60"
+                data-testid="input-session-name-login"
+                placeholder="Auto-generated from selections above"
               />
             </div>
 
