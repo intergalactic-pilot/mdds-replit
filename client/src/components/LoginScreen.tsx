@@ -11,6 +11,8 @@ import logoUrl from '@assets/Logo_1758524556759.png';
 
 export default function LoginScreen() {
   const [sessionName, setSessionName] = useState('');
+  const [course, setCourse] = useState('');
+  const [customCourse, setCustomCourse] = useState('');
   const [committeeNumber, setCommitteeNumber] = useState('');
   const [skipTurn1, setSkipTurn1] = useState(false);
   const [error, setError] = useState('');
@@ -18,6 +20,7 @@ export default function LoginScreen() {
   
   const setShowLoginScreen = useMDDSStore(state => state.setShowLoginScreen);
   const updateSessionName = useMDDSStore(state => state.updateSessionName);
+  const updateCourse = useMDDSStore(state => state.updateCourse);
   const updateCommitteeNumber = useMDDSStore(state => state.updateCommitteeNumber);
   const setActiveDatabaseSession = useMDDSStore(state => state.setActiveDatabaseSession);
   const syncToDatabase = useMDDSStore(state => state.syncToDatabase);
@@ -26,6 +29,20 @@ export default function LoginScreen() {
     if (!sessionName.trim()) {
       setError('Session name is required');
       return;
+    }
+
+    // Determine the final course value
+    let courseValue: string | null = null;
+    if (course) {
+      if (course === 'Others') {
+        if (!customCourse.trim()) {
+          setError('Please enter a course name');
+          return;
+        }
+        courseValue = customCourse.trim();
+      } else {
+        courseValue = course;
+      }
     }
 
     // Parse committee number - it can be a number, "Not applicable", or null
@@ -45,8 +62,9 @@ export default function LoginScreen() {
     setError('');
 
     try {
-      // Update session name and committee number in store
+      // Update session info in store
       updateSessionName(sessionName.trim());
+      updateCourse(courseValue);
       updateCommitteeNumber(committeeValue);
       
       // Get current game state (do not mutate yet)
@@ -133,6 +151,48 @@ export default function LoginScreen() {
                 disabled={isLoading}
               />
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="course-login">Course</Label>
+              <Select
+                value={course}
+                onValueChange={(value) => {
+                  setCourse(value);
+                  setError('');
+                  // Clear custom course if switching away from "Others"
+                  if (value !== 'Others') {
+                    setCustomCourse('');
+                  }
+                }}
+                disabled={isLoading}
+              >
+                <SelectTrigger data-testid="select-course-login">
+                  <SelectValue placeholder="Select course (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Senior Course">Senior Course</SelectItem>
+                  <SelectItem value="NRCC">NRCC</SelectItem>
+                  <SelectItem value="Others">Others</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {course === 'Others' && (
+              <div className="space-y-2">
+                <Label htmlFor="custom-course-login">Course Name</Label>
+                <Input
+                  id="custom-course-login"
+                  value={customCourse}
+                  onChange={(e) => {
+                    setCustomCourse(e.target.value);
+                    setError('');
+                  }}
+                  placeholder="Enter course name"
+                  data-testid="input-custom-course-login"
+                  disabled={isLoading}
+                />
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="committee-number-login">Committee Number</Label>
