@@ -140,6 +140,59 @@ export default function DomainStatistics() {
           {/* Overall Statistics Content */}
           {activeSection === 'overall' && (
             <div className="space-y-6" data-testid="overall-stats-content">
+              {/* Overall Deterrence Chart */}
+              <div className="glass-panel p-4">
+                <h3 className="text-sm font-semibold mb-4">Turn-Based Overall Deterrence Scores</h3>
+                <ResponsiveContainer width="100%" height={350}>
+                  <RechartsLineChart data={turnStatistics.map(stat => {
+                    const natoTotal = Object.values(stat.natoDeterrence).reduce((sum, val) => sum + val, 0);
+                    const russiaTotal = Object.values(stat.russiaDeterrence).reduce((sum, val) => sum + val, 0);
+                    return {
+                      turn: stat.turn,
+                      NATO: natoTotal,
+                      Russia: russiaTotal
+                    };
+                  })}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis 
+                      dataKey="turn" 
+                      stroke="hsl(var(--muted-foreground))"
+                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                      label={{ value: 'Turn', position: 'insideBottom', offset: -5, fill: 'hsl(var(--muted-foreground))' }}
+                    />
+                    <YAxis 
+                      stroke="hsl(var(--muted-foreground))"
+                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                      label={{ value: 'Total Deterrence', angle: -90, position: 'insideLeft', fill: 'hsl(var(--muted-foreground))' }}
+                    />
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                    />
+                    <Legend />
+                    <Line 
+                      type="monotone" 
+                      dataKey="NATO" 
+                      stroke="#3B82F6" 
+                      strokeWidth={3}
+                      dot={{ fill: '#3B82F6', r: 4 }}
+                      activeDot={{ r: 6 }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="Russia" 
+                      stroke="#EF4444" 
+                      strokeWidth={3}
+                      dot={{ fill: '#EF4444', r: 4 }}
+                      activeDot={{ r: 6 }}
+                    />
+                  </RechartsLineChart>
+                </ResponsiveContainer>
+              </div>
+
               {/* Domain Selector */}
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold">Select Dimension for Detailed Analysis</h3>
