@@ -391,14 +391,14 @@ export default function AppHeader({
               {sanitizeText('Reset Progress')}
             </Button>
 
-            {/* Finish Game */}
+            {/* Finish Session */}
             <Button 
               variant="destructive" 
               onClick={onFinishGameSession}
               data-testid="button-finish-game-session"
             >
               <FileCheck className="w-4 h-4 mr-2" />
-              {sanitizeText('Finish Game')}
+              {sanitizeText('Finish Session')}
             </Button>
           </div>
         </div>
