@@ -3,20 +3,19 @@ import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Target, Brain, TrendingUp, Lightbulb, Filter, CheckSquare, Square } from "lucide-react";
+import { ArrowLeft, Target, Brain, TrendingUp, Lightbulb, Filter, CheckSquare, Square, Sparkles } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { analyzeSelectedSessions, type SessionData } from "@/utils/sessionAnalyzer";
 
 interface GameSession {
   sessionName: string;
-  gameState: {
-    turn: number;
-    maxTurns: number;
-  };
+  gameState: any;
+  turnStatistics?: any;
   createdAt: string;
 }
 
@@ -85,6 +84,22 @@ export default function Analysis() {
   };
 
   const allSelected = filteredSessions.length > 0 && selectedSessions.length === filteredSessions.length;
+
+  // Get analysis for selected sessions
+  const selectedSessionsData: SessionData[] = useMemo(() => {
+    if (!sessions) return [];
+    return sessions
+      .filter(s => selectedSessions.includes(s.sessionName))
+      .map(s => ({
+        sessionName: s.sessionName,
+        gameState: s.gameState,
+        turnStatistics: s.turnStatistics
+      }));
+  }, [sessions, selectedSessions]);
+
+  const analysisResult = useMemo(() => {
+    return analyzeSelectedSessions(selectedSessionsData);
+  }, [selectedSessionsData]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -404,144 +419,91 @@ export default function Analysis() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Scenario-Based Analysis */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold">Scenario-Based Strategic Patterns</h3>
-                  
-                  <div className="space-y-3">
-                    <Card className="border-l-4 border-l-orange-500">
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-base">Budget Constraint Scenarios (Low Budget)</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <p className="text-sm text-muted-foreground">
-                          When operating under budget constraints (below 150K per domain):
-                        </p>
-                        <div className="grid gap-2 md:grid-cols-2 text-sm">
-                          <div className="rounded border p-3">
-                            <div className="font-medium mb-1">Priority Strategy</div>
-                            <div className="text-muted-foreground">Focus on 2-3 domains, maximize permanent cards for efficiency</div>
-                          </div>
-                          <div className="rounded border p-3">
-                            <div className="font-medium mb-1">Expected Outcome</div>
-                            <div className="text-muted-foreground">Win rate: 45% with specialized domain dominance</div>
-                          </div>
+                {selectedSessions.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Sparkles className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p className="text-lg">Select game sessions above to unlock strategic insights</p>
+                    <p className="text-sm mt-2">The AI will analyze card timing, momentum swings, team strategies, and winning patterns</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Headline Insight */}
+                    <div className="rounded-lg bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 p-6">
+                      <div className="flex items-start gap-3">
+                        <Sparkles className="w-6 h-6 text-purple-500 mt-1 flex-shrink-0" />
+                        <div>
+                          <h3 className="font-semibold text-lg mb-2">Headline Insight</h3>
+                          <p className="text-foreground leading-relaxed">{analysisResult.headlineInsight}</p>
                         </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="border-l-4 border-l-green-500">
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-base">Domain Focus Scenarios (Specific Domain Emphasis)</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <p className="text-sm text-muted-foreground">
-                          When predetermined to emphasize a specific domain:
-                        </p>
-                        <div className="grid gap-2 md:grid-cols-2 text-sm">
-                          <div className="rounded border p-3">
-                            <div className="font-medium mb-1">Cyber Focus</div>
-                            <div className="text-muted-foreground">Allocate 50% budget early, win rate: 58%</div>
-                          </div>
-                          <div className="rounded border p-3">
-                            <div className="font-medium mb-1">Economy Focus</div>
-                            <div className="text-muted-foreground">Permanent card acquisition priority, win rate: 62%</div>
-                          </div>
-                          <div className="rounded border p-3">
-                            <div className="font-medium mb-1">Space Focus</div>
-                            <div className="text-muted-foreground">Mid-game investment strategy, win rate: 52%</div>
-                          </div>
-                          <div className="rounded border p-3">
-                            <div className="font-medium mb-1">Cognitive Focus</div>
-                            <div className="text-muted-foreground">Late-game impact maximization, win rate: 48%</div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="border-l-4 border-l-blue-500">
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-base">Opponent Response Scenarios</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <p className="text-sm text-muted-foreground">
-                          When opponent demonstrates specific strategic patterns:
-                        </p>
-                        <div className="space-y-2 text-sm">
-                          <div className="rounded border p-3">
-                            <div className="font-medium mb-1">vs. Aggressive Early Spending</div>
-                            <div className="text-muted-foreground">Counter: Conserve budget Turns 1-3, exploit mid-game weakness. Success rate: 68%</div>
-                          </div>
-                          <div className="rounded border p-3">
-                            <div className="font-medium mb-1">vs. Balanced Approach</div>
-                            <div className="text-muted-foreground">Counter: Identify and dominate 2 key domains. Success rate: 55%</div>
-                          </div>
-                          <div className="rounded border p-3">
-                            <div className="font-medium mb-1">vs. Single Domain Focus</div>
-                            <div className="text-muted-foreground">Counter: Build advantage in remaining 4 domains. Success rate: 72%</div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="border-l-4 border-l-yellow-500">
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-base">Turn-Limited Scenarios</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <p className="text-sm text-muted-foreground">
-                          When games have modified turn limits:
-                        </p>
-                        <div className="grid gap-2 md:grid-cols-2 text-sm">
-                          <div className="rounded border p-3">
-                            <div className="font-medium mb-1">Short Games (6-8 turns)</div>
-                            <div className="text-muted-foreground">Aggressive asset purchases, skip permanents. Efficiency: 85%</div>
-                          </div>
-                          <div className="rounded border p-3">
-                            <div className="font-medium mb-1">Extended Games (15+ turns)</div>
-                            <div className="text-muted-foreground">Heavy permanent investment, long-term value. Efficiency: 92%</div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
-
-                {/* Conditional Recommendations */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Lightbulb className="w-5 h-5 text-yellow-500" />
-                    <h3 className="font-semibold">Conditional Recommendations</h3>
-                  </div>
-                  
-                  <div className="rounded-lg border p-4 space-y-3">
-                    <div className="font-medium">IF your budget is limited:</div>
-                    <div className="text-sm text-muted-foreground pl-4 border-l-2">
-                      THEN prioritize permanent cards for long-term efficiency gains and focus on 2-3 core domains
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="rounded-lg border p-4 space-y-3">
-                    <div className="font-medium">IF opponent dominates one domain:</div>
-                    <div className="text-sm text-muted-foreground pl-4 border-l-2">
-                      THEN establish superiority in remaining domains and use expert advisors to counter their strength
+                    {/* Patterns & Observations */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className="w-5 h-5 text-blue-500" />
+                        <h3 className="font-semibold text-lg">Patterns & Observations</h3>
+                      </div>
+                      
+                      <div className="grid gap-3">
+                        {analysisResult.patterns.map((pattern, index) => (
+                          <div
+                            key={index}
+                            className="rounded-lg border p-4 hover-elevate"
+                            data-testid={`pattern-item-${index}`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <Badge variant="secondary" className="mt-1 flex-shrink-0">
+                                {index + 1}
+                              </Badge>
+                              <p className="text-sm leading-relaxed">{pattern}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="rounded-lg border p-4 space-y-3">
-                    <div className="font-medium">IF early game economy is weak:</div>
-                    <div className="text-sm text-muted-foreground pl-4 border-l-2">
-                      THEN shift to defensive posture, minimize spending Turns 2-4, accumulate budget for Turn 5+ surge
+                    {/* Narrative Commentary */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <Brain className="w-5 h-5 text-purple-500" />
+                        <h3 className="font-semibold text-lg">Narrative Commentary</h3>
+                        <Badge variant="outline" className="text-xs">Sports Analytics Style</Badge>
+                      </div>
+                      
+                      <Card className="border-l-4 border-l-purple-500">
+                        <CardContent className="pt-6">
+                          <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-line">
+                            {analysisResult.narrativeCommentary}
+                          </p>
+                        </CardContent>
+                      </Card>
                     </div>
-                  </div>
 
-                  <div className="rounded-lg border p-4 space-y-3">
-                    <div className="font-medium">IF approaching final turns with lead:</div>
-                    <div className="text-sm text-muted-foreground pl-4 border-l-2">
-                      THEN maintain balanced domain coverage, prevent opponent breakthrough opportunities
+                    {/* Visual Suggestions */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <Lightbulb className="w-5 h-5 text-yellow-500" />
+                        <h3 className="font-semibold text-lg">Suggested Visuals</h3>
+                      </div>
+                      
+                      <div className="grid gap-3 md:grid-cols-2">
+                        {analysisResult.visualSuggestions.map((suggestion, index) => (
+                          <div
+                            key={index}
+                            className="rounded-lg border p-4 bg-muted/30"
+                            data-testid={`visual-suggestion-${index}`}
+                          >
+                            <div className="flex items-start gap-2">
+                              <div className="w-2 h-2 rounded-full bg-yellow-500 mt-2 flex-shrink-0" />
+                              <p className="text-sm">{suggestion}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  </>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
