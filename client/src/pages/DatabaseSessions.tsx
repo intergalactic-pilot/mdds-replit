@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Download, Eye, Search, Trash2, ZoomIn } from "lucide-react";
+import { ArrowLeft, Download, Eye, Search, Trash2, ZoomIn, BarChart3 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
@@ -287,21 +287,31 @@ export default function DatabaseSessions() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto p-6 space-y-6">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleBack}
+              data-testid="button-back-to-main"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold">Database Sessions</h1>
+              <p className="text-muted-foreground">
+                View and filter all stored strategy sessions
+              </p>
+            </div>
+          </div>
           <Button
             variant="outline"
             size="icon"
-            onClick={handleBack}
-            data-testid="button-back-to-main"
+            onClick={() => setLocation('/analysis')}
+            data-testid="button-navigate-analysis"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <BarChart3 className="w-5 h-5" />
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold">Database Sessions</h1>
-            <p className="text-muted-foreground">
-              View and filter all stored strategy sessions
-            </p>
-          </div>
         </div>
 
         {/* Filters */}
