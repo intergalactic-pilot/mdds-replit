@@ -88,7 +88,7 @@ export default function AppHeader({
         errors.push(`Participant ${index + 1} name is required`);
       }
       if (!participant.country.trim()) {
-        errors.push(`Participant ${index + 1} country is required`);
+        errors.push(`Participant ${index + 1} team is required`);
       }
     });
     
@@ -163,12 +163,18 @@ export default function AppHeader({
                             placeholder="Participant name"
                             data-testid={`input-participant-name-${index}`}
                           />
-                          <Input
+                          <Select
                             value={participant.country}
-                            onChange={(e) => updateParticipant(index, 'country', e.target.value)}
-                            placeholder="Country"
-                            data-testid={`input-participant-country-${index}`}
-                          />
+                            onValueChange={(value) => updateParticipant(index, 'country', value)}
+                          >
+                            <SelectTrigger data-testid={`select-participant-team-${index}`}>
+                              <SelectValue placeholder="Select team" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="NATO">NATO</SelectItem>
+                              <SelectItem value="Russia">Russia</SelectItem>
+                            </SelectContent>
+                          </Select>
                           <Button
                             variant="ghost"
                             size="icon"
