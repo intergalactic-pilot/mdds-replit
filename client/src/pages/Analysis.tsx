@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { analyzeSelectedSessions, type SessionData } from "@/utils/sessionAnalyzer";
+import { analyzeSelectedSessions, analyzeGenericPatterns, type SessionData } from "@/utils/sessionAnalyzer";
 
 interface GameSession {
   sessionName: string;
@@ -97,7 +97,11 @@ export default function Analysis() {
       }));
   }, [sessions, selectedSessions]);
 
-  const analysisResult = useMemo(() => {
+  const genericAnalysisResult = useMemo(() => {
+    return analyzeGenericPatterns(selectedSessionsData);
+  }, [selectedSessionsData]);
+
+  const predeterminedAnalysisResult = useMemo(() => {
     return analyzeSelectedSessions(selectedSessionsData);
   }, [selectedSessionsData]);
 
@@ -272,130 +276,90 @@ export default function Analysis() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Winning Patterns Overview */}
-                <div className="grid gap-4 md:grid-cols-3">
-                  <Card>
-                    <CardHeader className="space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Most Effective Domain</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">Economy</div>
-                      <p className="text-xs text-muted-foreground">70% win rate correlation</p>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader className="space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Optimal Budget Allocation</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">Balanced</div>
-                      <p className="text-xs text-muted-foreground">60% to domains, 40% reserve</p>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader className="space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Winning Turn Average</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">Turn 8-10</div>
-                      <p className="text-xs text-muted-foreground">Most games decided here</p>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Key Strategic Patterns */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5 text-green-500" />
-                    <h3 className="font-semibold">Key Strategic Patterns</h3>
+                {selectedSessions.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Sparkles className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p className="text-lg">Select game sessions above to discover all winning strategies</p>
+                    <p className="text-sm mt-2">The system will analyze every pattern and correlation without limitations</p>
                   </div>
-                  
-                  <div className="space-y-3">
-                    <Card className="border-l-4 border-l-green-500">
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-base">Early Economy Investment</CardTitle>
-                          <Badge variant="secondary">High Impact</Badge>
+                ) : (
+                  <>
+                    {/* Headline Insight */}
+                    <div className="rounded-lg bg-gradient-to-r from-blue-500/10 to-green-500/10 border border-blue-500/20 p-6">
+                      <div className="flex items-start gap-3">
+                        <Sparkles className="w-6 h-6 text-blue-500 mt-1 flex-shrink-0" />
+                        <div>
+                          <h3 className="font-semibold text-lg mb-2">Headline Insight</h3>
+                          <p className="text-foreground leading-relaxed">{genericAnalysisResult.headlineInsight}</p>
                         </div>
-                      </CardHeader>
-                      <CardContent className="text-sm text-muted-foreground">
-                        Winners typically invest 40-50% of Turn 1-3 budget in Economy domain cards
-                      </CardContent>
-                    </Card>
+                      </div>
+                    </div>
 
-                    <Card className="border-l-4 border-l-blue-500">
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-base">Permanent Card Priority</CardTitle>
-                          <Badge variant="secondary">Medium Impact</Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="text-sm text-muted-foreground">
-                        Acquiring 2-3 permanent cards by Turn 5 correlates with 65% win rate
-                      </CardContent>
-                    </Card>
+                    {/* Patterns & Observations */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className="w-5 h-5 text-green-500" />
+                        <h3 className="font-semibold text-lg">All Winning Strategies & Correlations</h3>
+                      </div>
+                      
+                      <div className="grid gap-3">
+                        {genericAnalysisResult.patterns.map((pattern, index) => (
+                          <div
+                            key={index}
+                            className="rounded-lg border p-4 hover-elevate"
+                            data-testid={`generic-pattern-${index}`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <Badge variant="secondary" className="mt-1 flex-shrink-0">
+                                {index + 1}
+                              </Badge>
+                              <p className="text-sm leading-relaxed">{pattern}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
 
-                    <Card className="border-l-4 border-l-purple-500">
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-base">Multi-Domain Balance</CardTitle>
-                          <Badge variant="secondary">High Impact</Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="text-sm text-muted-foreground">
-                        Winners maintain positive deterrence across at least 4 out of 5 domains
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
+                    {/* Narrative Commentary */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <Brain className="w-5 h-5 text-blue-500" />
+                        <h3 className="font-semibold text-lg">Strategic Analysis</h3>
+                      </div>
+                      
+                      <Card className="border-l-4 border-l-blue-500">
+                        <CardContent className="pt-6">
+                          <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-line">
+                            {genericAnalysisResult.narrativeCommentary}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </div>
 
-                {/* Action Recommendations */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Lightbulb className="w-5 h-5 text-yellow-500" />
-                    <h3 className="font-semibold">Recommended Actions</h3>
-                  </div>
-                  
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <div className="rounded-lg border p-4 space-y-2">
-                      <div className="font-medium">Early Game (Turns 1-4)</div>
-                      <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-                        <li>Focus on Economy and Cyber domains</li>
-                        <li>Purchase at least 1 permanent card</li>
-                        <li>Maintain budget reserve of 200K</li>
-                      </ul>
+                    {/* Visual Suggestions */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <Lightbulb className="w-5 h-5 text-yellow-500" />
+                        <h3 className="font-semibold text-lg">Suggested Visuals</h3>
+                      </div>
+                      
+                      <div className="grid gap-3 md:grid-cols-2">
+                        {genericAnalysisResult.visualSuggestions.map((suggestion, index) => (
+                          <div
+                            key={index}
+                            className="rounded-lg border p-4 bg-muted/30"
+                            data-testid={`generic-visual-${index}`}
+                          >
+                            <div className="flex items-start gap-2">
+                              <div className="w-2 h-2 rounded-full bg-yellow-500 mt-2 flex-shrink-0" />
+                              <p className="text-sm">{suggestion}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    
-                    <div className="rounded-lg border p-4 space-y-2">
-                      <div className="font-medium">Mid Game (Turns 5-8)</div>
-                      <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-                        <li>Balance all domains above 50 deterrence</li>
-                        <li>Leverage permanent card discounts</li>
-                        <li>Counter opponent's strongest domain</li>
-                      </ul>
-                    </div>
-                    
-                    <div className="rounded-lg border p-4 space-y-2">
-                      <div className="font-medium">Late Game (Turns 9-12)</div>
-                      <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-                        <li>High-impact asset cards for final push</li>
-                        <li>Exploit domain weaknesses</li>
-                        <li>Maximize permanent card benefits</li>
-                      </ul>
-                    </div>
-                    
-                    <div className="rounded-lg border p-4 space-y-2">
-                      <div className="font-medium">Critical Turns</div>
-                      <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-                        <li>Turn 1: Establish economic foundation</li>
-                        <li>Turn 5: Secure domain diversity</li>
-                        <li>Turn 8: Execute decisive strategy</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
+                  </>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -433,7 +397,7 @@ export default function Analysis() {
                         <Sparkles className="w-6 h-6 text-purple-500 mt-1 flex-shrink-0" />
                         <div>
                           <h3 className="font-semibold text-lg mb-2">Headline Insight</h3>
-                          <p className="text-foreground leading-relaxed">{analysisResult.headlineInsight}</p>
+                          <p className="text-foreground leading-relaxed">{predeterminedAnalysisResult.headlineInsight}</p>
                         </div>
                       </div>
                     </div>
@@ -446,7 +410,7 @@ export default function Analysis() {
                       </div>
                       
                       <div className="grid gap-3">
-                        {analysisResult.patterns.map((pattern, index) => (
+                        {predeterminedAnalysisResult.patterns.map((pattern, index) => (
                           <div
                             key={index}
                             className="rounded-lg border p-4 hover-elevate"
@@ -474,7 +438,7 @@ export default function Analysis() {
                       <Card className="border-l-4 border-l-purple-500">
                         <CardContent className="pt-6">
                           <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-line">
-                            {analysisResult.narrativeCommentary}
+                            {predeterminedAnalysisResult.narrativeCommentary}
                           </p>
                         </CardContent>
                       </Card>
@@ -488,7 +452,7 @@ export default function Analysis() {
                       </div>
                       
                       <div className="grid gap-3 md:grid-cols-2">
-                        {analysisResult.visualSuggestions.map((suggestion, index) => (
+                        {predeterminedAnalysisResult.visualSuggestions.map((suggestion, index) => (
                           <div
                             key={index}
                             className="rounded-lg border p-4 bg-muted/30"

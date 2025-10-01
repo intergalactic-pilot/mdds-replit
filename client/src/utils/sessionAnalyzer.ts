@@ -13,6 +13,330 @@ export interface AnalysisResult {
   visualSuggestions: string[];
 }
 
+export function analyzeGenericPatterns(sessions: SessionData[]): AnalysisResult {
+  if (sessions.length === 0) {
+    return {
+      headlineInsight: "No sessions selected for analysis",
+      patterns: [],
+      narrativeCommentary: "Select some game sessions to discover winning strategies and correlations.",
+      visualSuggestions: []
+    };
+  }
+
+  const allPatterns: string[] = [];
+  
+  // Analyze all winning strategies
+  const winnerAnalysis = analyzeAllWinningStrategies(sessions);
+  allPatterns.push(...winnerAnalysis.patterns);
+
+  // Analyze domain correlations comprehensively
+  const domainCorrelations = analyzeCompleteDomainCorrelations(sessions);
+  allPatterns.push(...domainCorrelations.patterns);
+
+  // Analyze budget strategies
+  const budgetStrategies = analyzeBudgetPatterns(sessions);
+  allPatterns.push(...budgetStrategies.patterns);
+
+  // Analyze card type effectiveness
+  const cardEffectiveness = analyzeCardTypeEffectiveness(sessions);
+  allPatterns.push(...cardEffectiveness.patterns);
+
+  // Analyze timing patterns
+  const timingPatterns = analyzeComprehensiveTiming(sessions);
+  allPatterns.push(...timingPatterns.patterns);
+
+  // Analyze turn-by-turn patterns
+  const turnPatterns = analyzeTurnByTurnPatterns(sessions);
+  allPatterns.push(...turnPatterns.patterns);
+
+  // Analyze team-specific winning formulas
+  const teamFormulas = analyzeTeamWinningFormulas(sessions);
+  allPatterns.push(...teamFormulas.patterns);
+
+  // Generate headline
+  const winnerStats = analyzeWinners(sessions);
+  const headlineInsight = generateGenericHeadline(sessions, winnerStats, allPatterns.length);
+
+  // Generate narrative
+  const narrativeCommentary = generateGenericNarrative(
+    sessions,
+    winnerAnalysis,
+    domainCorrelations,
+    budgetStrategies,
+    cardEffectiveness,
+    timingPatterns,
+    teamFormulas,
+    winnerStats
+  );
+
+  const visualSuggestions = [
+    "Win rate correlation matrix by domain strength combinations",
+    "Scatter plot of budget spending vs final deterrence scores",
+    "Timeline heatmap showing critical decision points across all games",
+    "Domain strength evolution chart comparing winners vs losers",
+    "Card purchase frequency histogram by turn and outcome",
+    "Team strategy comparison radar chart showing average domain investment"
+  ];
+
+  return {
+    headlineInsight,
+    patterns: allPatterns,
+    narrativeCommentary,
+    visualSuggestions
+  };
+}
+
+function analyzeAllWinningStrategies(sessions: SessionData[]) {
+  const patterns: string[] = [];
+  
+  const winners = sessions.map(s => ({
+    team: determineWinner(s.gameState),
+    state: s.gameState
+  })).filter(w => w.team !== null);
+
+  if (winners.length === 0) {
+    return { patterns: ["No completed games to analyze winning strategies"] };
+  }
+
+  // Analyze final scores
+  const avgWinningScore = winners.reduce((sum, w) => {
+    return sum + (w.team ? w.state.teams[w.team].totalDeterrence : 0);
+  }, 0) / winners.length;
+
+  const avgLosingScore = winners.reduce((sum, w) => {
+    const loser = w.team === 'NATO' ? 'Russia' : 'NATO';
+    return sum + w.state.teams[loser].totalDeterrence;
+  }, 0) / winners.length;
+
+  patterns.push(`Winners average ${Math.round(avgWinningScore)} total deterrence vs losers' ${Math.round(avgLosingScore)} - a ${Math.round(avgWinningScore - avgLosingScore)} point gap`);
+
+  // Analyze permanent card counts
+  const avgWinnerPermanents = winners.reduce((sum, w) => {
+    return sum + (w.team ? w.state.teams[w.team].ownedPermanents.length : 0);
+  }, 0) / winners.length;
+
+  patterns.push(`Winning teams hold an average of ${avgWinnerPermanents.toFixed(1)} permanent cards by game end`);
+
+  return { patterns };
+}
+
+function analyzeCompleteDomainCorrelations(sessions: SessionData[]) {
+  const patterns: string[] = [];
+  
+  const domainWins: Record<Domain, number> = { joint: 0, economy: 0, cognitive: 0, space: 0, cyber: 0 };
+  const domainScores: Record<Domain, number[]> = { joint: [], economy: [], cognitive: [], space: [], cyber: [] };
+  
+  sessions.forEach(session => {
+    const winner = determineWinner(session.gameState);
+    if (!winner) return;
+
+    const winnerState = session.gameState.teams[winner];
+    
+    // Track which domain was strongest
+    let maxDomain: Domain = 'joint';
+    let maxScore = 0;
+    (Object.keys(winnerState.deterrence) as Domain[]).forEach(domain => {
+      const score = winnerState.deterrence[domain];
+      domainScores[domain].push(score);
+      if (score > maxScore) {
+        maxScore = score;
+        maxDomain = domain;
+      }
+    });
+    domainWins[maxDomain]++;
+  });
+
+  // Report all domain correlations
+  (Object.keys(domainWins) as Domain[]).forEach(domain => {
+    const wins = domainWins[domain];
+    const scores = domainScores[domain];
+    if (wins > 0 && scores.length > 0) {
+      const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
+      patterns.push(`${domain.charAt(0).toUpperCase() + domain.slice(1)} domain dominance: ${wins} victories with avg score of ${Math.round(avgScore)}`);
+    }
+  });
+
+  return { patterns };
+}
+
+function analyzeBudgetPatterns(sessions: SessionData[]) {
+  const patterns: string[] = [];
+  
+  const winners = sessions.map(s => ({
+    team: determineWinner(s.gameState),
+    finalBudget: s.gameState.teams[determineWinner(s.gameState) || 'NATO']?.budget || 0
+  })).filter(w => w.team !== null);
+
+  if (winners.length > 0) {
+    const avgFinalBudget = winners.reduce((sum, w) => sum + w.finalBudget, 0) / winners.length;
+    
+    if (avgFinalBudget < 50) {
+      patterns.push(`Winners typically exhaust their budgets (avg ${Math.round(avgFinalBudget)}K remaining) - aggressive spending pays off`);
+    } else if (avgFinalBudget > 200) {
+      patterns.push(`Winners maintain budget reserves (avg ${Math.round(avgFinalBudget)}K remaining) - conservative play succeeds`);
+    } else {
+      patterns.push(`Winners balance spending and reserves (avg ${Math.round(avgFinalBudget)}K remaining at game end)`);
+    }
+  }
+
+  return { patterns };
+}
+
+function analyzeCardTypeEffectiveness(sessions: SessionData[]) {
+  const patterns: string[] = [];
+  
+  sessions.forEach(session => {
+    const winner = determineWinner(session.gameState);
+    if (!winner) return;
+
+    const winnerState = session.gameState.teams[winner];
+    const permanentCount = winnerState.ownedPermanents.length;
+    const totalPurchases = winnerState.recentPurchases?.length || 0;
+
+    if (permanentCount >= totalPurchases * 0.4) {
+      patterns.push(`High permanent card ratio (${Math.round(permanentCount / Math.max(totalPurchases, 1) * 100)}%) correlates with victory in session "${session.sessionName}"`);
+    }
+  });
+
+  if (patterns.length === 0) {
+    patterns.push("Mixed card strategies observed - no single card type dominates winning formulas");
+  }
+
+  return { patterns };
+}
+
+function analyzeComprehensiveTiming(sessions: SessionData[]) {
+  const patterns: string[] = [];
+  
+  const earlyActionWins = sessions.filter(s => {
+    const winner = determineWinner(s.gameState);
+    if (!winner) return false;
+    const purchases = s.gameState.teams[winner].recentPurchases || [];
+    return purchases.filter(p => p.purchasedTurn <= 3).length >= 2;
+  }).length;
+
+  const lateActionWins = sessions.filter(s => {
+    const winner = determineWinner(s.gameState);
+    if (!winner) return false;
+    const purchases = s.gameState.teams[winner].recentPurchases || [];
+    return purchases.filter(p => p.purchasedTurn > s.gameState.maxTurns - 3).length >= 2;
+  }).length;
+
+  const totalWins = sessions.filter(s => determineWinner(s.gameState) !== null).length;
+
+  if (totalWins > 0) {
+    patterns.push(`Early aggression (turns 1-3): ${earlyActionWins} wins (${Math.round(earlyActionWins / totalWins * 100)}%)`);
+    patterns.push(`Late-game surge strategy: ${lateActionWins} wins (${Math.round(lateActionWins / totalWins * 100)}%)`);
+  }
+
+  return { patterns };
+}
+
+function analyzeTurnByTurnPatterns(sessions: SessionData[]) {
+  const patterns: string[] = [];
+  
+  const turnDistribution: Record<number, number> = {};
+  
+  sessions.forEach(session => {
+    const winner = determineWinner(session.gameState);
+    if (!winner) return;
+
+    const purchases = session.gameState.teams[winner].recentPurchases || [];
+    purchases.forEach(p => {
+      turnDistribution[p.purchasedTurn] = (turnDistribution[p.purchasedTurn] || 0) + 1;
+    });
+  });
+
+  const criticalTurns = Object.entries(turnDistribution)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3);
+
+  if (criticalTurns.length > 0) {
+    patterns.push(`Most critical purchase turns: ${criticalTurns.map(([turn, count]) => `Turn ${turn} (${count} key purchases)`).join(', ')}`);
+  }
+
+  return { patterns };
+}
+
+function analyzeTeamWinningFormulas(sessions: SessionData[]) {
+  const patterns: string[] = [];
+  
+  const natoWins = sessions.filter(s => determineWinner(s.gameState) === 'NATO');
+  const russiaWins = sessions.filter(s => determineWinner(s.gameState) === 'Russia');
+
+  if (natoWins.length > 0) {
+    const natoAvgDomains = { joint: 0, economy: 0, cognitive: 0, space: 0, cyber: 0 } as Record<Domain, number>;
+    natoWins.forEach(s => {
+      const state = s.gameState.teams.NATO;
+      (Object.keys(state.deterrence) as Domain[]).forEach(d => {
+        natoAvgDomains[d] += state.deterrence[d];
+      });
+    });
+    
+    const topNATODomain = (Object.entries(natoAvgDomains) as [Domain, number][])
+      .sort((a, b) => b[1] - a[1])[0];
+    
+    patterns.push(`NATO winning formula: Prioritize ${topNATODomain[0]} (avg ${Math.round(topNATODomain[1] / natoWins.length)}) across ${natoWins.length} victories`);
+  }
+
+  if (russiaWins.length > 0) {
+    const russiaAvgDomains = { joint: 0, economy: 0, cognitive: 0, space: 0, cyber: 0 } as Record<Domain, number>;
+    russiaWins.forEach(s => {
+      const state = s.gameState.teams.Russia;
+      (Object.keys(state.deterrence) as Domain[]).forEach(d => {
+        russiaAvgDomains[d] += state.deterrence[d];
+      });
+    });
+    
+    const topRussiaDomain = (Object.entries(russiaAvgDomains) as [Domain, number][])
+      .sort((a, b) => b[1] - a[1])[0];
+    
+    patterns.push(`Russia winning formula: Prioritize ${topRussiaDomain[0]} (avg ${Math.round(topRussiaDomain[1] / russiaWins.length)}) across ${russiaWins.length} victories`);
+  }
+
+  return { patterns };
+}
+
+function generateGenericHeadline(sessions: SessionData[], winnerStats: any, patternCount: number): string {
+  if (sessions.length === 0) return "No data to analyze";
+  if (winnerStats.total === 0) return `Analyzed ${sessions.length} sessions - ${patternCount} strategic patterns identified`;
+
+  return `Comprehensive analysis of ${sessions.length} sessions reveals ${patternCount} distinct winning strategies and performance correlations.`;
+}
+
+function generateGenericNarrative(
+  sessions: SessionData[],
+  winnerAnalysis: any,
+  domainCorrelations: any,
+  budgetStrategies: any,
+  cardEffectiveness: any,
+  timingPatterns: any,
+  teamFormulas: any,
+  winnerStats: any
+): string {
+  if (sessions.length === 0) {
+    return "Select some game sessions to unlock comprehensive strategic analysis. The system will identify all winning patterns, domain correlations, and effective strategies without limitations.";
+  }
+
+  let narrative = `Analyzing ${sessions.length} complete strategic encounters, we've identified every measurable pattern that correlates with victory. `;
+
+  if (winnerStats.total > 0) {
+    narrative += `Out of ${winnerStats.total} decided games, the data reveals clear performance gaps between winners and losers across all dimensions. `;
+  }
+
+  narrative += `The winning strategies aren't random - they follow identifiable patterns in domain investment, timing, and resource allocation. `;
+  
+  narrative += `Some teams dominate through single-domain superiority, building an insurmountable lead in one area. Others spread their investments across multiple domains, creating a balanced deterrence profile that's hard to crack. `;
+
+  narrative += `Budget management separates winners from losers - not just how much you spend, but when you spend it and what you buy. `;
+
+  narrative += `Permanent cards provide long-term value, but asset cards deliver immediate impact. Expert advisors offer specialized advantages at critical moments. The most successful teams find the right mix for their strategic approach. `;
+
+  narrative += `Every session tells a story of adaptation, timing, and strategic vision. The patterns are here - learn from them, adapt them to your style, and execute with precision.`;
+
+  return narrative;
+}
+
 export function analyzeSelectedSessions(sessions: SessionData[]): AnalysisResult {
   if (sessions.length === 0) {
     return {
