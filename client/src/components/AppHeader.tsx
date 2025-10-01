@@ -25,7 +25,8 @@ import {
   Trash2,
   ChevronDown,
   Database,
-  CreditCard
+  CreditCard,
+  FileCheck
 } from 'lucide-react';
 import logoUrl from '@assets/Logo_1758524556759.png';
 import { useTheme } from "./ThemeProvider";
@@ -40,6 +41,7 @@ interface AppHeaderProps {
   onResetProgress: () => void;
   onSetMaxTurns: (turns: number) => void;
   onDownloadPDF: () => void;
+  onFinishGameSession: () => void;
 }
 
 export default function AppHeader({
@@ -48,7 +50,8 @@ export default function AppHeader({
   onSave,
   onResetProgress,
   onSetMaxTurns,
-  onDownloadPDF
+  onDownloadPDF,
+  onFinishGameSession
 }: AppHeaderProps) {
   const [, setLocation] = useLocation();
   const { theme, setTheme } = useTheme();
@@ -376,6 +379,16 @@ export default function AppHeader({
             {/* Save */}
             <Button variant="ghost" size="icon" onClick={onSave} data-testid="button-save">
               <Save className="w-4 h-4" />
+            </Button>
+
+            {/* Finish Game Session */}
+            <Button 
+              variant="default" 
+              onClick={onFinishGameSession}
+              data-testid="button-finish-game-session"
+            >
+              <FileCheck className="w-4 h-4 mr-2" />
+              {sanitizeText('Finish the Game Session')}
             </Button>
 
             {/* Reset Progress */}
