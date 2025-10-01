@@ -417,6 +417,7 @@ export default function MDDSStrategy() {
               onClick={handleFinishGameSession}
               disabled={isFinishing}
               data-testid="button-confirm-finish"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {isFinishing ? "Generating..." : "Yes, Finish Session"}
             </AlertDialogAction>
