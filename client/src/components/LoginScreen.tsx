@@ -232,12 +232,13 @@ export default function LoginScreen() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="game-date-login">Date of the Strategy</Label>
+              <Label htmlFor="game-date-login" className="text-muted-foreground">Session Date</Label>
               <Input
                 id="game-date-login"
                 value={formattedDate}
                 readOnly
-                className="bg-muted cursor-not-allowed"
+                disabled
+                className="bg-muted text-muted-foreground cursor-not-allowed opacity-60"
                 data-testid="input-game-date-login"
               />
             </div>
