@@ -45,9 +45,9 @@ export default function LoginScreen() {
       committeePart = committeeNumber.toString();
     }
     
-    // Build session name
+    // Build session name with dashes: coursename-committeenumber-date
     if (coursePart || committeePart) {
-      return `${coursePart}${committeePart}-${dateForSessionName}`;
+      return `${coursePart}-${committeePart}-${dateForSessionName}`;
     }
     return '';
   };
@@ -76,11 +76,11 @@ export default function LoginScreen() {
       }
     }
 
-    // Parse committee number - it can be a number, "Not applicable", or null
+    // Parse committee number - it can be a number, "NA", or null
     let committeeValue: number | string | null = null;
     if (committeeNumber) {
-      if (committeeNumber === 'Not applicable') {
-        committeeValue = 'Not applicable';
+      if (committeeNumber === 'NA') {
+        committeeValue = 'NA';
       } else {
         const num = parseInt(committeeNumber);
         if (!isNaN(num) && num >= 1 && num <= 10) {
@@ -186,7 +186,7 @@ export default function LoginScreen() {
                   <SelectValue placeholder="Select course (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Senior Course">Senior Course</SelectItem>
+                  <SelectItem value="SC">SC</SelectItem>
                   <SelectItem value="NRCC">NRCC</SelectItem>
                   <SelectItem value="Others">Others</SelectItem>
                 </SelectContent>
@@ -234,7 +234,7 @@ export default function LoginScreen() {
                   <SelectItem value="8">8</SelectItem>
                   <SelectItem value="9">9</SelectItem>
                   <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="Not applicable">Not applicable</SelectItem>
+                  <SelectItem value="NA">NA</SelectItem>
                 </SelectContent>
               </Select>
             </div>
