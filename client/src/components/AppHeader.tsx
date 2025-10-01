@@ -26,7 +26,9 @@ import {
   ChevronDown,
   Database,
   CreditCard,
-  FileCheck
+  FileCheck,
+  Lock,
+  Unlock
 } from 'lucide-react';
 import logoUrl from '@assets/Logo_1758524556759.png';
 import { useTheme } from "./ThemeProvider";
@@ -61,6 +63,9 @@ export default function AppHeader({
   const [showSessionInfo, setShowSessionInfo] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [isStrategyLogExpanded, setIsStrategyLogExpanded] = useState(false);
+  const [isDatabaseUnlocked, setIsDatabaseUnlocked] = useState(false);
+  const [databasePassword, setDatabasePassword] = useState("");
+  const [passwordError, setPasswordError] = useState(false);
   
   // Use store for session management
   const sessionInfo = useMDDSStore(state => state.sessionInfo);
@@ -70,6 +75,21 @@ export default function AppHeader({
   const addParticipant = useMDDSStore(state => state.addParticipant);
   const removeParticipant = useMDDSStore(state => state.removeParticipant);
   
+
+  const handleUnlockDatabase = () => {
+    if (databasePassword === "MDDS") {
+      setIsDatabaseUnlocked(true);
+      setPasswordError(false);
+      setDatabasePassword("");
+    } else {
+      setPasswordError(true);
+    }
+  };
+
+  const handleDatabaseNavigation = () => {
+    setShowSettings(false);
+    setLocation('/database');
+  };
 
   const handleDownloadCardLogs = async () => {
     try {
@@ -326,19 +346,57 @@ export default function AppHeader({
                   <DialogTitle>{sanitizeText('Settings')}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
-                  {/* Database Button */}
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start p-3 gap-2"
-                    onClick={() => {
-                      setShowSettings(false);
-                      setLocation('/database');
-                    }}
-                    data-testid="button-navigate-database"
-                  >
-                    <Database className="w-4 h-4" />
-                    <span className="font-medium">Database</span>
-                  </Button>
+                  {/* Database Section - Password Protected */}
+                  {!isDatabaseUnlocked ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 p-3 rounded-lg border bg-muted/30">
+                        <Lock className="w-4 h-4 text-muted-foreground" />
+                        <span className="font-medium text-muted-foreground">Database (Locked)</span>
+                      </div>
+                      <div className="pl-3 space-y-2">
+                        <Label htmlFor="database-password" className="text-sm">Enter password to unlock</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            id="database-password"
+                            type="password"
+                            value={databasePassword}
+                            onChange={(e) => {
+                              setDatabasePassword(e.target.value);
+                              setPasswordError(false);
+                            }}
+                            onKeyPress={(e) => {
+                              if (e.key === 'Enter') {
+                                handleUnlockDatabase();
+                              }
+                            }}
+                            placeholder="Enter password"
+                            className={passwordError ? "border-red-500" : ""}
+                            data-testid="input-database-password"
+                          />
+                          <Button
+                            onClick={handleUnlockDatabase}
+                            size="sm"
+                            data-testid="button-unlock-database"
+                          >
+                            <Unlock className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        {passwordError && (
+                          <p className="text-xs text-red-500">Incorrect password</p>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start p-3 gap-2"
+                      onClick={handleDatabaseNavigation}
+                      data-testid="button-navigate-database"
+                    >
+                      <Database className="w-4 h-4" />
+                      <span className="font-medium">Database</span>
+                    </Button>
+                  )}
 
                   {/* Card Purchase Logs */}
                   <Collapsible
