@@ -212,6 +212,7 @@ export default function MDDSStrategy() {
           console.log('Set max turns:', turns);
         }}
         onDownloadPDF={handleDownloadPDF}
+        onFinishGameSession={() => setShowFinishDialog(true)}
       />
 
       <div className="container mx-auto px-4 py-6 max-w-full">
@@ -346,7 +347,7 @@ export default function MDDSStrategy() {
                 </div>
 
                 {/* Finish Turn Button - Hidden on Mobile */}
-                <div className="glass-panel p-3 lg:p-4 hidden md:block space-y-2">
+                <div className="glass-panel p-3 lg:p-4 hidden md:block">
                   <Button
                     onClick={() => {
                       store.advanceGameTurn();
@@ -359,17 +360,6 @@ export default function MDDSStrategy() {
                   >
                     <SkipForward className="w-4 h-4 mr-2" />
                     Finish Turn ({store.turn})
-                  </Button>
-
-                  <Button
-                    onClick={() => setShowFinishDialog(true)}
-                    size="lg"
-                    variant="default"
-                    className="w-full"
-                    data-testid="button-finish-game-session"
-                  >
-                    <FileCheck className="w-4 h-4 mr-2" />
-                    Finish the Game Session
                   </Button>
                 </div>
               </div>
