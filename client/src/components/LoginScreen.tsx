@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useMDDSStore } from '@/state/store';
 import { sanitizeText } from '../logic/guards';
 import { apiRequest } from '@/lib/queryClient';
@@ -27,10 +28,17 @@ export default function LoginScreen() {
       return;
     }
 
-    const committeeNum = committeeNumber ? parseInt(committeeNumber) : null;
-    if (committeeNumber && (committeeNum === null || committeeNum < 1 || committeeNum > 10)) {
-      setError('Committee number must be between 1 and 10');
-      return;
+    // Parse committee number - it can be a number, "Not applicable", or null
+    let committeeValue: number | string | null = null;
+    if (committeeNumber) {
+      if (committeeNumber === 'Not applicable') {
+        committeeValue = 'Not applicable';
+      } else {
+        const num = parseInt(committeeNumber);
+        if (!isNaN(num) && num >= 1 && num <= 10) {
+          committeeValue = num;
+        }
+      }
     }
 
     setIsLoading(true);
@@ -39,7 +47,7 @@ export default function LoginScreen() {
     try {
       // Update session name and committee number in store
       updateSessionName(sessionName.trim());
-      updateCommitteeNumber(committeeNum);
+      updateCommitteeNumber(committeeValue);
       
       // Get current game state (do not mutate yet)
       const currentState = useMDDSStore.getState();
@@ -127,21 +135,32 @@ export default function LoginScreen() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="committee-number-login">Committee Number (1-10)</Label>
-              <Input
-                id="committee-number-login"
-                type="number"
-                min="1"
-                max="10"
+              <Label htmlFor="committee-number-login">Committee Number</Label>
+              <Select
                 value={committeeNumber}
-                onChange={(e) => {
-                  setCommitteeNumber(e.target.value);
+                onValueChange={(value) => {
+                  setCommitteeNumber(value);
                   setError('');
                 }}
-                placeholder="Optional"
-                data-testid="input-committee-number-login"
                 disabled={isLoading}
-              />
+              >
+                <SelectTrigger data-testid="select-committee-number-login">
+                  <SelectValue placeholder="Select committee number (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1</SelectItem>
+                  <SelectItem value="2">2</SelectItem>
+                  <SelectItem value="3">3</SelectItem>
+                  <SelectItem value="4">4</SelectItem>
+                  <SelectItem value="5">5</SelectItem>
+                  <SelectItem value="6">6</SelectItem>
+                  <SelectItem value="7">7</SelectItem>
+                  <SelectItem value="8">8</SelectItem>
+                  <SelectItem value="9">9</SelectItem>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="Not applicable">Not applicable</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex items-center space-x-2">
