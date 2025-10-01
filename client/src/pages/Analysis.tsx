@@ -335,29 +335,6 @@ export default function Analysis() {
                         </CardContent>
                       </Card>
                     </div>
-
-                    {/* Visual Suggestions */}
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2">
-                        <Lightbulb className="w-5 h-5 text-yellow-500" />
-                        <h3 className="font-semibold text-lg">Suggested Visuals</h3>
-                      </div>
-                      
-                      <div className="grid gap-3 md:grid-cols-2">
-                        {genericAnalysisResult.visualSuggestions.map((suggestion, index) => (
-                          <div
-                            key={index}
-                            className="rounded-lg border p-4 bg-muted/30"
-                            data-testid={`generic-visual-${index}`}
-                          >
-                            <div className="flex items-start gap-2">
-                              <div className="w-2 h-2 rounded-full bg-yellow-500 mt-2 flex-shrink-0" />
-                              <p className="text-sm">{suggestion}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
                   </>
                 )}
               </CardContent>
@@ -442,29 +419,6 @@ export default function Analysis() {
                           </p>
                         </CardContent>
                       </Card>
-                    </div>
-
-                    {/* Visual Suggestions */}
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2">
-                        <Lightbulb className="w-5 h-5 text-yellow-500" />
-                        <h3 className="font-semibold text-lg">Suggested Visuals</h3>
-                      </div>
-                      
-                      <div className="grid gap-3 md:grid-cols-2">
-                        {predeterminedAnalysisResult.visualSuggestions.map((suggestion, index) => (
-                          <div
-                            key={index}
-                            className="rounded-lg border p-4 bg-muted/30"
-                            data-testid={`visual-suggestion-${index}`}
-                          >
-                            <div className="flex items-start gap-2">
-                              <div className="w-2 h-2 rounded-full bg-yellow-500 mt-2 flex-shrink-0" />
-                              <p className="text-sm">{suggestion}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
                     </div>
                   </>
                 )}
