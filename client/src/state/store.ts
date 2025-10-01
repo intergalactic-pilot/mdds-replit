@@ -19,6 +19,7 @@ interface SessionInfo {
   sessionName: string;
   course: string | null;
   committeeNumber: number | string | null;
+  gameDate: string;
   participants: Array<{
     name: string;
     country: string;
@@ -105,6 +106,7 @@ const createInitialState = (): Omit<GameState, 'teams'> & { teams: Record<Team, 
       sessionName: '',
       course: null,
       committeeNumber: null,
+      gameDate: new Date().toISOString().split('T')[0],
       participants: [{ name: '', country: '' }, { name: '', country: '' }]
     },
     turnStatistics: [{
@@ -368,6 +370,7 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
             sessionName: data.sessionInfo.sessionName || '',
             course: data.sessionInfo.course ?? null,
             committeeNumber: data.sessionInfo.committeeNumber ?? null,
+            gameDate: data.sessionInfo.gameDate || new Date().toISOString().split('T')[0],
             participants: data.sessionInfo.participants && data.sessionInfo.participants.length > 0 
               ? data.sessionInfo.participants
               : currentState.sessionInfo.participants
@@ -425,6 +428,7 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
           sessionName: data.sessionInfo.sessionName || '',
           course: data.sessionInfo.course ?? null,
           committeeNumber: data.sessionInfo.committeeNumber ?? null,
+          gameDate: data.sessionInfo.gameDate || new Date().toISOString().split('T')[0],
           participants: data.sessionInfo.participants && data.sessionInfo.participants.length > 0 
             ? data.sessionInfo.participants
             : currentState.sessionInfo.participants
