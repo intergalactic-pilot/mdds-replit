@@ -22,11 +22,22 @@ The application is built using a modern React-based architecture with TypeScript
 The frontend follows a component-based architecture with clear separation of concerns between presentation components, state logic, and business rules.
 
 ### Key Features
-- **Database Sessions View**: Accessible from Settings dialog, displays all stored game sessions with session name, turn information, participants, current phase/team, and deterrence scores. Features robust type safety with comprehensive data normalization to handle various API response structures.
+- **Database Sessions View**: Accessible from Settings dialog (password: "MDDS"), displays all stored game sessions with session name, turn information, participants, current phase/team, and deterrence scores. Features robust type safety with comprehensive data normalization to handle various API response structures. Includes research icon (flask) for quick access to Research Dashboard.
 - **Analysis Dashboard**: Multi-tab interface (/analysis) featuring:
   - **Generic Patternization**: Discovers all winning strategies and correlations across 7 analysis categories (winning strategies, domain correlations, budget patterns, card effectiveness, timing patterns, turn-by-turn patterns, team-specific formulas)
   - **Predetermined Considerations**: Answers 7 strategic questions about card timing, momentum swings, team asymmetry, comeback triggers, dimension correlation, strategy consistency, and cross-session recurrence
   - **Ask Questions**: Interactive Q&A interface with LLM-style chat experience for querying selected sessions. Provides authentic, data-driven answers based on real session data (winners, scores, domains, budgets, cards, turns, comparisons)
+- **Research Dashboard** (/research): Statistical analysis environment featuring:
+  - **Session Filtering**: Search, winner filtering, and date-based filtering for research dataset selection
+  - **Variable Selection**: 14+ dependent variables (deterrence scores, budget metrics, turn counts) across NATO/Russia teams
+  - **Descriptive Statistics**: Automated calculation of N, Mean, SD, Min, Max, Range, Median, and IQR for selected variables
+  - **Statistical Test Recommendations**: Intelligent recommendation system for 11 statistical methodologies (t-tests, ANOVA, MANOVA, correlation, regression, non-parametric tests) with appropriateness detection based on data characteristics
+  - **Scientific Report Generation**: Automated creation of publication-ready Results sections including:
+    - Descriptive Statistics with formatted tables and narrative interpretation
+    - Methodology-specific inferential analysis with appropriate statistical frameworks
+    - Figure and table placeholders with proper academic formatting
+    - Summary and interpretation sections following scientific publication standards
+  - **Report Export**: Download generated reports as formatted text files
 - **Settings Dialog**: Centralized settings interface with collapsible Card Purchase Logs and navigation to database sessions
 - **Login Screen**: Glassmorphism interface with session creation and optional "Skip Turn 1" configuration
 - **Mobile Interface**: Dedicated mobile views for session management
