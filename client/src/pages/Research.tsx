@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, FlaskConical, Filter, TrendingUp, BarChart3, ListChecks, FileText, Download } from "lucide-react";
+import { prepareReportData } from "@/utils/reportDataPreparation";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -788,55 +789,57 @@ export default function Research() {
                   </div>
 
                   <Button
-                    onClick={() => {
+                    onClick={async () => {
                       setIsGeneratingReport(true);
-                      // Generate report with slight delay to show loading state
-                      setTimeout(() => {
-                        const report = generateScientificReport(
+                      try {
+                        const reportData = prepareReportData(
                           selectedMethodology,
                           selectedSessions,
                           selectedVariables,
-                          summaryStats,
+                          summaryStats!,
                           sessions || [],
-                          groupingVariable,
-                          comparisonType
+                          groupingVariable
                         );
-                        setGeneratedReport(report);
-                        setIsGeneratingReport(false);
-                      }, 500);
+                        
+                        const response = await fetch('/api/generate-word-report', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json'
+                          },
+                          body: JSON.stringify(reportData)
+                        });
+                        
+                        if (!response.ok) {
+                          throw new Error('Failed to generate report');
+                        }
+                        
+                        const blob = await response.blob();
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `research-results-${selectedMethodology.replace(/\s+/g, '-').toLowerCase()}.docx`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        
+                        setGeneratedReport('Word document generated successfully!');
+                      } catch (error) {
+                        console.error('Error generating report:', error);
+                        setGeneratedReport('Error generating report. Please try again.');
+                      }
+                      setIsGeneratingReport(false);
                     }}
                     disabled={!selectedMethodology || isGeneratingReport}
                     className="w-full"
                     data-testid="button-generate-report"
                   >
-                    {isGeneratingReport ? "Generating..." : "Generate Scientific Report"}
+                    {isGeneratingReport ? "Generating Word Document..." : "Generate Word Document Report"}
                   </Button>
 
                   {generatedReport && (
                     <div className="space-y-3 mt-4">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-semibold">Results Report</h3>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            const blob = new Blob([generatedReport], { type: 'text/plain' });
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.href = url;
-                            a.download = `research-results-${selectedMethodology.replace(/\s+/g, '-').toLowerCase()}.txt`;
-                            a.click();
-                            URL.revokeObjectURL(url);
-                          }}
-                          data-testid="button-download-report"
-                        >
-                          <Download className="w-4 h-4 mr-2" />
-                          Download
-                        </Button>
+                      <div className="p-4 border rounded-lg bg-muted/50">
+                        <p className="text-sm">{generatedReport}</p>
                       </div>
-                      <ScrollArea className="h-96 border rounded-lg p-4">
-                        <pre className="text-xs whitespace-pre-wrap font-mono">{generatedReport}</pre>
-                      </ScrollArea>
                     </div>
                   )}
                 </CardContent>
