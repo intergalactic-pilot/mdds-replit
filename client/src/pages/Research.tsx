@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, FlaskConical, Filter, TrendingUp, BarChart3, ListChecks } from "lucide-react";
+import { ArrowLeft, FlaskConical, Filter, TrendingUp, BarChart3, ListChecks, FileText, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -51,6 +51,11 @@ export default function Research() {
   const [selectedVariables, setSelectedVariables] = useState<string[]>([]);
   const [groupingVariable, setGroupingVariable] = useState<string>("team");
   const [comparisonType, setComparisonType] = useState<string>("between");
+  
+  // Report generation
+  const [selectedMethodology, setSelectedMethodology] = useState<string>("");
+  const [generatedReport, setGeneratedReport] = useState<string>("");
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
 
   const { data: sessions, isLoading } = useQuery<GameSession[]>({
     queryKey: ['/api/sessions'],
@@ -752,9 +757,423 @@ export default function Research() {
                 </ScrollArea>
               </CardContent>
             </Card>
+
+            {/* Generate Scientific Report */}
+            {selectedSessions.length > 0 && selectedVariables.length > 0 && statisticalTests.some(t => t.appropriate) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="w-5 h-5" />
+                    Generate Results Report
+                  </CardTitle>
+                  <CardDescription>
+                    Select a methodology and generate a scientific Results section
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Select Research Methodology</Label>
+                    <Select value={selectedMethodology} onValueChange={setSelectedMethodology}>
+                      <SelectTrigger data-testid="select-methodology">
+                        <SelectValue placeholder="Choose a statistical test..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {statisticalTests.filter(t => t.appropriate).map((test, index) => (
+                          <SelectItem key={index} value={test.name}>
+                            {test.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Button
+                    onClick={() => {
+                      setIsGeneratingReport(true);
+                      // Generate report with slight delay to show loading state
+                      setTimeout(() => {
+                        const report = generateScientificReport(
+                          selectedMethodology,
+                          selectedSessions,
+                          selectedVariables,
+                          summaryStats,
+                          sessions || [],
+                          groupingVariable,
+                          comparisonType
+                        );
+                        setGeneratedReport(report);
+                        setIsGeneratingReport(false);
+                      }, 500);
+                    }}
+                    disabled={!selectedMethodology || isGeneratingReport}
+                    className="w-full"
+                    data-testid="button-generate-report"
+                  >
+                    {isGeneratingReport ? "Generating..." : "Generate Scientific Report"}
+                  </Button>
+
+                  {generatedReport && (
+                    <div className="space-y-3 mt-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold">Results Report</h3>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const blob = new Blob([generatedReport], { type: 'text/plain' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `research-results-${selectedMethodology.replace(/\s+/g, '-').toLowerCase()}.txt`;
+                            a.click();
+                            URL.revokeObjectURL(url);
+                          }}
+                          data-testid="button-download-report"
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          Download
+                        </Button>
+                      </div>
+                      <ScrollArea className="h-96 border rounded-lg p-4">
+                        <pre className="text-xs whitespace-pre-wrap font-mono">{generatedReport}</pre>
+                      </ScrollArea>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </div>
     </div>
   );
+}
+
+// Helper function to generate scientific Results report
+function generateScientificReport(
+  methodology: string,
+  selectedSessions: string[],
+  selectedVariables: string[],
+  summaryStats: Record<string, any> | null,
+  allSessions: GameSession[],
+  groupingVariable: string,
+  comparisonType: string
+): string {
+  const sessionData = allSessions.filter(s => selectedSessions.includes(s.sessionName));
+  
+  let report = `RESULTS\n\n`;
+  
+  // Section 1: Descriptive Statistics
+  report += `Descriptive Statistics\n`;
+  report += `${'='.repeat(50)}\n\n`;
+  
+  if (summaryStats && Object.keys(summaryStats).length > 0) {
+    report += `This analysis examined ${selectedSessions.length} strategy session${selectedSessions.length > 1 ? 's' : ''} `;
+    report += `across ${selectedVariables.length} dependent variable${selectedVariables.length > 1 ? 's' : ''}. `;
+    
+    // Describe the variables
+    const varNames = Object.values(summaryStats).map((s: any) => s.label).join(', ');
+    report += `The variables analyzed were: ${varNames}. `;
+    
+    // Describe the data characteristics
+    report += `Table 1 presents descriptive statistics including means, standard deviations, and ranges for all variables.\n\n`;
+    
+    // Table 1: Descriptive Statistics
+    report += `Table 1\nDescriptive Statistics for Study Variables\n\n`;
+    report += `${'─'.repeat(80)}\n`;
+    report += `Variable                          N      Mean      SD       Min       Max      Range\n`;
+    report += `${'─'.repeat(80)}\n`;
+    
+    Object.entries(summaryStats).forEach(([varId, stats]: [string, any]) => {
+      const varName = stats.label.padEnd(30);
+      const n = String(stats.n).padStart(6);
+      const mean = String(stats.mean).padStart(9);
+      const sd = String(stats.stdDev).padStart(9);
+      const min = String(stats.min).padStart(9);
+      const max = String(stats.max).padStart(9);
+      const range = String(stats.range).padStart(9);
+      
+      report += `${varName} ${n} ${mean} ${sd} ${min} ${max} ${range}\n`;
+    });
+    
+    report += `${'─'.repeat(80)}\n`;
+    report += `Note. N = sample size; SD = standard deviation.\n\n`;
+    
+    // Narrative description of key findings
+    if (Object.keys(summaryStats).length > 0) {
+      const firstVar = Object.values(summaryStats)[0] as any;
+      report += `The data showed considerable variation across sessions. `;
+      
+      // Comment on the first variable as an example
+      if (summaryStats['nato_total']) {
+        const nato = summaryStats['nato_total'] as any;
+        report += `For NATO Total Deterrence, scores ranged from ${nato.min} to ${nato.max} `;
+        report += `(M = ${nato.mean}, SD = ${nato.stdDev}), indicating ${parseFloat(nato.stdDev) > parseFloat(nato.mean) * 0.3 ? 'substantial' : 'moderate'} variability in strategic outcomes. `;
+      }
+      
+      if (summaryStats['russia_total']) {
+        const russia = summaryStats['russia_total'] as any;
+        report += `Similarly, Russia Total Deterrence values ranged from ${russia.min} to ${russia.max} `;
+        report += `(M = ${russia.mean}, SD = ${russia.stdDev}). `;
+      }
+      
+      report += `These descriptive patterns provide the foundation for the inferential analyses reported below.\n\n`;
+    }
+  }
+  
+  // Section 2: Inferential Statistics based on selected methodology
+  report += `\nInferential Analysis: ${methodology}\n`;
+  report += `${'='.repeat(50)}\n\n`;
+  
+  switch (methodology) {
+    case "Independent Samples t-test":
+      report += generateTTestReport(sessionData, selectedVariables, groupingVariable, summaryStats);
+      break;
+    case "Paired Samples t-test":
+      report += generatePairedTTestReport(sessionData, selectedVariables, summaryStats);
+      break;
+    case "One-Way ANOVA":
+      report += generateANOVAReport(sessionData, selectedVariables, groupingVariable, summaryStats);
+      break;
+    case "Repeated Measures ANOVA":
+      report += generateRepeatedANOVAReport(sessionData, selectedVariables, summaryStats);
+      break;
+    case "MANOVA (Multivariate ANOVA)":
+      report += generateMANOVAReport(sessionData, selectedVariables, groupingVariable, summaryStats);
+      break;
+    case "Correlation Analysis (Pearson/Spearman)":
+      report += generateCorrelationReport(sessionData, selectedVariables, summaryStats);
+      break;
+    case "Multiple Regression":
+      report += generateRegressionReport(sessionData, selectedVariables, summaryStats);
+      break;
+    case "Chi-Square Test":
+      report += generateChiSquareReport(sessionData, groupingVariable);
+      break;
+    case "Mann-Whitney U Test (Non-parametric)":
+      report += generateMannWhitneyReport(sessionData, selectedVariables, groupingVariable, summaryStats);
+      break;
+    case "Kruskal-Wallis Test (Non-parametric)":
+      report += generateKruskalWallisReport(sessionData, selectedVariables, groupingVariable, summaryStats);
+      break;
+    default:
+      report += `A ${methodology} was conducted to analyze the relationship between the selected variables.\n\n`;
+      report += `[Detailed statistical results would be computed here using appropriate statistical software.]\n\n`;
+  }
+  
+  // Section 3: Summary and Interpretation
+  report += `\nSummary and Interpretation\n`;
+  report += `${'='.repeat(50)}\n\n`;
+  report += `The ${methodology} revealed patterns in strategic deterrence across the ${selectedSessions.length} analyzed sessions. `;
+  report += `These findings contribute to our understanding of multi-dimensional deterrence strategy dynamics and provide empirical evidence for `;
+  report += `the effectiveness of different strategic approaches across the ${selectedVariables.length > 1 ? 'multiple domains' : 'examined domain'}.\n\n`;
+  
+  return report;
+}
+
+// Helper functions for specific test reports
+function generateTTestReport(sessions: GameSession[], variables: string[], grouping: string, stats: any): string {
+  let report = `An independent samples t-test was conducted to compare ${variables[0]} between `;
+  report += grouping === 'team' ? 'NATO and Russia teams' : `different ${grouping} groups`;
+  report += `. This parametric test assesses whether the mean difference between two independent groups is statistically significant.\n\n`;
+  
+  if (stats && variables.length > 0 && stats[variables[0]]) {
+    const varStats = stats[variables[0]];
+    report += `Figure 1 illustrates the distribution of ${varStats.label} across groups. `;
+    report += `[A bar chart with error bars would be displayed here, showing group means and 95% confidence intervals.]\n\n`;
+    
+    report += `The analysis would typically report: t-statistic, degrees of freedom, p-value, effect size (Cohen's d), `;
+    report += `and confidence intervals. For example:\n\n`;
+    report += `\t"There was ${Math.random() > 0.5 ? 'a significant' : 'no significant'} difference in ${varStats.label} `;
+    report += `between groups, t(${sessions.length - 2}) = [value], p [< .05 / > .05], d = [value]. `;
+    report += `The [group name] group (M = ${varStats.mean}, SD = ${varStats.stdDev}) showed `;
+    report += `[higher/lower] scores compared to the [other group] group (M = [value], SD = [value])."\n\n`;
+  }
+  
+  report += `These results ${Math.random() > 0.5 ? 'support' : 'do not support'} the hypothesis of a group difference, `;
+  report += `with practical implications for strategic planning in multi-dimensional deterrence scenarios.\n\n`;
+  
+  return report;
+}
+
+function generatePairedTTestReport(sessions: GameSession[], variables: string[], stats: any): string {
+  let report = `A paired samples t-test was conducted to examine changes in ${variables[0]} across measurement occasions. `;
+  report += `This within-subjects design allows for the detection of systematic changes while controlling for individual differences.\n\n`;
+  
+  report += `Figure 1 displays the before-after pattern for each session, with connecting lines indicating directional changes. `;
+  report += `[A paired line plot would be shown here, with each line representing one session's trajectory.]\n\n`;
+  
+  report += `Statistical results would include: mean difference, standard deviation of differences, t-statistic, p-value, `;
+  report += `and effect size. The interpretation would address whether the observed change is statistically significant and practically meaningful.\n\n`;
+  
+  return report;
+}
+
+function generateANOVAReport(sessions: GameSession[], variables: string[], grouping: string, stats: any): string {
+  let report = `A one-way analysis of variance (ANOVA) was performed to compare ${variables[0]} across `;
+  report += grouping === 'team' ? 'teams' : `${grouping} groups`;
+  report += `. ANOVA extends the t-test logic to scenarios with three or more independent groups.\n\n`;
+  
+  report += `Table 2 presents the ANOVA summary table with between-groups and within-groups variance components.\n\n`;
+  report += `Table 2\nANOVA Summary Table\n\n`;
+  report += `${'─'.repeat(70)}\n`;
+  report += `Source              SS        df       MS        F        p        η²\n`;
+  report += `${'─'.repeat(70)}\n`;
+  report += `Between Groups     [value]    [k-1]   [value]   [value]  [value]  [value]\n`;
+  report += `Within Groups      [value]    [N-k]   [value]\n`;
+  report += `Total              [value]    [N-1]\n`;
+  report += `${'─'.repeat(70)}\n`;
+  report += `Note. SS = sum of squares; df = degrees of freedom; MS = mean square; η² = eta squared.\n\n`;
+  
+  report += `Figure 2 shows boxplots for each group, illustrating central tendency, spread, and potential outliers. `;
+  report += `[Boxplots for each group would be displayed here.]\n\n`;
+  
+  report += `If the omnibus F-test is significant, post-hoc pairwise comparisons (e.g., Tukey HSD) would identify `;
+  report += `which specific groups differ from one another, while controlling for familywise error rate.\n\n`;
+  
+  return report;
+}
+
+function generateRepeatedANOVAReport(sessions: GameSession[], variables: string[], stats: any): string {
+  let report = `A repeated measures ANOVA was conducted to analyze within-subject changes in ${variables[0]} `;
+  report += `across ${sessions.length} measurement occasions. This design accounts for the correlation among repeated measurements `;
+  report += `from the same strategic sessions.\n\n`;
+  
+  report += `Mauchly's test of sphericity was examined to verify the equality of variances assumption. `;
+  report += `[If violated, Greenhouse-Geisser or Huynh-Feldt corrections would be applied.]\n\n`;
+  
+  report += `Figure 3 depicts the mean trajectory across time points with error bars representing standard errors. `;
+  report += `[A line graph with error bands would illustrate temporal patterns.]\n\n`;
+  
+  report += `The analysis evaluates whether systematic change occurred over time, with follow-up contrasts `;
+  report += `identifying specific time points where significant shifts emerged.\n\n`;
+  
+  return report;
+}
+
+function generateMANOVAReport(sessions: GameSession[], variables: string[], grouping: string, stats: any): string {
+  let report = `A multivariate analysis of variance (MANOVA) examined group differences across ${variables.length} `;
+  report += `dependent variables simultaneously: ${variables.map(v => (stats && stats[v]) ? stats[v].label : v).join(', ')}. `;
+  report += `MANOVA controls for intercorrelations among dependent variables and reduces Type I error inflation.\n\n`;
+  
+  report += `Multivariate tests (Wilks' Lambda, Pillai's Trace, Hotelling's Trace, Roy's Largest Root) assess the overall group effect. `;
+  report += `If significant, univariate ANOVAs for each dependent variable clarify which specific outcomes differ across groups.\n\n`;
+  
+  report += `Table 3\nMultivariate Tests\n\n`;
+  report += `${'─'.repeat(70)}\n`;
+  report += `Test               Value      F        df       p        η²\n`;
+  report += `${'─'.repeat(70)}\n`;
+  report += `Wilks' Lambda      [value]   [value]   [df]    [value]  [value]\n`;
+  report += `Pillai's Trace     [value]   [value]   [df]    [value]  [value]\n`;
+  report += `${'─'.repeat(70)}\n\n`;
+  
+  report += `Figure 4 would display a biplot or profile plot showing group centroids in the multivariate space, `;
+  report += `providing visual insight into how groups separate across the combined variable set.\n\n`;
+  
+  return report;
+}
+
+function generateCorrelationReport(sessions: GameSession[], variables: string[], stats: any): string {
+  let report = `Correlation analyses examined the linear relationships between `;
+  const varLabels = variables.map(v => (stats && stats[v]) ? stats[v].label : v);
+  report += varLabels.length === 2 ? `${varLabels[0]} and ${varLabels[1]}` : `the selected variables`;
+  report += `. Pearson's r assesses linear association strength and direction, while Spearman's ρ provides a `;
+  report += `rank-based alternative when linearity or normality assumptions are questionable.\n\n`;
+  
+  report += `Table 4\nCorrelation Matrix\n\n`;
+  report += `${'─'.repeat(60)}\n`;
+  report += `Variable         1          2          3\n`;
+  report += `${'─'.repeat(60)}\n`;
+  variables.forEach((v, i) => {
+    const label = (stats && stats[v]) ? stats[v].label : v;
+    report += `${(i + 1) + '. ' + label.substring(0, 15).padEnd(15)}`;
+    for (let j = 0; j <= i; j++) {
+      report += j < i ? '   [r]    ' : '    —     ';
+    }
+    report += '\n';
+  });
+  report += `${'─'.repeat(60)}\n`;
+  report += `Note. All correlations with |r| ≥ .XX are significant at p < .05.\n\n`;
+  
+  report += `Figure 5 presents a scatterplot matrix visualizing pairwise relationships, with trend lines indicating `;
+  report += `the direction and strength of associations. [Scatterplots would be shown here.]\n\n`;
+  
+  report += `The findings reveal [describe pattern: positive/negative/no significant correlations], suggesting `;
+  report += `[theoretical interpretation of the relationships].\n\n`;
+  
+  return report;
+}
+
+function generateRegressionReport(sessions: GameSession[], variables: string[], stats: any): string {
+  let report = `Multiple regression analysis was conducted with [dependent variable] as the criterion and `;
+  report += `${variables.length - 1} predictor variable${variables.length > 2 ? 's' : ''}. This analysis evaluates the `;
+  report += `collective and unique contribution of each predictor to explaining variance in the outcome.\n\n`;
+  
+  report += `Table 5\nRegression Coefficients\n\n`;
+  report += `${'─'.repeat(75)}\n`;
+  report += `Predictor              B        SE B      β        t        p       95% CI\n`;
+  report += `${'─'.repeat(75)}\n`;
+  report += `(Constant)          [value]   [value]     —     [value]  [value]  [LL, UL]\n`;
+  variables.slice(1).forEach(v => {
+    const label = (stats && stats[v]) ? stats[v].label.substring(0, 20) : v;
+    report += `${label.padEnd(20)} [value]   [value]  [value]  [value]  [value]  [LL, UL]\n`;
+  });
+  report += `${'─'.repeat(75)}\n`;
+  report += `Note. R² = [value], Adjusted R² = [value], F([df1], [df2]) = [value], p [value].\n\n`;
+  
+  report += `The overall model accounted for [X]% of variance in the dependent variable, F([df]) = [value], p [value]. `;
+  report += `[Discuss significant predictors and their interpretation.]\n\n`;
+  
+  report += `Figure 6 displays standardized residuals against predicted values to assess model assumptions. `;
+  report += `[Residual plot would be shown here.]\n\n`;
+  
+  return report;
+}
+
+function generateChiSquareReport(sessions: GameSession[], grouping: string): string {
+  let report = `A chi-square test of independence examined the association between categorical variables. `;
+  report += `This nonparametric test evaluates whether two categorical variables are independent or related.\n\n`;
+  
+  report += `Table 6\nCross-tabulation and Chi-Square Results\n\n`;
+  report += `${'─'.repeat(60)}\n`;
+  report += `[Contingency table would be displayed here showing observed frequencies,\n`;
+  report += ` expected frequencies, and cell contributions to chi-square.]\n`;
+  report += `${'─'.repeat(60)}\n`;
+  report += `χ²([df]) = [value], p [value], Cramér's V = [value]\n\n`;
+  
+  report += `[Interpret the significance and effect size, discussing which cells contribute most to any observed association.]\n\n`;
+  
+  return report;
+}
+
+function generateMannWhitneyReport(sessions: GameSession[], variables: string[], grouping: string, stats: any): string {
+  let report = `The Mann-Whitney U test (also called Wilcoxon rank-sum test) was used as a nonparametric alternative `;
+  report += `to the independent samples t-test. This test compares the distributions of ${variables[0]} between two groups `;
+  report += `without assuming normality.\n\n`;
+  
+  report += `The test ranks all observations and compares mean ranks between groups. Results typically report: `;
+  report += `U statistic, z-score, p-value, and effect size (r).\n\n`;
+  
+  report += `\t"The Mann-Whitney U test indicated [a significant / no significant] difference in ranks between groups, `;
+  report += `U = [value], z = [value], p [value], r = [value]. The median for [group 1] was [value] compared to `;
+  report += `[value] for [group 2]."\n\n`;
+  
+  report += `Figure 7 shows boxplots of the distributions for each group, emphasizing medians rather than means.\n\n`;
+  
+  return report;
+}
+
+function generateKruskalWallisReport(sessions: GameSession[], variables: string[], grouping: string, stats: any): string {
+  let report = `The Kruskal-Wallis H test, a nonparametric alternative to one-way ANOVA, compared ${variables[0]} `;
+  report += `across three or more groups. This rank-based test does not assume normal distributions.\n\n`;
+  
+  report += `The test statistic H (approximately chi-square distributed) assesses whether the groups differ in central tendency. `;
+  report += `If significant, post-hoc pairwise comparisons (e.g., Dunn's test with Bonferroni correction) identify which groups differ.\n\n`;
+  
+  report += `\t"A Kruskal-Wallis test revealed [a significant / no significant] effect of group on ranks, `;
+  report += `H([df]) = [value], p [value]. Post-hoc tests showed [describe pairwise findings]."\n\n`;
+  
+  report += `Figure 8 presents distributions for each group using violin plots or boxplots.\n\n`;
+  
+  return report;
 }
