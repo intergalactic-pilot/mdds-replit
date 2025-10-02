@@ -32,12 +32,15 @@ The frontend follows a component-based architecture with clear separation of con
   - **Variable Selection**: 14+ dependent variables (deterrence scores, budget metrics, turn counts) across NATO/Russia teams
   - **Descriptive Statistics**: Automated calculation of N, Mean, SD, Min, Max, Range, Median, and IQR for selected variables
   - **Statistical Test Recommendations**: Intelligent recommendation system for 11 statistical methodologies (t-tests, ANOVA, MANOVA, correlation, regression, non-parametric tests) with appropriateness detection based on data characteristics
-  - **Scientific Report Generation**: Automated creation of publication-ready Results sections including:
-    - Descriptive Statistics with formatted tables and narrative interpretation
-    - Methodology-specific inferential analysis with appropriate statistical frameworks
-    - Figure and table placeholders with proper academic formatting
+  - **Scientific Word Document Generation**: Automated creation of publication-ready .docx reports including:
+    - Actual statistical calculations (t-tests with p-values, ANOVA with F-statistics, correlation coefficients, regression analyses)
+    - Descriptive statistics tables with properly formatted values
+    - Embedded statistical charts (bar charts, scatter plots, line graphs) generated server-side
+    - Methodology-specific inferential analysis sections with appropriate statistical frameworks
+    - APA-style formatting with proper figure/table numbering
     - Summary and interpretation sections following scientific publication standards
-  - **Report Export**: Download generated reports as formatted text files
+  - **Robust Data Validation**: Comprehensive edge-case handling ensures safe defaults when data is insufficient (minimum 2-3 observations per group required)
+  - **Report Export**: Download generated reports as professionally formatted Word documents (.docx)
 - **Settings Dialog**: Centralized settings interface with collapsible Card Purchase Logs and navigation to database sessions
 - **Login Screen**: Glassmorphism interface with session creation and optional "Skip Turn 1" configuration
 - **Mobile Interface**: Dedicated mobile views for session management
@@ -103,6 +106,12 @@ The backend is designed as a lightweight foundation that can be extended with da
 - **Zod**: Runtime type validation and schema definition
 - **ESBuild**: Fast JavaScript bundler for server-side code
 - **Date-fns**: Date manipulation and formatting utilities
+
+### Research & Statistical Analysis
+- **simple-statistics**: Statistical calculations library for t-tests, ANOVA, correlation, and regression analysis
+- **docx**: Professional Word document generation with tables, charts, and APA formatting
+- **canvas & chartjs-node-canvas**: Server-side chart rendering for embedded visualizations
+- **Chart.js**: Statistical chart generation (bar charts, scatter plots, line graphs)
 
 ### Database Integration
 - **Neon Database**: Serverless PostgreSQL platform (@neondatabase/serverless)
