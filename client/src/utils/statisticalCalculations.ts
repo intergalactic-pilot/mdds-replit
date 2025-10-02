@@ -1,4 +1,4 @@
-import ss from 'simple-statistics';
+import * as ss from 'simple-statistics';
 
 export interface TTestResult {
   tStatistic: number;
@@ -47,6 +47,23 @@ export interface RegressionResult {
 }
 
 export function calculateTTest(group1: number[], group2: number[]): TTestResult {
+  // Validate inputs
+  if (group1.length < 2 || group2.length < 2) {
+    return {
+      tStatistic: 0,
+      degreesOfFreedom: 0,
+      pValue: 1,
+      mean1: group1.length > 0 ? ss.mean(group1) || 0 : 0,
+      mean2: group2.length > 0 ? ss.mean(group2) || 0 : 0,
+      sd1: 0,
+      sd2: 0,
+      n1: group1.length,
+      n2: group2.length,
+      cohensD: 0,
+      significant: false
+    };
+  }
+  
   const mean1 = ss.mean(group1) || 0;
   const mean2 = ss.mean(group2) || 0;
   const sd1 = ss.standardDeviation(group1) || 0;
@@ -104,13 +121,13 @@ function calculateTTestPValue(tStat: number, df: number): number {
 }
 
 export function calculateCorrelation(x: number[], y: number[]): CorrelationResult {
-  if (x.length !== y.length || x.length < 2) {
+  if (x.length !== y.length || x.length < 3) {
     return {
       coefficient: 0,
       pValue: 1,
       n: x.length,
       significant: false,
-      interpretation: 'Insufficient data'
+      interpretation: 'Insufficient data (need at least 3 data points)'
     };
   }
   
@@ -140,11 +157,33 @@ export function calculateCorrelation(x: number[], y: number[]): CorrelationResul
 }
 
 export function calculateANOVA(groups: { name: string; values: number[] }[]): ANOVAResult {
+  // Validate inputs - need at least 2 groups with at least 2 values each
+  const validGroups = groups.filter(g => g.values.length >= 2);
+  if (validGroups.length < 2) {
+    return {
+      fStatistic: 0,
+      pValue: 1,
+      betweenGroupsDF: 0,
+      withinGroupsDF: 0,
+      betweenGroupsSS: 0,
+      withinGroupsSS: 0,
+      totalSS: 0,
+      etaSquared: 0,
+      significant: false,
+      groupMeans: groups.map(g => ({
+        group: g.name,
+        mean: g.values.length > 0 ? ss.mean(g.values) || 0 : 0,
+        sd: g.values.length > 1 ? ss.standardDeviation(g.values) || 0 : 0,
+        n: g.values.length
+      }))
+    };
+  }
+  
   const allValues: number[] = [];
   const groupSizes: number[] = [];
   const groupMeans: { group: string; mean: number; sd: number; n: number }[] = [];
   
-  groups.forEach(group => {
+  validGroups.forEach(group => {
     allValues.push(...group.values);
     groupSizes.push(group.values.length);
     groupMeans.push({
@@ -157,16 +196,16 @@ export function calculateANOVA(groups: { name: string; values: number[] }[]): AN
   
   const grandMean = ss.mean(allValues) || 0;
   const totalN = allValues.length;
-  const k = groups.length;
+  const k = validGroups.length;
   
   let betweenGroupsSS = 0;
-  groups.forEach((group, i) => {
+  validGroups.forEach((group, i) => {
     const groupMean = ss.mean(group.values) || 0;
     betweenGroupsSS += groupSizes[i] * Math.pow(groupMean - grandMean, 2);
   });
   
   let withinGroupsSS = 0;
-  groups.forEach((group) => {
+  validGroups.forEach((group) => {
     const groupMean = ss.mean(group.values) || 0;
     group.values.forEach(value => {
       withinGroupsSS += Math.pow(value - groupMean, 2);
@@ -286,7 +325,7 @@ function gammaLn(x: number): number {
 }
 
 export function calculateRegression(x: number[], y: number[]): RegressionResult {
-  if (x.length !== y.length || x.length < 2) {
+  if (x.length !== y.length || x.length < 3) {
     return {
       slope: 0,
       intercept: 0,

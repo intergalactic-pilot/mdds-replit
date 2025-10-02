@@ -3,6 +3,8 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertGameSessionSchema, selectGameSessionSchema } from "@shared/schema";
 import { z } from "zod";
+import { generateBarChart, generateGroupedBarChart, generateScatterPlot } from "./chartGenerator";
+import { createScientificReport, type StatisticsTable } from "./wordDocumentGenerator";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Game Session Management Routes
@@ -118,6 +120,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting game session:", error);
       res.status(500).json({ error: "Failed to delete game session" });
+    }
+  });
+
+  // Generate Word document report
+  app.post("/api/generate-word-report", async (req, res) => {
+    try {
+      const {
+        methodology,
+        descriptiveStats,
+        inferentialData,
+        sessionCount,
+        variableNames,
+        chartData
+      } = req.body;
+
+      if (!methodology || !descriptiveStats || !variableNames) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      // Generate charts
+      const chartBuffers: { title: string; buffer: Buffer }[] = [];
+      
+      if (chartData && Array.isArray(chartData)) {
+        for (const chart of chartData) {
+          try {
+            let buffer: Buffer;
+            
+            if (chart.type === 'bar') {
+              buffer = await generateBarChart(chart.data, chart.title);
+            } else if (chart.type === 'grouped-bar') {
+              buffer = await generateGroupedBarChart(chart.data, chart.title, chart.yLabel || 'Value');
+            } else if (chart.type === 'scatter') {
+              buffer = await generateScatterPlot(chart.data, chart.title, chart.xLabel || 'X', chart.yLabel || 'Y');
+            } else {
+              buffer = await generateBarChart(chart.data, chart.title);
+            }
+            
+            chartBuffers.push({ title: chart.title, buffer });
+          } catch (chartError) {
+            console.error("Error generating chart:", chartError);
+          }
+        }
+      }
+
+      // Generate Word document
+      const docBuffer = await createScientificReport(
+        methodology,
+        descriptiveStats,
+        inferentialData,
+        chartBuffers,
+        sessionCount,
+        variableNames
+      );
+
+      // Set headers for file download
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+      res.setHeader('Content-Disposition', `attachment; filename="research-results-${methodology.replace(/\s+/g, '-').toLowerCase()}.docx"`);
+      res.send(docBuffer);
+    } catch (error) {
+      console.error("Error generating Word document:", error);
+      res.status(500).json({ error: "Failed to generate Word document" });
     }
   });
 
