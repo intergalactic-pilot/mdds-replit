@@ -9,6 +9,7 @@ import MobileSession from "./pages/MobileSession";
 import MobileLogin from "./pages/MobileLogin";
 import DatabaseSessions from "./pages/DatabaseSessions";
 import Analysis from "./pages/Analysis";
+import Research from "./pages/Research";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -17,6 +18,7 @@ function Router() {
       <Route path="/" component={MDDSStrategy} />
       <Route path="/database" component={DatabaseSessions} />
       <Route path="/analysis" component={Analysis} />
+      <Route path="/research" component={Research} />
       <Route path="/mobile" component={MobileLogin} />
       <Route path="/mobile/:sessionName" component={MobileSession} />
       <Route component={NotFound} />
