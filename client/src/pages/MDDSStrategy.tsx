@@ -9,7 +9,7 @@ import AppHeader from '../components/AppHeader';
 import TeamPanel from '../components/TeamPanel';
 import CardShop from '../components/CardShop';
 import CardDetailModal from '../components/CardDetailModal';
-import { SkipForward, FileCheck } from 'lucide-react';
+import { SkipForward, FileCheck, Eye, EyeOff } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import DeterrenceChart from '../components/DeterrenceChart';
 import CartDisplay from '../components/CartDisplay';
@@ -42,6 +42,7 @@ export default function MDDSStrategy() {
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [showFinishDialog, setShowFinishDialog] = useState(false);
   const [isFinishing, setIsFinishing] = useState(false);
+  const [showShopAndCarts, setShowShopAndCarts] = useState(true);
   const { toast } = useToast();
 
   // Redirect mobile users to mobile login interface
@@ -249,119 +250,139 @@ export default function MDDSStrategy() {
             <div className="lg:col-span-5 order-1 lg:order-2">
               <div className="space-y-4 lg:space-y-6">
                 {/* Card Shop */}
-                <div className="glass-card p-3 lg:p-6">
-                  <CardShop
-                    cards={availableCards}
-                    onAddToCart={(card) => store.addToCart(store.currentTeam, card)}
-                    onViewDetails={(card) => store.setSelectedCard(card)}
-                    cartItems={currentTeamState.cart}
-                    natoCartItems={natoState.cart}
-                    russiaCartItems={russiaState.cart}
-                    getDiscountedPrice={getDiscountedPrice}
-                    getNATOPrice={priceForNATO}
-                    getRussiaPrice={priceForRussia}
-                    disabled={store.phase !== 'purchase'}
-                    onAddToNATOCart={(card) => store.addToCart('NATO', card)}
-                    onAddToRussiaCart={(card) => store.addToCart('Russia', card)}
-                    currentTurn={store.turn}
-                    natoTeamState={natoState}
-                    russiaTeamState={russiaState}
-                  />
-                </div>
+                {showShopAndCarts && (
+                  <div className="glass-card p-3 lg:p-6">
+                    <CardShop
+                      cards={availableCards}
+                      onAddToCart={(card) => store.addToCart(store.currentTeam, card)}
+                      onViewDetails={(card) => store.setSelectedCard(card)}
+                      cartItems={currentTeamState.cart}
+                      natoCartItems={natoState.cart}
+                      russiaCartItems={russiaState.cart}
+                      getDiscountedPrice={getDiscountedPrice}
+                      getNATOPrice={priceForNATO}
+                      getRussiaPrice={priceForRussia}
+                      disabled={store.phase !== 'purchase'}
+                      onAddToNATOCart={(card) => store.addToCart('NATO', card)}
+                      onAddToRussiaCart={(card) => store.addToCart('Russia', card)}
+                      currentTurn={store.turn}
+                      natoTeamState={natoState}
+                      russiaTeamState={russiaState}
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Right Sidebar - NATO and Russia Carts */}
             <div className="lg:col-span-2 order-3">
               <div className="lg:sticky lg:top-24 space-y-4">
-                <div className="glass-panel p-3 lg:p-4">
-                  <CartDisplay
-                    team="NATO"
-                    cartItems={natoState.cart}
-                    onRemoveFromCart={(cardId) => store.removeFromCart('NATO', cardId)}
-                    getDiscountedPrice={priceForNATO}
-                    cartTotal={natoCartTotal}
-                    onConfirmPurchases={() => {
-                      // Validate before committing NATO purchases
-                      const natoValidation = store.turn === 1 
-                        ? validateTurn1Restrictions(natoState.cart, natoState)
-                        : validatePooledBudget(natoState.cart, natoState);
-                      
-                      if (!natoValidation.valid) {
-                        // Don't commit if validation fails - errors will be visible in validation display
-                        return;
-                      }
-                      
-                      store.commitTeamPurchases('NATO');
-                      store.saveToLocalStorage();
-                    }}
-                    canConfirm={(() => {
-                      if (natoState.cart.length === 0) return false;
-                      if (natoCartTotal > natoState.budget) return false;
-                      
-                      // Check team-specific validation
-                      const natoValidation = store.turn === 1 
-                        ? validateTurn1Restrictions(natoState.cart, natoState)
-                        : validatePooledBudget(natoState.cart, natoState);
-                      
-                      return natoValidation.valid;
-                    })()}
-                    budget={natoState.budget}
-                  />
-                </div>
-
-                <div className="glass-panel p-3 lg:p-4">
-                  <CartDisplay
-                    team="Russia"
-                    cartItems={russiaState.cart}
-                    onRemoveFromCart={(cardId) => store.removeFromCart('Russia', cardId)}
-                    getDiscountedPrice={priceForRussia}
-                    cartTotal={russiaCartTotal}
-                    onConfirmPurchases={() => {
-                      // Validate before committing Russia purchases
-                      const russiaValidation = store.turn === 1 
-                        ? validateTurn1Restrictions(russiaState.cart, russiaState)
-                        : validatePooledBudget(russiaState.cart, russiaState);
-                      
-                      if (!russiaValidation.valid) {
-                        // Don't commit if validation fails - errors will be visible in validation display
-                        return;
-                      }
-                      
-                      store.commitTeamPurchases('Russia');
-                      store.saveToLocalStorage();
-                    }}
-                    canConfirm={(() => {
-                      if (russiaState.cart.length === 0) return false;
-                      if (russiaCartTotal > russiaState.budget) return false;
-                      
-                      // Check team-specific validation
-                      const russiaValidation = store.turn === 1 
-                        ? validateTurn1Restrictions(russiaState.cart, russiaState)
-                        : validatePooledBudget(russiaState.cart, russiaState);
-                      
-                      return russiaValidation.valid;
-                    })()}
-                    budget={russiaState.budget}
-                  />
-                </div>
-
-                {/* Finish Turn Button - Hidden on Mobile */}
-                <div className="glass-panel p-3 lg:p-4 hidden md:block">
+                {/* Visibility Toggle Button */}
+                <div className="flex justify-center">
                   <Button
-                    onClick={() => {
-                      store.advanceGameTurn();
-                      store.saveToLocalStorage();
-                    }}
-                    size="lg"
+                    onClick={() => setShowShopAndCarts(!showShopAndCarts)}
+                    size="sm"
                     variant="outline"
-                    className="w-full"
-                    data-testid="button-finish-turn"
+                    className="gap-2"
+                    data-testid="button-toggle-shop-visibility"
                   >
-                    <SkipForward className="w-4 h-4 mr-2" />
-                    Finish Turn ({store.turn})
+                    {showShopAndCarts ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showShopAndCarts ? 'Hide' : 'Show'} Shop & Carts
                   </Button>
                 </div>
+
+                {showShopAndCarts && (
+                  <>
+                    <div className="glass-panel p-3 lg:p-4">
+                      <CartDisplay
+                        team="NATO"
+                        cartItems={natoState.cart}
+                        onRemoveFromCart={(cardId) => store.removeFromCart('NATO', cardId)}
+                        getDiscountedPrice={priceForNATO}
+                        cartTotal={natoCartTotal}
+                        onConfirmPurchases={() => {
+                          // Validate before committing NATO purchases
+                          const natoValidation = store.turn === 1 
+                            ? validateTurn1Restrictions(natoState.cart, natoState)
+                            : validatePooledBudget(natoState.cart, natoState);
+                          
+                          if (!natoValidation.valid) {
+                            // Don't commit if validation fails - errors will be visible in validation display
+                            return;
+                          }
+                          
+                          store.commitTeamPurchases('NATO');
+                          store.saveToLocalStorage();
+                        }}
+                        canConfirm={(() => {
+                          if (natoState.cart.length === 0) return false;
+                          if (natoCartTotal > natoState.budget) return false;
+                          
+                          // Check team-specific validation
+                          const natoValidation = store.turn === 1 
+                            ? validateTurn1Restrictions(natoState.cart, natoState)
+                            : validatePooledBudget(natoState.cart, natoState);
+                          
+                          return natoValidation.valid;
+                        })()}
+                        budget={natoState.budget}
+                      />
+                    </div>
+
+                    <div className="glass-panel p-3 lg:p-4">
+                      <CartDisplay
+                        team="Russia"
+                        cartItems={russiaState.cart}
+                        onRemoveFromCart={(cardId) => store.removeFromCart('Russia', cardId)}
+                        getDiscountedPrice={priceForRussia}
+                        cartTotal={russiaCartTotal}
+                        onConfirmPurchases={() => {
+                          // Validate before committing Russia purchases
+                          const russiaValidation = store.turn === 1 
+                            ? validateTurn1Restrictions(russiaState.cart, russiaState)
+                            : validatePooledBudget(russiaState.cart, russiaState);
+                          
+                          if (!russiaValidation.valid) {
+                            // Don't commit if validation fails - errors will be visible in validation display
+                            return;
+                          }
+                          
+                          store.commitTeamPurchases('Russia');
+                          store.saveToLocalStorage();
+                        }}
+                        canConfirm={(() => {
+                          if (russiaState.cart.length === 0) return false;
+                          if (russiaCartTotal > russiaState.budget) return false;
+                          
+                          // Check team-specific validation
+                          const russiaValidation = store.turn === 1 
+                            ? validateTurn1Restrictions(russiaState.cart, russiaState)
+                            : validatePooledBudget(russiaState.cart, russiaState);
+                          
+                          return russiaValidation.valid;
+                        })()}
+                        budget={russiaState.budget}
+                      />
+                    </div>
+
+                    {/* Finish Turn Button - Hidden on Mobile */}
+                    <div className="glass-panel p-3 lg:p-4 hidden md:block">
+                      <Button
+                        onClick={() => {
+                          store.advanceGameTurn();
+                          store.saveToLocalStorage();
+                        }}
+                        size="lg"
+                        variant="outline"
+                        className="w-full"
+                        data-testid="button-finish-turn"
+                      >
+                        <SkipForward className="w-4 h-4 mr-2" />
+                        Finish Turn ({store.turn})
+                      </Button>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -369,9 +390,11 @@ export default function MDDSStrategy() {
         
         
         {/* Statistics Section */}
-        <div className="mt-6">
-          <DomainStatistics />
-        </div>
+        {showShopAndCarts && (
+          <div className="mt-6">
+            <DomainStatistics />
+          </div>
+        )}
       </div>
 
       {/* Card Detail Modal */}
