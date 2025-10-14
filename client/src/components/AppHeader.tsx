@@ -576,6 +576,103 @@ export default function AppHeader({
                     <span className="font-medium">{sanitizeText('Generate Simulation Report')}</span>
                   </Button>
 
+                  {/* Card Reference */}
+                  <Collapsible>
+                    <CollapsibleTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start p-3 gap-2"
+                        data-testid="button-toggle-card-reference"
+                      >
+                        <HelpCircle className="w-4 h-4" />
+                        <span className="font-medium">Card Reference by Dimension</span>
+                        <ChevronDown className="h-4 w-4 ml-auto transition-transform" />
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="px-3 pb-2">
+                      <div className="space-y-3">
+                        <Select value={selectedDimension || ''} onValueChange={(value) => setSelectedDimension(value as Domain)}>
+                          <SelectTrigger data-testid="select-dimension-settings">
+                            <SelectValue placeholder="Select a dimension" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="joint">Joint</SelectItem>
+                            <SelectItem value="economy">Economy</SelectItem>
+                            <SelectItem value="cognitive">Cognitive</SelectItem>
+                            <SelectItem value="space">Space</SelectItem>
+                            <SelectItem value="cyber">Cyber</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        
+                        {selectedDimension && (
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                              <DomainBadge domain={selectedDimension} />
+                              <span className="text-sm font-medium">Cards</span>
+                            </div>
+                            
+                            {/* Asset and Expert Cards */}
+                            <div className="space-y-1 max-h-[40vh] overflow-y-auto">
+                              {cardsData
+                                .filter((card: any) => card.domain === selectedDimension && card.type !== 'permanent')
+                                .map((card: any) => (
+                                  <div key={card.id} className="flex items-center gap-3 p-2 text-sm rounded bg-muted/30">
+                                    <span className="font-mono font-medium">
+                                      {card.id}
+                                    </span>
+                                    <span>-</span>
+                                    <span className="text-muted-foreground">
+                                      {(card.effects || []).map((effect: any, effectIndex: number) => (
+                                        <span key={effectIndex}>
+                                          {effectIndex > 0 ? ', ' : ''}
+                                          {effect.target === 'self' ? 'Self' : 'Opponent'} {effect.domain}:{effect.delta > 0 ? '+' : ''}{effect.delta}
+                                        </span>
+                                      ))}
+                                      {card.type === 'expert' && card.expertInfo && (
+                                        <span className="text-xs italic">({card.expertInfo})</span>
+                                      )}
+                                    </span>
+                                  </div>
+                                ))
+                              }
+                            </div>
+
+                            {/* Permanent Cards */}
+                            {cardsData.filter((card: any) => card.domain === selectedDimension && card.type === 'permanent').length > 0 && (
+                              <div className="space-y-2 mt-4 pt-4 border-t">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-semibold text-purple-600 dark:text-purple-400">Permanent Cards</span>
+                                </div>
+                                <div className="space-y-1">
+                                  {cardsData
+                                    .filter((card: any) => card.domain === selectedDimension && card.type === 'permanent')
+                                    .map((card: any) => (
+                                      <div key={card.id} className="p-2 text-sm rounded bg-purple-500/10 border border-purple-500/20">
+                                        <div className="font-mono font-medium text-purple-600 dark:text-purple-400 mb-1">
+                                          {card.id}
+                                        </div>
+                                        <div className="text-muted-foreground text-xs">
+                                          {card.permanentMods && (
+                                            <>
+                                              <div>Discount: -{card.permanentMods.flatDiscountK}K</div>
+                                              <div className="mt-1">
+                                                Applies to: {card.permanentMods.appliesToCardIds.join(', ')}
+                                              </div>
+                                            </>
+                                          )}
+                                        </div>
+                                      </div>
+                                    ))
+                                  }
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+
                   {/* Card Purchase Logs */}
                   <Collapsible
                     open={isStrategyLogExpanded}
