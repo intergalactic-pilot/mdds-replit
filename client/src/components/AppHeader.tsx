@@ -273,16 +273,6 @@ export default function AppHeader({
               </DialogContent>
             </Dialog>
 
-            {/* Download PDF */}
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={onDownloadPDF}
-              data-testid="button-download-pdf"
-            >
-              <Download className="w-4 h-4" />
-            </Button>
-
             {/* Card Reference */}
             <Popover open={showCardReference} onOpenChange={setShowCardReference}>
               <PopoverTrigger asChild>
@@ -564,6 +554,28 @@ export default function AppHeader({
                     <span className="font-medium">{sanitizeText('Rules & Guidelines')}</span>
                   </Button>
 
+                  {/* Save */}
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start p-3 gap-2"
+                    onClick={onSave}
+                    data-testid="button-save"
+                  >
+                    <Save className="w-4 h-4" />
+                    <span className="font-medium">Save</span>
+                  </Button>
+
+                  {/* Download PDF */}
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start p-3 gap-2"
+                    onClick={onDownloadPDF}
+                    data-testid="button-download-pdf"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span className="font-medium">Download PDF</span>
+                  </Button>
+
                   {/* Card Purchase Logs */}
                   <Collapsible
                     open={isStrategyLogExpanded}
@@ -604,12 +616,6 @@ export default function AppHeader({
                 </div>
               </DialogContent>
             </Dialog>
-
-
-            {/* Save */}
-            <Button variant="ghost" size="icon" onClick={onSave} data-testid="button-save">
-              <Save className="w-4 h-4" />
-            </Button>
 
             {/* Reset Progress */}
             <Button 
