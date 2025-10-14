@@ -228,25 +228,27 @@ export default function MDDSStrategy() {
 
           <div className="grid grid-cols-1 lg:grid-cols-10 gap-4 lg:gap-6">
             {/* Left Sidebar - Team Panels */}
-            <div className="lg:col-span-3 order-2 lg:order-1">
-              <div className="space-y-4">
-                <div className="glass-panel p-3 lg:p-4">
-                  <TeamPanel
-                    team={store.currentTeam}
-                    teamState={currentTeamState}
-                    isActive={true}
-                    currentTurn={store.turn}
-                  />
-                </div>
-                <div className="glass-panel p-3 lg:p-4">
-                  <TeamPanel
-                    team={opponentTeam}
-                    teamState={opponentTeamState}
-                    currentTurn={store.turn}
-                  />
+            {showShopAndCarts && (
+              <div className="lg:col-span-3 order-2 lg:order-1">
+                <div className="space-y-4">
+                  <div className="glass-panel p-3 lg:p-4">
+                    <TeamPanel
+                      team={store.currentTeam}
+                      teamState={currentTeamState}
+                      isActive={true}
+                      currentTurn={store.turn}
+                    />
+                  </div>
+                  <div className="glass-panel p-3 lg:p-4">
+                    <TeamPanel
+                      team={opponentTeam}
+                      teamState={opponentTeamState}
+                      currentTurn={store.turn}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Main Content - Wider */}
             <div className="lg:col-span-5 order-1 lg:order-2">
