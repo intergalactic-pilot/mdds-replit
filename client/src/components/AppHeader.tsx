@@ -540,6 +540,44 @@ export default function AppHeader({
                     <span className="font-medium">{sanitizeText('Generate Simulation Report')}</span>
                   </Button>
 
+                  {/* Card Purchase Logs */}
+                  <Collapsible
+                    open={isStrategyLogExpanded}
+                    onOpenChange={setIsStrategyLogExpanded}
+                  >
+                    <div className="flex items-center gap-2">
+                      <CollapsibleTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className="flex-1 justify-between p-3 gap-2"
+                          data-testid="button-toggle-strategy-log"
+                        >
+                          <div className="flex items-center gap-2">
+                            <CreditCard className="w-4 h-4" />
+                            <span className="font-medium">{sanitizeText('Card Purchase Logs')}</span>
+                          </div>
+                          <ChevronDown
+                            className={`h-4 w-4 transition-transform ${
+                              isStrategyLogExpanded ? 'rotate-180' : ''
+                            }`}
+                          />
+                        </Button>
+                      </CollapsibleTrigger>
+                      <Button 
+                        variant="ghost"
+                        size="sm" 
+                        onClick={handleDownloadCardLogs}
+                        data-testid="button-download-card-logs"
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        Download
+                      </Button>
+                    </div>
+                    <CollapsibleContent className="pt-2">
+                      <StrategyLog entries={strategyLog} maxHeight="60vh" />
+                    </CollapsibleContent>
+                  </Collapsible>
+
                   {/* Permanent Cards - Password Protected */}
                   {!isPermanentCardsUnlocked ? (
                     <div className="p-3 rounded-lg border bg-muted/30 space-y-2">
@@ -647,44 +685,6 @@ export default function AppHeader({
                       </CollapsibleContent>
                     </Collapsible>
                   )}
-
-                  {/* Card Purchase Logs */}
-                  <Collapsible
-                    open={isStrategyLogExpanded}
-                    onOpenChange={setIsStrategyLogExpanded}
-                  >
-                    <div className="flex items-center gap-2">
-                      <CollapsibleTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          className="flex-1 justify-between p-3 gap-2"
-                          data-testid="button-toggle-strategy-log"
-                        >
-                          <div className="flex items-center gap-2">
-                            <CreditCard className="w-4 h-4" />
-                            <span className="font-medium">{sanitizeText('Card Purchase Logs')}</span>
-                          </div>
-                          <ChevronDown
-                            className={`h-4 w-4 transition-transform ${
-                              isStrategyLogExpanded ? 'rotate-180' : ''
-                            }`}
-                          />
-                        </Button>
-                      </CollapsibleTrigger>
-                      <Button 
-                        variant="ghost"
-                        size="sm" 
-                        onClick={handleDownloadCardLogs}
-                        data-testid="button-download-card-logs"
-                      >
-                        <Download className="w-4 h-4 mr-2" />
-                        Download
-                      </Button>
-                    </div>
-                    <CollapsibleContent className="pt-2">
-                      <StrategyLog entries={strategyLog} maxHeight="60vh" />
-                    </CollapsibleContent>
-                  </Collapsible>
 
                   {/* Database Section - Password Protected */}
                   {!isDatabaseUnlocked ? (
