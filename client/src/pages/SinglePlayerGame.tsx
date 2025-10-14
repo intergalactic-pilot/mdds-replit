@@ -32,6 +32,9 @@ import { apiRequest } from "@/lib/queryClient";
 
 export default function SinglePlayerGame() {
   const store = useMDDSStore();
+  const currentTeam = useMDDSStore(state => state.currentTeam);
+  const phase = useMDDSStore(state => state.phase);
+  const turn = useMDDSStore(state => state.turn);
   const [, setLocation] = useLocation();
   const [availableCards, setAvailableCards] = useState(applyDomainQuotas(cardsData as Card[]));
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
@@ -82,7 +85,9 @@ export default function SinglePlayerGame() {
 
   // AI logic - automatically plays when it's Russia's turn
   useEffect(() => {
-    if (store.currentTeam === 'Russia' && store.phase === 'purchase' && !isAIThinking) {
+    console.log('[AI Effect] Team:', currentTeam, 'Phase:', phase, 'isAIThinking:', isAIThinking);
+    if (currentTeam === 'Russia' && phase === 'purchase' && !isAIThinking) {
+      console.log('[AI Effect] Triggering AI decision...');
       setIsAIThinking(true);
       
       // Delay AI action for realism
@@ -90,7 +95,7 @@ export default function SinglePlayerGame() {
         makeAIDecision();
       }, 1500);
     }
-  }, [store.currentTeam, store.phase]);
+  }, [currentTeam, phase, isAIThinking]);
 
   const makeAIDecision = () => {
     const russiaState = store.teams.Russia;
@@ -300,6 +305,7 @@ export default function SinglePlayerGame() {
   };
 
   const handleCommitPurchases = () => {
+    console.log('[Commit] Starting commit for team:', store.currentTeam, 'turn:', store.turn);
     const errors: string[] = [];
 
     if (store.currentTeam === 'NATO') {
@@ -327,17 +333,29 @@ export default function SinglePlayerGame() {
     }
 
     if (errors.length === 0) {
+      console.log('[Commit] Validation passed, committing purchases');
       store.commitTeamPurchases(store.currentTeam);
       setValidationErrors([]);
       
-      if (store.currentTeam === 'Russia') {
-        setIsAIThinking(false);
+      if (store.currentTeam === 'NATO') {
+        console.log('[Commit] NATO committed, switching to Russia in 500ms...');
+        // After NATO commits, switch to Russia (which will trigger AI)
+        setTimeout(() => {
+          console.log('[Commit] Switching team to Russia');
+          store.setCurrentTeam('Russia');
+        }, 500);
+      } else if (store.currentTeam === 'Russia') {
+        console.log('[Commit] Russia committed, advancing turn and switching to NATO in 500ms...');
         // AI automatically advances turn after committing
         setTimeout(() => {
+          console.log('[Commit] Advancing turn and switching to NATO');
           store.advanceGameTurn();
+          store.setCurrentTeam('NATO');
+          setIsAIThinking(false); // Reset after team switch to prevent re-trigger
         }, 500);
       }
     } else {
+      console.log('[Commit] Validation failed:', errors);
       setValidationErrors(errors);
       if (store.currentTeam === 'Russia') {
         setIsAIThinking(false);
@@ -444,11 +462,16 @@ export default function SinglePlayerGame() {
 
         <div className="glass-card p-6 space-y-4">
           <h3 className="text-lg font-semibold">Turn Control</h3>
+          {isAIThinking && (
+            <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-3" data-testid="ai-thinking-indicator">
+              <p className="text-sm text-yellow-600 dark:text-yellow-400">AI is thinking...</p>
+            </div>
+          )}
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <div className="text-sm text-muted-foreground">Current Turn: {store.turn}/{store.maxTurns}</div>
-              <div className="text-sm text-muted-foreground">Phase: {store.phase}</div>
-              <div className="text-sm text-muted-foreground">Current Team: {store.currentTeam}</div>
+              <div className="text-sm text-muted-foreground" data-testid="text-current-turn">Current Turn: {store.turn}/{store.maxTurns}</div>
+              <div className="text-sm text-muted-foreground" data-testid="text-current-phase">Phase: {store.phase}</div>
+              <div className="text-sm text-muted-foreground" data-testid="text-current-team">Current Team: {store.currentTeam}</div>
             </div>
             <div className="flex gap-2">
               {canCommit && store.currentTeam === 'NATO' && (
