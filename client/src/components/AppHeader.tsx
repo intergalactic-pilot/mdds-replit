@@ -562,7 +562,7 @@ export default function AppHeader({
                     data-testid="button-save"
                   >
                     <Save className="w-4 h-4" />
-                    <span className="font-medium">Save</span>
+                    <span className="font-medium">{sanitizeText('Save Game')}</span>
                   </Button>
 
                   {/* Download PDF */}
@@ -573,7 +573,7 @@ export default function AppHeader({
                     data-testid="button-download-pdf"
                   >
                     <Download className="w-4 h-4" />
-                    <span className="font-medium">Download PDF</span>
+                    <span className="font-medium">{sanitizeText('Generate Simulation Report')}</span>
                   </Button>
 
                   {/* Card Purchase Logs */}
@@ -606,7 +606,7 @@ export default function AppHeader({
                         data-testid="button-download-card-logs"
                       >
                         <Download className="w-4 h-4 mr-2" />
-                        Download PDF
+                        Download
                       </Button>
                     </div>
                     <CollapsibleContent className="pt-2">
