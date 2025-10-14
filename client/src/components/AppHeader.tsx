@@ -74,6 +74,9 @@ export default function AppHeader({
   const [databasePassword, setDatabasePassword] = useState("");
   const [passwordError, setPasswordError] = useState(false);
   const [showRules, setShowRules] = useState(false);
+  const [isPermanentCardsUnlocked, setIsPermanentCardsUnlocked] = useState(false);
+  const [permanentCardsPassword, setPermanentCardsPassword] = useState("");
+  const [permanentCardsPasswordError, setPermanentCardsPasswordError] = useState(false);
   
   // Use store for session management
   const sessionInfo = useMDDSStore(state => state.sessionInfo);
@@ -91,6 +94,16 @@ export default function AppHeader({
       setDatabasePassword("");
     } else {
       setPasswordError(true);
+    }
+  };
+
+  const handleUnlockPermanentCards = () => {
+    if (permanentCardsPassword === "MDDS") {
+      setIsPermanentCardsUnlocked(true);
+      setPermanentCardsPasswordError(false);
+      setPermanentCardsPassword("");
+    } else {
+      setPermanentCardsPasswordError(true);
     }
   };
 
@@ -491,6 +504,188 @@ export default function AppHeader({
                   <DialogTitle>{sanitizeText('Settings')}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
+                  {/* Guidelines/Tutorial */}
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start p-3 gap-2"
+                    onClick={() => {
+                      setShowSettings(false);
+                      setShowRules(true);
+                    }}
+                    data-testid="button-show-guidelines"
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    <span className="font-medium">{sanitizeText('Rules & Guidelines')}</span>
+                  </Button>
+
+                  {/* Save */}
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start p-3 gap-2"
+                    onClick={onSave}
+                    data-testid="button-save"
+                  >
+                    <Save className="w-4 h-4" />
+                    <span className="font-medium">{sanitizeText('Save Simulation')}</span>
+                  </Button>
+
+                  {/* Download PDF */}
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start p-3 gap-2"
+                    onClick={onDownloadPDF}
+                    data-testid="button-download-pdf"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span className="font-medium">{sanitizeText('Generate Simulation Report')}</span>
+                  </Button>
+
+                  {/* Permanent Cards - Password Protected */}
+                  {!isPermanentCardsUnlocked ? (
+                    <div className="p-3 rounded-lg border bg-muted/30 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Lock className="w-4 h-4 text-muted-foreground" />
+                        <span className="font-medium text-muted-foreground">Permanent Cards (Locked)</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <Input
+                          id="permanent-cards-password"
+                          type="password"
+                          value={permanentCardsPassword}
+                          onChange={(e) => {
+                            setPermanentCardsPassword(e.target.value);
+                            setPermanentCardsPasswordError(false);
+                          }}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              handleUnlockPermanentCards();
+                            }
+                          }}
+                          placeholder="Enter password"
+                          className={permanentCardsPasswordError ? "border-red-500" : ""}
+                          data-testid="input-permanent-cards-password"
+                        />
+                        <Button
+                          onClick={handleUnlockPermanentCards}
+                          size="sm"
+                          data-testid="button-unlock-permanent-cards"
+                        >
+                          <Unlock className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      {permanentCardsPasswordError && (
+                        <p className="text-xs text-red-500">Incorrect password</p>
+                      )}
+                    </div>
+                  ) : (
+                    <Collapsible>
+                      <CollapsibleTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className="w-full justify-start p-3 gap-2"
+                          data-testid="button-toggle-permanent-cards"
+                        >
+                          <HelpCircle className="w-4 h-4" />
+                          <span className="font-medium">Permanent Cards</span>
+                          <ChevronDown className="h-4 w-4 ml-auto transition-transform" />
+                        </Button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="px-3 pb-2">
+                        <div className="space-y-3">
+                          <Select value={selectedDimension || ''} onValueChange={(value) => setSelectedDimension(value as Domain)}>
+                            <SelectTrigger data-testid="select-dimension-settings">
+                              <SelectValue placeholder="Select a dimension" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="joint">Joint</SelectItem>
+                              <SelectItem value="economy">Economy</SelectItem>
+                              <SelectItem value="cognitive">Cognitive</SelectItem>
+                              <SelectItem value="space">Space</SelectItem>
+                              <SelectItem value="cyber">Cyber</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          
+                          {selectedDimension && (
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <DomainBadge domain={selectedDimension} />
+                                <span className="text-sm font-semibold text-purple-600 dark:text-purple-400">Permanent Cards</span>
+                              </div>
+                              
+                              {/* Permanent Cards Only */}
+                              {cardsData.filter((card: any) => card.domain === selectedDimension && card.type === 'permanent').length > 0 ? (
+                                <div className="space-y-1">
+                                  {cardsData
+                                    .filter((card: any) => card.domain === selectedDimension && card.type === 'permanent')
+                                    .map((card: any) => (
+                                      <div key={card.id} className="p-2 text-sm rounded bg-purple-500/10 border border-purple-500/20">
+                                        <div className="font-mono font-medium text-purple-600 dark:text-purple-400 mb-1">
+                                          {card.id}
+                                        </div>
+                                        <div className="text-muted-foreground text-xs">
+                                          {card.permanentMods && (
+                                            <>
+                                              <div>Discount: -{card.permanentMods.flatDiscountK}K</div>
+                                              <div className="mt-1">
+                                                Applies to: {card.permanentMods.appliesToCardIds.join(', ')}
+                                              </div>
+                                            </>
+                                          )}
+                                        </div>
+                                      </div>
+                                    ))
+                                  }
+                                </div>
+                              ) : (
+                                <div className="text-sm text-muted-foreground p-2">
+                                  No permanent cards for this dimension
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )}
+
+                  {/* Card Purchase Logs */}
+                  <Collapsible
+                    open={isStrategyLogExpanded}
+                    onOpenChange={setIsStrategyLogExpanded}
+                  >
+                    <div className="flex items-center gap-2">
+                      <CollapsibleTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className="flex-1 justify-between p-3 gap-2"
+                          data-testid="button-toggle-strategy-log"
+                        >
+                          <div className="flex items-center gap-2">
+                            <CreditCard className="w-4 h-4" />
+                            <span className="font-medium">{sanitizeText('Card Purchase Logs')}</span>
+                          </div>
+                          <ChevronDown
+                            className={`h-4 w-4 transition-transform ${
+                              isStrategyLogExpanded ? 'rotate-180' : ''
+                            }`}
+                          />
+                        </Button>
+                      </CollapsibleTrigger>
+                      <Button 
+                        variant="ghost"
+                        size="sm" 
+                        onClick={handleDownloadCardLogs}
+                        data-testid="button-download-card-logs"
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        Download
+                      </Button>
+                    </div>
+                    <CollapsibleContent className="pt-2">
+                      <StrategyLog entries={strategyLog} maxHeight="60vh" />
+                    </CollapsibleContent>
+                  </Collapsible>
+
                   {/* Database Section - Password Protected */}
                   {!isDatabaseUnlocked ? (
                     <div className="p-3 rounded-lg border bg-muted/30 space-y-2">
@@ -539,150 +734,6 @@ export default function AppHeader({
                       <span className="font-medium">Database</span>
                     </Button>
                   )}
-
-                  {/* Guidelines/Tutorial */}
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start p-3 gap-2"
-                    onClick={() => {
-                      setShowSettings(false);
-                      setShowRules(true);
-                    }}
-                    data-testid="button-show-guidelines"
-                  >
-                    <BookOpen className="w-4 h-4" />
-                    <span className="font-medium">{sanitizeText('Rules & Guidelines')}</span>
-                  </Button>
-
-                  {/* Save */}
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start p-3 gap-2"
-                    onClick={onSave}
-                    data-testid="button-save"
-                  >
-                    <Save className="w-4 h-4" />
-                    <span className="font-medium">{sanitizeText('Save Simulation')}</span>
-                  </Button>
-
-                  {/* Download PDF */}
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start p-3 gap-2"
-                    onClick={onDownloadPDF}
-                    data-testid="button-download-pdf"
-                  >
-                    <Download className="w-4 h-4" />
-                    <span className="font-medium">{sanitizeText('Generate Simulation Report')}</span>
-                  </Button>
-
-                  {/* Permanent Cards */}
-                  <Collapsible>
-                    <CollapsibleTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-start p-3 gap-2"
-                        data-testid="button-toggle-permanent-cards"
-                      >
-                        <HelpCircle className="w-4 h-4" />
-                        <span className="font-medium">Permanent Cards</span>
-                        <ChevronDown className="h-4 w-4 ml-auto transition-transform" />
-                      </Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="px-3 pb-2">
-                      <div className="space-y-3">
-                        <Select value={selectedDimension || ''} onValueChange={(value) => setSelectedDimension(value as Domain)}>
-                          <SelectTrigger data-testid="select-dimension-settings">
-                            <SelectValue placeholder="Select a dimension" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="joint">Joint</SelectItem>
-                            <SelectItem value="economy">Economy</SelectItem>
-                            <SelectItem value="cognitive">Cognitive</SelectItem>
-                            <SelectItem value="space">Space</SelectItem>
-                            <SelectItem value="cyber">Cyber</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        
-                        {selectedDimension && (
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2">
-                              <DomainBadge domain={selectedDimension} />
-                              <span className="text-sm font-semibold text-purple-600 dark:text-purple-400">Permanent Cards</span>
-                            </div>
-                            
-                            {/* Permanent Cards Only */}
-                            {cardsData.filter((card: any) => card.domain === selectedDimension && card.type === 'permanent').length > 0 ? (
-                              <div className="space-y-1">
-                                {cardsData
-                                  .filter((card: any) => card.domain === selectedDimension && card.type === 'permanent')
-                                  .map((card: any) => (
-                                    <div key={card.id} className="p-2 text-sm rounded bg-purple-500/10 border border-purple-500/20">
-                                      <div className="font-mono font-medium text-purple-600 dark:text-purple-400 mb-1">
-                                        {card.id}
-                                      </div>
-                                      <div className="text-muted-foreground text-xs">
-                                        {card.permanentMods && (
-                                          <>
-                                            <div>Discount: -{card.permanentMods.flatDiscountK}K</div>
-                                            <div className="mt-1">
-                                              Applies to: {card.permanentMods.appliesToCardIds.join(', ')}
-                                            </div>
-                                          </>
-                                        )}
-                                      </div>
-                                    </div>
-                                  ))
-                                }
-                              </div>
-                            ) : (
-                              <div className="text-sm text-muted-foreground p-2">
-                                No permanent cards for this dimension
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-
-                  {/* Card Purchase Logs */}
-                  <Collapsible
-                    open={isStrategyLogExpanded}
-                    onOpenChange={setIsStrategyLogExpanded}
-                  >
-                    <div className="flex items-center gap-2">
-                      <CollapsibleTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          className="flex-1 justify-between p-3 gap-2"
-                          data-testid="button-toggle-strategy-log"
-                        >
-                          <div className="flex items-center gap-2">
-                            <CreditCard className="w-4 h-4" />
-                            <span className="font-medium">{sanitizeText('Card Purchase Logs')}</span>
-                          </div>
-                          <ChevronDown
-                            className={`h-4 w-4 transition-transform ${
-                              isStrategyLogExpanded ? 'rotate-180' : ''
-                            }`}
-                          />
-                        </Button>
-                      </CollapsibleTrigger>
-                      <Button 
-                        variant="ghost"
-                        size="sm" 
-                        onClick={handleDownloadCardLogs}
-                        data-testid="button-download-card-logs"
-                      >
-                        <Download className="w-4 h-4 mr-2" />
-                        Download
-                      </Button>
-                    </div>
-                    <CollapsibleContent className="pt-2">
-                      <StrategyLog entries={strategyLog} maxHeight="60vh" />
-                    </CollapsibleContent>
-                  </Collapsible>
                 </div>
               </DialogContent>
             </Dialog>
