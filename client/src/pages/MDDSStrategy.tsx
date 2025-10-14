@@ -214,6 +214,8 @@ export default function MDDSStrategy() {
         }}
         onDownloadPDF={handleDownloadPDF}
         onFinishGameSession={() => setShowFinishDialog(true)}
+        showShopAndCarts={showShopAndCarts}
+        onToggleShopAndCarts={() => setShowShopAndCarts(!showShopAndCarts)}
       />
 
       <div className="container mx-auto px-4 py-6 max-w-full">
@@ -277,20 +279,6 @@ export default function MDDSStrategy() {
             {/* Right Sidebar - NATO and Russia Carts */}
             <div className="lg:col-span-2 order-3">
               <div className="lg:sticky lg:top-24 space-y-4">
-                {/* Visibility Toggle Button */}
-                <div className="flex justify-center">
-                  <Button
-                    onClick={() => setShowShopAndCarts(!showShopAndCarts)}
-                    size="sm"
-                    variant="outline"
-                    className="gap-2"
-                    data-testid="button-toggle-shop-visibility"
-                  >
-                    {showShopAndCarts ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    {showShopAndCarts ? 'Hide' : 'Show'} Shop & Carts
-                  </Button>
-                </div>
-
                 {showShopAndCarts && (
                   <>
                     <div className="glass-panel p-3 lg:p-4">
