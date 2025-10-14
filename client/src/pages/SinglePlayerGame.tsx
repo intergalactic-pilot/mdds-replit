@@ -48,22 +48,34 @@ export default function SinglePlayerGame() {
   useEffect(() => {
     const initSession = async () => {
       try {
+        // Check if Skip Turn 1 was selected
+        const urlParams = new URLSearchParams(window.location.search);
+        const skipTurn1 = urlParams.get('skipTurn1') === 'true';
+        
         const sessionName = `AI Strategy ${new Date().toLocaleString()}`;
         store.updateSessionName(sessionName);
         
-        // Create database session
+        // If Skip Turn 1, advance to Turn 2 before creating session
+        if (skipTurn1) {
+          store.advanceGameTurn();
+        }
+        
+        // Get fresh state after potential turn advancement
+        const currentState = useMDDSStore.getState();
+        
+        // Create database session with current turn state
         await apiRequest('POST', '/api/sessions', {
           sessionName: sessionName,
           gameState: {
-            turn: store.turn,
-            maxTurns: store.maxTurns,
-            currentTeam: store.currentTeam,
-            teams: store.teams,
-            phase: store.phase,
-            strategyLog: store.strategyLog
+            turn: currentState.turn,
+            maxTurns: currentState.maxTurns,
+            currentTeam: currentState.currentTeam,
+            teams: currentState.teams,
+            phase: currentState.phase,
+            strategyLog: currentState.strategyLog
           },
-          sessionInfo: store.sessionInfo,
-          turnStatistics: store.turnStatistics,
+          sessionInfo: currentState.sessionInfo,
+          turnStatistics: currentState.turnStatistics,
           lastUpdated: new Date().toISOString()
         });
 
