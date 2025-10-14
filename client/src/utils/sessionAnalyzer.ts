@@ -1,4 +1,5 @@
 import type { GameState, Team, Domain } from "@shared/schema";
+import cardsData from "@/data/cards.json";
 
 export interface SessionData {
   sessionName: string;
@@ -368,6 +369,9 @@ export function analyzeSelectedSessions(sessions: SessionData[]): AnalysisResult
   // Analyze cross-session patterns
   const crossSessionInsights = analyzeCrossSessionPatterns(sessions);
 
+  // Analyze card statistics
+  const cardStatsInsights = analyzeCardStatistics(sessions);
+
   // Determine winner stats
   const winnerStats = analyzeWinners(sessions);
 
@@ -379,7 +383,8 @@ export function analyzeSelectedSessions(sessions: SessionData[]): AnalysisResult
     ...comebackInsights.patterns,
     ...dimensionInsights.patterns,
     ...consistencyInsights.patterns,
-    ...crossSessionInsights.patterns
+    ...crossSessionInsights.patterns,
+    ...cardStatsInsights.patterns
   ].filter(Boolean);
 
   const headlineInsight = generateHeadlineInsight(sessions, winnerStats, dimensionInsights);
@@ -650,6 +655,128 @@ function analyzeCrossSessionPatterns(sessions: SessionData[]) {
         patterns.push(`${Math.round(earlySpenders / sessions.length * 100)}% of winners invested heavily in turns 1-3 - early aggression pays off`);
       }
     }
+  }
+
+  return { patterns };
+}
+
+function analyzeCardStatistics(sessions: SessionData[]) {
+  const patterns = [];
+  
+  // Create a lookup map for cards
+  const cardLookup = new Map(cardsData.map(card => [card.id, card]));
+  
+  // Track card purchase frequency
+  const cardPurchases: Record<string, { count: number; wins: number; cardName: string; cardType: string }> = {};
+  
+  sessions.forEach(session => {
+    const winner = determineWinner(session.gameState);
+    
+    // Analyze both teams' purchases
+    ['NATO', 'Russia'].forEach(teamName => {
+      const team = session.gameState.teams[teamName as Team];
+      const isWinner = winner === teamName;
+      
+      team.recentPurchases?.forEach(purchase => {
+        const card = cardLookup.get(purchase.cardId);
+        
+        if (!cardPurchases[purchase.cardId]) {
+          cardPurchases[purchase.cardId] = {
+            count: 0,
+            wins: 0,
+            cardName: card?.name || purchase.cardId,
+            cardType: card?.type || 'unknown'
+          };
+        }
+        cardPurchases[purchase.cardId].count++;
+        if (isWinner) {
+          cardPurchases[purchase.cardId].wins++;
+        }
+      });
+    });
+  });
+
+  // Find most frequently purchased cards
+  const sortedByFrequency = Object.entries(cardPurchases)
+    .sort((a, b) => b[1].count - a[1].count)
+    .slice(0, 5);
+
+  if (sortedByFrequency.length > 0) {
+    // Show all top 5 with counts
+    sortedByFrequency.forEach(([_, data], index) => {
+      if (index === 0) {
+        patterns.push(`Most purchased card: ${data.cardName} (${data.count} purchases across all sessions)`);
+      } else {
+        patterns.push(`#${index + 1} popular pick: ${data.cardName} (${data.count} purchases)`);
+      }
+    });
+  }
+
+  // Analyze card types by winner
+  const cardTypeStats: Record<string, { total: number; winnerPurchases: number }> = {
+    asset: { total: 0, winnerPurchases: 0 },
+    permanent: { total: 0, winnerPurchases: 0 },
+    expert: { total: 0, winnerPurchases: 0 }
+  };
+
+  sessions.forEach(session => {
+    const winner = determineWinner(session.gameState);
+    
+    ['NATO', 'Russia'].forEach(teamName => {
+      const team = session.gameState.teams[teamName as Team];
+      const isWinner = winner === teamName;
+      
+      team.recentPurchases?.forEach(purchase => {
+        const card = cardLookup.get(purchase.cardId);
+        const cardType = card?.type || 'asset';
+        if (cardTypeStats[cardType]) {
+          cardTypeStats[cardType].total++;
+          if (isWinner) {
+            cardTypeStats[cardType].winnerPurchases++;
+          }
+        }
+      });
+    });
+  });
+
+  // Report card type effectiveness
+  Object.entries(cardTypeStats).forEach(([type, stats]) => {
+    if (stats.total > 0) {
+      const winRate = Math.round((stats.winnerPurchases / stats.total) * 100);
+      const typeName = type.charAt(0).toUpperCase() + type.slice(1);
+      patterns.push(`${typeName} cards: ${stats.total} purchases total, ${winRate}% win rate when used`);
+    }
+  });
+
+  // Find cards with highest win correlation
+  const winningCards = Object.entries(cardPurchases)
+    .filter(([_, data]) => data.count >= 2) // At least 2 purchases
+    .sort((a, b) => (b[1].wins / b[1].count) - (a[1].wins / a[1].count))
+    .slice(0, 3);
+
+  if (winningCards.length > 0) {
+    winningCards.forEach(([_, data]) => {
+      const winRate = Math.round((data.wins / data.count) * 100);
+      if (winRate >= 60) {
+        patterns.push(`${data.cardName} shows strong correlation with victory (${winRate}% win rate in ${data.count} uses)`);
+      }
+    });
+  }
+
+  // Analyze permanent card holdings
+  const permanentCardCounts: number[] = [];
+  sessions.forEach(session => {
+    const winner = determineWinner(session.gameState);
+    if (winner) {
+      const winnerState = session.gameState.teams[winner];
+      permanentCardCounts.push(winnerState.ownedPermanents.length);
+    }
+  });
+
+  if (permanentCardCounts.length > 0) {
+    const avgPermanents = permanentCardCounts.reduce((sum, count) => sum + count, 0) / permanentCardCounts.length;
+    const maxPermanents = Math.max(...permanentCardCounts);
+    patterns.push(`Winning teams average ${avgPermanents.toFixed(1)} permanent cards (max: ${maxPermanents} in a single victory)`);
   }
 
   return { patterns };
