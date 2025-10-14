@@ -391,23 +391,23 @@ export default function DefenseOffenseChart({ forceExpanded = false, hideToggle 
               bgClass="bg-blue-50/5 dark:bg-blue-950/20"
             />
             
-            {/* Russia Defense Chart */}
-            <IndividualChart
-              title="Russia Defensive Effects"
-              team="Russia"
-              type="Defense"
-              data={russiaDefenseData}
-              visibleDomains={visibleDomains}
-              onToggleDomain={toggleDomainVisibility}
-              bgClass="bg-red-50/5 dark:bg-red-950/20"
-            />
-            
             {/* Russia Offense Chart */}
             <IndividualChart
               title="Russia Offensive Effects on NATO"
               team="Russia"
               type="Offense"
               data={russiaOffenseData}
+              visibleDomains={visibleDomains}
+              onToggleDomain={toggleDomainVisibility}
+              bgClass="bg-red-50/5 dark:bg-red-950/20"
+            />
+            
+            {/* Russia Defense Chart */}
+            <IndividualChart
+              title="Russia Defensive Effects"
+              team="Russia"
+              type="Defense"
+              data={russiaDefenseData}
               visibleDomains={visibleDomains}
               onToggleDomain={toggleDomainVisibility}
               bgClass="bg-red-50/5 dark:bg-red-950/20"
