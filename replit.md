@@ -135,3 +135,42 @@ The backend is designed as a lightweight foundation that can be extended with da
 - **Local Storage**: Browser-based persistence for game state
 
 The application is designed for deployment on platforms like Replit, with database provisioning handled through environment variables and minimal external service dependencies.
+
+## Deployment Documentation
+
+The application includes comprehensive deployment documentation for production environments:
+
+### Deployment Files
+- **README.md**: Application overview, features, quick start guide, and technology stack
+- **DEPLOYMENT.md**: Complete step-by-step deployment guide for Windows and Linux servers
+  - Prerequisites and system requirements
+  - Windows Server deployment (IIS/standalone)
+  - Linux Server deployment (Ubuntu/CentOS with Nginx)
+  - Database setup and configuration
+  - SSL/HTTPS configuration
+  - Process management with PM2
+  - Troubleshooting guide
+- **PACKAGING.md**: Instructions for creating deployment packages
+  - What to include/exclude in ZIP files
+  - Multiple packaging methods (Git, manual, npm scripts)
+  - Security best practices
+  - Version management
+  - Checksum generation
+- **.env.example**: Template for environment variables
+
+### Deployment Targets
+The application can be deployed to:
+- Windows Server 2016+ (IIS or standalone)
+- Linux servers (Ubuntu 18.04+, CentOS 7+, Debian 10+)
+- Any platform supporting Node.js 18+ and PostgreSQL 14+
+- Cloud platforms (AWS, Azure, Google Cloud, DigitalOcean)
+- VPS providers with SSH access
+
+### Single-Player AI Features
+- **Password Protection**: Single game mode requires password "MDDS"
+- **Skip Turn 1**: Optional checkbox to start directly at Turn 2 with pooled budget
+- **Balanced AI Strategy**: Russia AI tracks NATO deterrence scores and adapts strategy
+  - Gap analysis across all domains
+  - Impact-based card selection (not just cost)
+  - Budget allocation proportional to deterrence gaps
+  - Competitive scoring for engaging gameplay
