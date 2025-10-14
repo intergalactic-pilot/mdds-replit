@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLocation } from 'wouter';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +14,7 @@ export default function LoginScreen() {
   const [skipTurn1, setSkipTurn1] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [, setLocation] = useLocation();
   
   const setShowLoginScreen = useMDDSStore(state => state.setShowLoginScreen);
   const updateSessionName = useMDDSStore(state => state.updateSessionName);
@@ -77,6 +79,10 @@ export default function LoginScreen() {
       setError('Failed to create session. Please try again.');
       setIsLoading(false);
     }
+  };
+
+  const handleSingleGame = () => {
+    setLocation('/single-player');
   };
 
   return (
@@ -148,6 +154,27 @@ export default function LoginScreen() {
               data-testid="button-start-session"
             >
               {isLoading ? 'Starting...' : 'Start Session'}
+            </Button>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">
+                  Or
+                </span>
+              </div>
+            </div>
+
+            <Button
+              onClick={handleSingleGame}
+              variant="outline"
+              className="w-full"
+              disabled={isLoading}
+              data-testid="button-single-game"
+            >
+              Single game
             </Button>
           </div>
         </div>
