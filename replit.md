@@ -25,7 +25,11 @@ The frontend follows a component-based architecture with clear separation of con
 - **Database Sessions View**: Accessible from Settings dialog (password: "MDDS"), displays all stored game sessions with session name, turn information, participants, current phase/team, and deterrence scores. Features robust type safety with comprehensive data normalization to handle various API response structures. Includes research icon (flask) for quick access to Research Dashboard.
 - **Analysis Dashboard**: Multi-tab interface (/analysis) featuring:
   - **Generic Patternization**: Discovers all winning strategies and correlations across 7 analysis categories (winning strategies, domain correlations, budget patterns, card effectiveness, timing patterns, turn-by-turn patterns, team-specific formulas)
-  - **Predetermined Considerations**: Answers 7 strategic questions about card timing, momentum swings, team asymmetry, comeback triggers, dimension correlation, strategy consistency, and cross-session recurrence
+  - **Predetermined Considerations**: Answers strategic questions about card timing, momentum swings, team asymmetry, comeback triggers, dimension correlation, strategy consistency, and cross-session recurrence. Includes comprehensive card-related statistics:
+    - **Most Purchased Cards**: Top 5 most frequently purchased cards with individual purchase counts across all sessions
+    - **Card Type Win Rates**: Asset, Permanent, and Expert card purchase totals with calculated win rates (% of purchases leading to victories)
+    - **High-Correlation Cards**: Identifies specific cards with ≥60% win rate (minimum 2 uses) showing strong correlation with victory
+    - **Permanent Card Holdings**: Average and maximum permanent cards held by winning teams
   - **Ask Questions**: Interactive Q&A interface with LLM-style chat experience for querying selected sessions. Provides authentic, data-driven answers based on real session data (winners, scores, domains, budgets, cards, turns, comparisons)
 - **Research Dashboard** (/research): Statistical analysis environment featuring:
   - **Hypothesis Development**: Interactive hypothesis analyzer that intelligently recommends relevant variables based on natural language input. Uses keyword matching and pattern detection to identify team mentions (NATO/Russia), domain references (economy, cyber, space, cognitive, joint), and comparison terms (correlation, impact, versus). Features include:
