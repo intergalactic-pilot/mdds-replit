@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "./components/ThemeProvider";
 import MDDSStrategy from "./pages/MDDSStrategy";
+import SinglePlayerGame from "./pages/SinglePlayerGame";
 import MobileSession from "./pages/MobileSession";
 import MobileLogin from "./pages/MobileLogin";
 import DatabaseSessions from "./pages/DatabaseSessions";
@@ -16,6 +17,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={MDDSStrategy} />
+      <Route path="/single-player" component={SinglePlayerGame} />
       <Route path="/database" component={DatabaseSessions} />
       <Route path="/analysis" component={Analysis} />
       <Route path="/research" component={Research} />
