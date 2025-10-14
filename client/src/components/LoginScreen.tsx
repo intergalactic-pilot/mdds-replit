@@ -4,6 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { useMDDSStore } from '@/state/store';
 import { sanitizeText } from '../logic/guards';
 import { apiRequest } from '@/lib/queryClient';
@@ -14,6 +22,9 @@ export default function LoginScreen() {
   const [skipTurn1, setSkipTurn1] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [password, setPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [, setLocation] = useLocation();
   
   const setShowLoginScreen = useMDDSStore(state => state.setShowLoginScreen);
@@ -82,7 +93,18 @@ export default function LoginScreen() {
   };
 
   const handleSingleGame = () => {
-    setLocation('/single-player');
+    setShowPasswordDialog(true);
+    setPassword('');
+    setPasswordError('');
+  };
+
+  const handlePasswordSubmit = () => {
+    if (password === 'MDDS') {
+      setShowPasswordDialog(false);
+      setLocation(`/single-player?skipTurn1=${skipTurn1}`);
+    } else {
+      setPasswordError('Incorrect password');
+    }
   };
 
   return (
@@ -179,6 +201,64 @@ export default function LoginScreen() {
           </div>
         </div>
       </div>
+
+      <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Single Player Password</DialogTitle>
+            <DialogDescription>
+              Enter the password to access Single Player mode
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="single-player-password">Password</Label>
+              <Input
+                id="single-player-password"
+                type="password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setPasswordError('');
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handlePasswordSubmit();
+                  }
+                }}
+                placeholder="Enter password"
+                data-testid="input-single-player-password"
+                autoFocus
+              />
+            </div>
+
+            {passwordError && (
+              <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-md p-3">
+                <p className="text-sm text-red-600 dark:text-red-400" data-testid="text-password-error">
+                  {passwordError}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowPasswordDialog(false)}
+              data-testid="button-cancel-password"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handlePasswordSubmit}
+              data-testid="button-submit-password"
+            >
+              Continue
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
