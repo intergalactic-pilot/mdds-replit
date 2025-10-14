@@ -111,6 +111,7 @@ export default function SinglePlayerGame() {
 
   const makeAIDecision = () => {
     const russiaState = store.teams.Russia;
+    const natoState = store.teams.NATO;
     const budget = russiaState.budget;
     const turn = store.turn;
     
@@ -128,25 +129,47 @@ export default function SinglePlayerGame() {
       return;
     }
 
-    // AI Strategy: Prioritize permanent cards, then balance domains
-    let selectedCards: Card[] = [];
-    let remainingBudget = budget;
-    let spentPerDomain: Record<Domain, number> = {
-      joint: 0, economy: 0, cognitive: 0, space: 0, cyber: 0
+    // Calculate deterrence gaps per domain (NATO score - Russia score)
+    const domains: Domain[] = ['joint', 'economy', 'cognitive', 'space', 'cyber'];
+    const gaps: Record<Domain, number> = {
+      joint: natoState.deterrence.joint - russiaState.deterrence.joint,
+      economy: natoState.deterrence.economy - russiaState.deterrence.economy,
+      cognitive: natoState.deterrence.cognitive - russiaState.deterrence.cognitive,
+      space: natoState.deterrence.space - russiaState.deterrence.space,
+      cyber: natoState.deterrence.cyber - russiaState.deterrence.cyber,
     };
 
-    // Turn 1: Must spend exactly 200K per domain
+    // Sort domains by gap (prioritize where Russia is furthest behind)
+    const domainsByGap = domains.sort((a, b) => gaps[b] - gaps[a]);
+
+    // Helper to calculate card impact score
+    const getCardImpact = (card: Card): number => {
+      if (!card.effects) return 0;
+      return card.effects.reduce((sum, effect) => {
+        // Positive for self-benefits, negative for opponent penalties
+        return sum + Math.abs(effect.delta);
+      }, 0);
+    };
+
+    // AI Strategy: Balance deterrence to stay competitive with NATO
+    let selectedCards: Card[] = [];
+    let remainingBudget = budget;
+
+    // Turn 1: Must spend exactly 200K per domain, but prioritize gap-closing
     if (turn === 1) {
-      const domains: Domain[] = ['joint', 'economy', 'cognitive', 'space', 'cyber'];
-      
       for (const domain of domains) {
         const domainCards = russiaAvailableCards
           .filter(c => c.domain === domain)
           .sort((a, b) => {
-            // Prioritize permanents, then by effectiveness
-            if (a.type === 'permanent' && b.type !== 'permanent') return -1;
-            if (a.type !== 'permanent' && b.type === 'permanent') return 1;
-            return b.baseCostK - a.baseCostK;
+            // Prioritize cards with better deterrence impact
+            const aImpact = getCardImpact(a);
+            const bImpact = getCardImpact(b);
+            
+            // Favor permanents slightly, but prioritize impact
+            const aScore = aImpact + (a.type === 'permanent' ? 5 : 0);
+            const bScore = bImpact + (b.type === 'permanent' ? 5 : 0);
+            
+            return bScore - aScore;
           });
 
         let domainBudget = 200;
@@ -155,44 +178,47 @@ export default function SinglePlayerGame() {
           if (price <= domainBudget) {
             selectedCards.push(card);
             domainBudget -= price;
-            spentPerDomain[domain] += price;
             
             if (domainBudget === 0) break;
           }
         }
       }
     } else {
-      // Turn 2+: Pooled budget strategy
-      // 1. First, get permanents if budget allows
-      const permanents = russiaAvailableCards
-        .filter(c => c.type === 'permanent')
-        .sort((a, b) => b.baseCostK - a.baseCostK);
+      // Turn 2+: Balanced strategy targeting gap closure
+      // Prioritize domains where Russia is behind
+      for (const domain of domainsByGap) {
+        const domainGap = gaps[domain];
+        
+        // Skip if Russia is significantly ahead in this domain
+        if (domainGap < -10) continue;
 
-      for (const card of permanents) {
-        const price = calculateDiscountedPrice(card, russiaState.ownedPermanents);
-        if (price <= remainingBudget && price <= 500) {
-          selectedCards.push(card);
-          remainingBudget -= price;
-        }
-      }
-
-      // 2. Then, balance spending across domains
-      const domains: Domain[] = ['joint', 'economy', 'cognitive', 'space', 'cyber'];
-      const shuffledDomains = domains.sort(() => Math.random() - 0.5);
-
-      for (const domain of shuffledDomains) {
         const domainCards = russiaAvailableCards
           .filter(c => c.domain === domain && !selectedCards.includes(c))
-          .sort((a, b) => b.baseCostK - a.baseCostK);
+          .sort((a, b) => {
+            // Score cards by deterrence impact and gap-closing potential
+            const aImpact = getCardImpact(a);
+            const bImpact = getCardImpact(b);
+            
+            // Favor permanents for long-term value
+            const aScore = aImpact + (a.type === 'permanent' ? 8 : 0);
+            const bScore = bImpact + (b.type === 'permanent' ? 8 : 0);
+            
+            return bScore - aScore;
+          });
+
+        // Allocate budget proportional to gap size
+        const budgetForDomain = domainGap > 0 ? Math.min(remainingBudget * 0.3, 400) : Math.min(remainingBudget * 0.15, 200);
 
         for (const card of domainCards) {
           const price = calculateDiscountedPrice(card, russiaState.ownedPermanents);
-          if (price <= remainingBudget && price <= 300) {
+          if (price <= remainingBudget && price <= budgetForDomain) {
             selectedCards.push(card);
             remainingBudget -= price;
             break;
           }
         }
+
+        if (remainingBudget < 50) break;
       }
     }
 
