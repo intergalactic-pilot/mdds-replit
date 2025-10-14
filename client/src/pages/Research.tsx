@@ -58,6 +58,9 @@ export default function Research() {
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
   const [cardTeamFilter, setCardTeamFilter] = useState<string>("both");
   
+  // Hypothesis Development
+  const [hypothesis, setHypothesis] = useState<string>("");
+  
   // Report generation
   const [selectedMethodology, setSelectedMethodology] = useState<string>("");
   const [generatedReport, setGeneratedReport] = useState<string>("");
@@ -445,6 +448,84 @@ export default function Research() {
     sessions
   ]);
 
+  // Analyze hypothesis and recommend variables
+  const recommendedVariables = useMemo(() => {
+    if (!hypothesis.trim()) return [];
+    
+    const lowerHypothesis = hypothesis.toLowerCase();
+    const recommendations: string[] = [];
+    
+    // Keywords for different variable types
+    const keywords = {
+      nato_total: ['nato total', 'nato overall', 'nato deterrence score', 'nato performance'],
+      russia_total: ['russia total', 'russia overall', 'russia deterrence score', 'russia performance'],
+      nato_joint: ['nato joint', 'nato military'],
+      nato_economy: ['nato economy', 'nato economic'],
+      nato_cognitive: ['nato cognitive', 'nato information', 'nato perception'],
+      nato_space: ['nato space', 'nato satellite'],
+      nato_cyber: ['nato cyber', 'nato digital'],
+      russia_joint: ['russia joint', 'russia military'],
+      russia_economy: ['russia economy', 'russia economic'],
+      russia_cognitive: ['russia cognitive', 'russia information', 'russia perception'],
+      russia_space: ['russia space', 'russia satellite'],
+      russia_cyber: ['russia cyber', 'russia digital'],
+      turn_count: ['turn', 'duration', 'length', 'time', 'rounds'],
+      card_count: ['card', 'purchase', 'investment', 'spending']
+    };
+
+    // Check for general team mentions
+    const hasNato = /\bnato\b/.test(lowerHypothesis);
+    const hasRussia = /\brussia\b/.test(lowerHypothesis);
+    
+    // Check for domain mentions
+    const hasJoint = /\bjoint\b|military|forces/.test(lowerHypothesis);
+    const hasEconomy = /\beconom/.test(lowerHypothesis);
+    const hasCognitive = /\bcognitive\b|information|perception|narrative/.test(lowerHypothesis);
+    const hasSpace = /\bspace\b|satellite/.test(lowerHypothesis);
+    const hasCyber = /\bcyber\b|digital|network/.test(lowerHypothesis);
+    
+    // Match specific keywords
+    Object.entries(keywords).forEach(([varId, terms]) => {
+      if (terms.some(term => lowerHypothesis.includes(term))) {
+        recommendations.push(varId);
+      }
+    });
+    
+    // Add domain-based recommendations if team mentioned but no specific match
+    if (hasNato && !recommendations.some(r => r.startsWith('nato_'))) {
+      if (hasJoint) recommendations.push('nato_joint');
+      if (hasEconomy) recommendations.push('nato_economy');
+      if (hasCognitive) recommendations.push('nato_cognitive');
+      if (hasSpace) recommendations.push('nato_space');
+      if (hasCyber) recommendations.push('nato_cyber');
+      if (!hasJoint && !hasEconomy && !hasCognitive && !hasSpace && !hasCyber) {
+        recommendations.push('nato_total');
+      }
+    }
+    
+    if (hasRussia && !recommendations.some(r => r.startsWith('russia_'))) {
+      if (hasJoint) recommendations.push('russia_joint');
+      if (hasEconomy) recommendations.push('russia_economy');
+      if (hasCognitive) recommendations.push('russia_cognitive');
+      if (hasSpace) recommendations.push('russia_space');
+      if (hasCyber) recommendations.push('russia_cyber');
+      if (!hasJoint && !hasEconomy && !hasCognitive && !hasSpace && !hasCyber) {
+        recommendations.push('russia_total');
+      }
+    }
+    
+    // Check for comparison/correlation terms
+    const hasComparison = /\bcompare|versus|vs|between|differ|relationship|correlat|impact|effect|influence/.test(lowerHypothesis);
+    if (hasComparison && recommendations.length === 0) {
+      // If comparing but no specific variables, suggest both teams' totals
+      if (hasNato || hasRussia || (!hasNato && !hasRussia)) {
+        recommendations.push('nato_total', 'russia_total');
+      }
+    }
+    
+    return Array.from(new Set(recommendations)); // Remove duplicates
+  }, [hypothesis]);
+
   // Calculate card purchase frequency
   const cardFrequencyData = useMemo(() => {
     if (!sessions || selectedCards.length === 0 || selectedSessions.length === 0) {
@@ -721,6 +802,115 @@ export default function Research() {
 
           {/* Right Panel: Analysis Results */}
           <div className="lg:col-span-2 space-y-4">
+            {/* Hypothesis Development */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FlaskConical className="w-5 h-5" />
+                  Hypothesis Development
+                </CardTitle>
+                <CardDescription>
+                  Enter your research hypothesis to get variable recommendations
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="hypothesis">Your Hypothesis</Label>
+                  <textarea
+                    id="hypothesis"
+                    value={hypothesis}
+                    onChange={(e) => setHypothesis(e.target.value)}
+                    placeholder="Example: NATO's economic domain performance is positively correlated with their overall deterrence score..."
+                    className="w-full min-h-[100px] p-3 rounded-md border border-input bg-background text-sm resize-y"
+                    data-testid="textarea-hypothesis"
+                  />
+                </div>
+
+                {/* Recommendations */}
+                {hypothesis.trim() && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-semibold">Recommended Variables</h3>
+                      {recommendedVariables.length > 0 && (
+                        <Badge variant="outline" className="text-xs">
+                          {recommendedVariables.length} suggestion{recommendedVariables.length !== 1 ? 's' : ''}
+                        </Badge>
+                      )}
+                    </div>
+
+                    {recommendedVariables.length > 0 ? (
+                      <div className="space-y-2">
+                        <p className="text-xs text-muted-foreground">
+                          Based on your hypothesis, consider selecting these variables:
+                        </p>
+                        <div className="grid grid-cols-1 gap-2">
+                          {recommendedVariables.map(varId => {
+                            const variable = availableVariables.find(v => v.id === varId);
+                            const isSelected = selectedVariables.includes(varId);
+                            
+                            return (
+                              <div
+                                key={varId}
+                                className={`flex items-center justify-between p-2 rounded-md border transition-colors ${
+                                  isSelected 
+                                    ? 'border-primary bg-primary/5' 
+                                    : 'border-border bg-muted/30 hover-elevate'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 flex-1">
+                                  {isSelected ? (
+                                    <Badge variant="default" className="text-xs">Selected</Badge>
+                                  ) : (
+                                    <Badge variant="outline" className="text-xs">Recommended</Badge>
+                                  )}
+                                  <span className="text-sm">{variable?.label}</span>
+                                </div>
+                                {!isSelected && (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => toggleVariable(varId)}
+                                    data-testid={`button-select-${varId}`}
+                                  >
+                                    Select
+                                  </Button>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                        
+                        {recommendedVariables.some(v => !selectedVariables.includes(v)) && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              const toAdd = recommendedVariables.filter(v => !selectedVariables.includes(v));
+                              setSelectedVariables(prev => [...prev, ...toAdd]);
+                            }}
+                            className="w-full"
+                            data-testid="button-select-all-recommended"
+                          >
+                            Select All Recommended
+                          </Button>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground p-3 bg-muted/30 rounded-md">
+                        No specific variable recommendations. Try mentioning team names (NATO/Russia), domains (economy, cyber, space, cognitive, joint), or comparison terms in your hypothesis.
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {!hypothesis.trim() && (
+                  <p className="text-sm text-muted-foreground p-3 bg-muted/30 rounded-md">
+                    Enter a hypothesis above to receive personalized variable recommendations for your analysis.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Card Purchase Frequency Analysis */}
             <Card>
               <CardHeader>
