@@ -352,13 +352,8 @@ export default function AppHeader({
               </PopoverContent>
             </Popover>
 
-            {/* Rules/Readme */}
+            {/* Rules/Readme Dialog (triggered from Settings) */}
             <Dialog open={showRules} onOpenChange={setShowRules}>
-              <DialogTrigger asChild>
-                <Button variant="ghost" size="icon" data-testid="button-show-rules">
-                  <BookOpen className="w-4 h-4" />
-                </Button>
-              </DialogTrigger>
               <DialogContent className="max-w-[95vw] w-full max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="text-2xl">{sanitizeText('MDDS Rules & Guidelines')}</DialogTitle>
@@ -554,6 +549,20 @@ export default function AppHeader({
                       <span className="font-medium">Database</span>
                     </Button>
                   )}
+
+                  {/* Guidelines/Tutorial */}
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start p-3 gap-2"
+                    onClick={() => {
+                      setShowSettings(false);
+                      setShowRules(true);
+                    }}
+                    data-testid="button-show-guidelines"
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    <span className="font-medium">{sanitizeText('Rules & Guidelines')}</span>
+                  </Button>
 
                   {/* Card Purchase Logs */}
                   <Collapsible
