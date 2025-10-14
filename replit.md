@@ -28,8 +28,15 @@ The frontend follows a component-based architecture with clear separation of con
   - **Predetermined Considerations**: Answers 7 strategic questions about card timing, momentum swings, team asymmetry, comeback triggers, dimension correlation, strategy consistency, and cross-session recurrence
   - **Ask Questions**: Interactive Q&A interface with LLM-style chat experience for querying selected sessions. Provides authentic, data-driven answers based on real session data (winners, scores, domains, budgets, cards, turns, comparisons)
 - **Research Dashboard** (/research): Statistical analysis environment featuring:
+  - **Hypothesis Development**: Interactive hypothesis analyzer that intelligently recommends relevant variables based on natural language input. Uses keyword matching and pattern detection to identify team mentions (NATO/Russia), domain references (economy, cyber, space, cognitive, joint), and comparison terms (correlation, impact, versus). Features include:
+    - Real-time analysis of hypothesis text with useMemo optimization
+    - Smart variable recommendations with deduplication logic
+    - Visual distinction between Selected and Recommended variables
+    - Bulk "Select All Recommended" functionality
+    - Fallback suggestions when hypothesis lacks specific keywords
   - **Session Filtering**: Search, winner filtering, and date-based filtering for research dataset selection
   - **Variable Selection**: 14+ dependent variables (deterrence scores, budget metrics, turn counts) across NATO/Russia teams
+  - **Card Purchase Frequency**: Multi-card selection analysis showing percentage of sessions where cards were purchased, with team filtering (Both/NATO/Russia) and session-based percentage calculations using Set-based tracking to prevent >100% values
   - **Descriptive Statistics**: Automated calculation of N, Mean, SD, Min, Max, Range, Median, and IQR for selected variables
   - **Statistical Test Recommendations**: Intelligent recommendation system for 11 statistical methodologies (t-tests, ANOVA, MANOVA, correlation, regression, non-parametric tests) with appropriateness detection based on data characteristics
   - **Scientific Word Document Generation**: Automated creation of publication-ready .docx reports including:
