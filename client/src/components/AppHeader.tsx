@@ -28,7 +28,9 @@ import {
   CreditCard,
   FileCheck,
   Lock,
-  Unlock
+  Unlock,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import logoUrl from '@assets/Logo_1758524556759.png';
 import { useTheme } from "./ThemeProvider";
@@ -44,6 +46,8 @@ interface AppHeaderProps {
   onSetMaxTurns: (turns: number) => void;
   onDownloadPDF: () => void;
   onFinishGameSession: () => void;
+  showShopAndCarts: boolean;
+  onToggleShopAndCarts: () => void;
 }
 
 export default function AppHeader({
@@ -53,7 +57,9 @@ export default function AppHeader({
   onResetProgress,
   onSetMaxTurns,
   onDownloadPDF,
-  onFinishGameSession
+  onFinishGameSession,
+  showShopAndCarts,
+  onToggleShopAndCarts
 }: AppHeaderProps) {
   const [, setLocation] = useLocation();
   const { theme, setTheme } = useTheme();
@@ -158,6 +164,16 @@ export default function AppHeader({
             >
               <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
               <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            </Button>
+
+            {/* Show/Hide Shop & Carts Toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onToggleShopAndCarts}
+              data-testid="button-toggle-shop-visibility"
+            >
+              {showShopAndCarts ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </Button>
 
             {/* Participants */}
