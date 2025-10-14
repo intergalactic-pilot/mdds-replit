@@ -30,7 +30,8 @@ import {
   Lock,
   Unlock,
   Eye,
-  EyeOff
+  EyeOff,
+  BookOpen
 } from 'lucide-react';
 import logoUrl from '@assets/Logo_1758524556759.png';
 import { useTheme } from "./ThemeProvider";
@@ -72,6 +73,7 @@ export default function AppHeader({
   const [isDatabaseUnlocked, setIsDatabaseUnlocked] = useState(false);
   const [databasePassword, setDatabasePassword] = useState("");
   const [passwordError, setPasswordError] = useState(false);
+  const [showRules, setShowRules] = useState(false);
   
   // Use store for session management
   const sessionInfo = useMDDSStore(state => state.sessionInfo);
@@ -349,6 +351,215 @@ export default function AppHeader({
                 </div>
               </PopoverContent>
             </Popover>
+
+            {/* Rules/Readme */}
+            <Dialog open={showRules} onOpenChange={setShowRules}>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="icon" data-testid="button-show-rules">
+                  <BookOpen className="w-4 h-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl">{sanitizeText('MDDS Rules & Guidelines')}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-6 text-sm">
+                  {/* Overview */}
+                  <section className="space-y-3">
+                    <h3 className="text-lg font-semibold text-primary">Overview</h3>
+                    <p className="text-muted-foreground leading-relaxed">
+                      Multi Dimension Deterrence Strategy (MDDS) is a strategic planning application where NATO and Russia teams compete across five domains: Joint, Economy, Cognitive, Space, and Cyber. Teams purchase cards to increase their deterrence while reducing opponent deterrence.
+                    </p>
+                  </section>
+
+                  {/* Game Setup */}
+                  <section className="space-y-3">
+                    <h3 className="text-lg font-semibold text-primary">{sanitizeText('Strategy Setup')}</h3>
+                    <div className="space-y-2">
+                      <div className="p-3 rounded-lg bg-muted/30">
+                        <p className="font-medium mb-1">Teams</p>
+                        <p className="text-muted-foreground">Two teams: NATO (blue) and Russia (red)</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-muted/30">
+                        <p className="font-medium mb-1">Turn Types</p>
+                        <ul className="list-disc list-inside text-muted-foreground space-y-1">
+                          <li><strong>Base Turn (Turn 1):</strong> 200K budget per domain (1000K total)</li>
+                          <li><strong>Pooled Turns (Turn 2+):</strong> 1000K total budget, flexible allocation</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* Five Domains */}
+                  <section className="space-y-3">
+                    <h3 className="text-lg font-semibold text-primary">Five Domains</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <div className="p-3 rounded-lg border">
+                        <DomainBadge domain="joint" className="mb-2" />
+                        <p className="text-muted-foreground text-xs">Military coordination and operations</p>
+                      </div>
+                      <div className="p-3 rounded-lg border">
+                        <DomainBadge domain="economy" className="mb-2" />
+                        <p className="text-muted-foreground text-xs">Economic power and sanctions</p>
+                      </div>
+                      <div className="p-3 rounded-lg border">
+                        <DomainBadge domain="cognitive" className="mb-2" />
+                        <p className="text-muted-foreground text-xs">Information and psychological warfare</p>
+                      </div>
+                      <div className="p-3 rounded-lg border">
+                        <DomainBadge domain="space" className="mb-2" />
+                        <p className="text-muted-foreground text-xs">Satellite and space capabilities</p>
+                      </div>
+                      <div className="p-3 rounded-lg border">
+                        <DomainBadge domain="cyber" className="mb-2" />
+                        <p className="text-muted-foreground text-xs">Digital attacks and defenses</p>
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* Card Types */}
+                  <section className="space-y-3">
+                    <h3 className="text-lg font-semibold text-primary">Card Types</h3>
+                    <div className="space-y-2">
+                      <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                        <p className="font-medium text-blue-600 dark:text-blue-400 mb-1">Asset Cards</p>
+                        <p className="text-muted-foreground">One-time use cards with immediate effects</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                        <p className="font-medium text-purple-600 dark:text-purple-400 mb-1">Permanent Cards</p>
+                        <ul className="text-muted-foreground space-y-1">
+                          <li>• Passive effects applied every turn</li>
+                          <li>• Reduce card costs by 50K permanently</li>
+                          <li>• Strategic long-term investment</li>
+                        </ul>
+                      </div>
+                      <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                        <p className="font-medium text-amber-600 dark:text-amber-400 mb-1">Expert Cards</p>
+                        <ul className="text-muted-foreground space-y-1">
+                          <li>• One-time powerful effects</li>
+                          <li>• Cannot be purchased again once used</li>
+                          <li>• Premium strategic options</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* Turn Flow */}
+                  <section className="space-y-3">
+                    <h3 className="text-lg font-semibold text-primary">Turn Flow</h3>
+                    <div className="space-y-2">
+                      <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
+                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                          <span className="font-bold text-primary">1</span>
+                        </div>
+                        <div>
+                          <p className="font-medium">Purchase Phase</p>
+                          <p className="text-muted-foreground">Add cards to cart within budget constraints</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
+                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                          <span className="font-bold text-primary">2</span>
+                        </div>
+                        <div>
+                          <p className="font-medium">Commit Phase</p>
+                          <p className="text-muted-foreground">Click "Finish Turn" to confirm purchases and apply effects</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
+                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                          <span className="font-bold text-primary">3</span>
+                        </div>
+                        <div>
+                          <p className="font-medium">Advance Phase</p>
+                          <p className="text-muted-foreground">Turn switches to opponent team automatically</p>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* Scoring */}
+                  <section className="space-y-3">
+                    <h3 className="text-lg font-semibold text-primary">Deterrence Scoring</h3>
+                    <div className="p-4 rounded-lg bg-gradient-to-r from-blue-500/10 to-red-500/10 border">
+                      <p className="text-muted-foreground mb-3">
+                        Card effects modify deterrence scores across domains:
+                      </p>
+                      <ul className="space-y-2 text-muted-foreground">
+                        <li className="flex items-start gap-2">
+                          <span className="text-green-500 font-bold">+</span>
+                          <span><strong>Offensive Effects:</strong> Increase your team's deterrence</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-red-500 font-bold">−</span>
+                          <span><strong>Defensive Effects:</strong> Reduce opponent's deterrence</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-primary font-bold">∑</span>
+                          <span><strong>Total Score:</strong> Sum of all domain scores determines winner</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </section>
+
+                  {/* Budget Rules */}
+                  <section className="space-y-3">
+                    <h3 className="text-lg font-semibold text-primary">Budget Rules</h3>
+                    <div className="space-y-2">
+                      <div className="p-3 rounded-lg border border-orange-500/30 bg-orange-500/5">
+                        <p className="font-medium text-orange-600 dark:text-orange-400 mb-1">Turn 1 Restrictions</p>
+                        <p className="text-muted-foreground">Must spend exactly 200K per domain (no flexibility)</p>
+                      </div>
+                      <div className="p-3 rounded-lg border border-green-500/30 bg-green-500/5">
+                        <p className="font-medium text-green-600 dark:text-green-400 mb-1">Turn 2+ Flexibility</p>
+                        <p className="text-muted-foreground">Allocate 1000K freely across any domains</p>
+                      </div>
+                      <div className="p-3 rounded-lg border border-blue-500/30 bg-blue-500/5">
+                        <p className="font-medium text-blue-600 dark:text-blue-400 mb-1">Permanent Discounts</p>
+                        <p className="text-muted-foreground">Each permanent card reduces future costs by 50K</p>
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* Strategy Tips */}
+                  <section className="space-y-3">
+                    <h3 className="text-lg font-semibold text-primary">Strategic Tips</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <div className="p-3 rounded-lg bg-muted/20 border">
+                        <p className="font-medium mb-1">Balance Domains</p>
+                        <p className="text-xs text-muted-foreground">Diversify across all five domains</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-muted/20 border">
+                        <p className="font-medium mb-1">Permanent Investment</p>
+                        <p className="text-xs text-muted-foreground">Early permanents pay off long-term</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-muted/20 border">
+                        <p className="font-medium mb-1">Expert Timing</p>
+                        <p className="text-xs text-muted-foreground">Save experts for critical moments</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-muted/20 border">
+                        <p className="font-medium mb-1">Opponent Analysis</p>
+                        <p className="text-xs text-muted-foreground">Counter opponent's strong domains</p>
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* Features */}
+                  <section className="space-y-3">
+                    <h3 className="text-lg font-semibold text-primary">Application Features</h3>
+                    <div className="space-y-2 text-muted-foreground">
+                      <p>• <strong>Save/Load:</strong> Save progress to local storage anytime</p>
+                      <p>• <strong>Export/Import:</strong> Share sessions via JSON files</p>
+                      <p>• <strong>PDF Reports:</strong> Generate detailed session reports</p>
+                      <p>• <strong>Database:</strong> Store sessions to database (password: MDDS)</p>
+                      <p>• <strong>Analytics:</strong> View historical patterns and statistics</p>
+                      <p>• <strong>Research:</strong> Statistical analysis and Word document generation</p>
+                      <p>• <strong>Card Reference:</strong> Quick card lookup by domain</p>
+                    </div>
+                  </section>
+                </div>
+              </DialogContent>
+            </Dialog>
 
             {/* Card Logs Modal */}
             <Dialog open={showSettings} onOpenChange={setShowSettings}>
