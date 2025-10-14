@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, FlaskConical, Filter, TrendingUp, BarChart3, ListChecks, FileText, Download } from "lucide-react";
+import { ArrowLeft, FlaskConical, Filter, TrendingUp, BarChart3, ListChecks, FileText, Download, CreditCard } from "lucide-react";
 import { prepareReportData } from "@/utils/reportDataPreparation";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -13,6 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
 import { Domain } from '@shared/schema';
+import cardsData from '../data/cards.json';
 
 interface GameSession {
   sessionName: string;
@@ -53,6 +54,10 @@ export default function Research() {
   const [groupingVariable, setGroupingVariable] = useState<string>("team");
   const [comparisonType, setComparisonType] = useState<string>("between");
   
+  // Card Purchase Frequency Analysis
+  const [selectedCards, setSelectedCards] = useState<string[]>([]);
+  const [cardTeamFilter, setCardTeamFilter] = useState<string>("both");
+  
   // Report generation
   const [selectedMethodology, setSelectedMethodology] = useState<string>("");
   const [generatedReport, setGeneratedReport] = useState<string>("");
@@ -79,6 +84,14 @@ export default function Research() {
       prev.includes(variable)
         ? prev.filter(v => v !== variable)
         : [...prev, variable]
+    );
+  };
+
+  const toggleCard = (cardId: string) => {
+    setSelectedCards(prev =>
+      prev.includes(cardId)
+        ? prev.filter(c => c !== cardId)
+        : [...prev, cardId]
     );
   };
 
@@ -432,6 +445,74 @@ export default function Research() {
     sessions
   ]);
 
+  // Calculate card purchase frequency
+  const cardFrequencyData = useMemo(() => {
+    if (!sessions || selectedCards.length === 0 || selectedSessions.length === 0) {
+      return [];
+    }
+
+    const selectedSessionData = sessions.filter(s => selectedSessions.includes(s.sessionName));
+    const totalSessions = selectedSessionData.length;
+    
+    return selectedCards.map(cardId => {
+      const card = cardsData.find(c => c.id === cardId);
+      let natoCount = 0;
+      let russiaCount = 0;
+      let totalCount = 0;
+      
+      // Track unique sessions where this card appears (for percentage calculation)
+      const sessionsWithNato = new Set<string>();
+      const sessionsWithRussia = new Set<string>();
+      const sessionsWithAny = new Set<string>();
+
+      selectedSessionData.forEach(session => {
+        const strategyLog = session.gameState?.strategyLog || [];
+        
+        strategyLog.forEach((log: any) => {
+          // Match pattern: "TEAM purchased CardName (ID) for XK"
+          const purchaseMatch = log.action.match(/purchased.*\(([^)]+)\)/i);
+          if (purchaseMatch && purchaseMatch[1] === cardId) {
+            totalCount++;
+            sessionsWithAny.add(session.sessionName);
+            
+            if (log.team === "NATO") {
+              natoCount++;
+              sessionsWithNato.add(session.sessionName);
+            } else if (log.team === "Russia") {
+              russiaCount++;
+              sessionsWithRussia.add(session.sessionName);
+            }
+          }
+        });
+      });
+
+      // Calculate session appearance counts and percentages based on filter
+      let displayCount = totalCount;
+      let sessionsAppeared = sessionsWithAny.size;
+      
+      if (cardTeamFilter === "NATO") {
+        displayCount = natoCount;
+        sessionsAppeared = sessionsWithNato.size;
+      } else if (cardTeamFilter === "Russia") {
+        displayCount = russiaCount;
+        sessionsAppeared = sessionsWithRussia.size;
+      }
+
+      const percentage = totalSessions > 0 ? (sessionsAppeared / totalSessions * 100).toFixed(1) : "0.0";
+
+      return {
+        cardId,
+        cardName: card?.name || cardId,
+        natoCount,
+        russiaCount,
+        totalCount,
+        displayCount,
+        percentage,
+        sessionsAppeared
+      };
+    }).sort((a, b) => b.displayCount - a.displayCount);
+  }, [sessions, selectedSessions, selectedCards, cardTeamFilter]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -640,6 +721,152 @@ export default function Research() {
 
           {/* Right Panel: Analysis Results */}
           <div className="lg:col-span-2 space-y-4">
+            {/* Card Purchase Frequency Analysis */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="w-5 h-5" />
+                  Card Purchase Frequency
+                </CardTitle>
+                <CardDescription>
+                  Analyze how often specific cards are purchased across selected sessions
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Card Selection and Team Filter */}
+                <div className="space-y-3">
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <Label>Team Filter</Label>
+                      <Select value={cardTeamFilter} onValueChange={setCardTeamFilter}>
+                        <SelectTrigger data-testid="select-card-team-filter">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="both">Both Teams</SelectItem>
+                          <SelectItem value="NATO">NATO Only</SelectItem>
+                          <SelectItem value="Russia">Russia Only</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>Select Cards to Analyze</Label>
+                    <ScrollArea className="h-48 border rounded-md p-2 mt-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        {cardsData
+                          .sort((a, b) => a.id.localeCompare(b.id))
+                          .map((card: any) => (
+                            <div
+                              key={card.id}
+                              className="flex items-center gap-2 p-1 rounded hover-elevate"
+                            >
+                              <Checkbox
+                                checked={selectedCards.includes(card.id)}
+                                onCheckedChange={() => toggleCard(card.id)}
+                                data-testid={`checkbox-card-${card.id}`}
+                              />
+                              <Label 
+                                className="text-xs cursor-pointer flex-1"
+                                onClick={() => toggleCard(card.id)}
+                              >
+                                <span className="font-mono font-semibold">{card.id}</span>
+                                {" - "}
+                                <span className="text-muted-foreground">{card.name}</span>
+                              </Label>
+                            </div>
+                          ))}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                </div>
+
+                {/* Frequency Results */}
+                {selectedCards.length > 0 && selectedSessions.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-semibold">Frequency Results</h3>
+                      <Badge variant="outline">
+                        {selectedSessions.length} session(s)
+                      </Badge>
+                    </div>
+
+                    {cardFrequencyData.length > 0 ? (
+                      <ScrollArea className="h-64">
+                        <div className="space-y-2">
+                          {cardFrequencyData.map((data) => (
+                            <div 
+                              key={data.cardId} 
+                              className="border rounded-lg p-3 space-y-2"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1">
+                                  <p className="text-sm font-semibold font-mono">
+                                    {data.cardId}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {data.cardName}
+                                  </p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-lg font-bold">{data.displayCount}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {data.displayCount === 1 ? 'purchase' : 'purchases'}
+                                  </p>
+                                  <p className="text-xs font-semibold text-primary mt-1">
+                                    {data.sessionsAppeared} / {selectedSessions.length} sessions ({data.percentage}%)
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Team breakdown when showing both teams */}
+                              {cardTeamFilter === "both" && (
+                                <div className="flex gap-2 text-xs">
+                                  <div className="flex-1 p-2 rounded bg-blue-500/10 border border-blue-500/20">
+                                    <p className="text-muted-foreground">NATO</p>
+                                    <p className="font-semibold">{data.natoCount}</p>
+                                  </div>
+                                  <div className="flex-1 p-2 rounded bg-red-500/10 border border-red-500/20">
+                                    <p className="text-muted-foreground">Russia</p>
+                                    <p className="font-semibold">{data.russiaCount}</p>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Visual bar */}
+                              <div className="relative h-2 bg-muted rounded-full overflow-hidden">
+                                <div
+                                  className="absolute left-0 top-0 h-full bg-primary rounded-full transition-all"
+                                  style={{ width: `${Math.min(parseFloat(data.percentage), 100)}%` }}
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        No purchases found for selected cards in the selected sessions.
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {selectedCards.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Select cards above to view purchase frequency analysis
+                  </p>
+                )}
+
+                {selectedSessions.length === 0 && selectedCards.length > 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Select sessions from the left panel to analyze card purchase frequency
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Summary Statistics */}
             {summaryStats && Object.keys(summaryStats).length > 0 && (
               <Card>
