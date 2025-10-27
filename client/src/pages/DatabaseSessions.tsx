@@ -25,6 +25,15 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Domain } from '@shared/schema';
 
+interface TurnStatistics {
+  turn: number;
+  natoTotalDeterrence: number;
+  russiaTotalDeterrence: number;
+  natoDeterrence: Record<Domain, number>;
+  russiaDeterrence: Record<Domain, number>;
+  timestamp: Date | string;
+}
+
 interface GameSession {
   sessionName: string;
   gameState: {
@@ -44,11 +53,7 @@ interface GameSession {
   sessionInfo: {
     participants?: string[];
   } | null;
-  turnStatistics: Array<{
-    turn: number;
-    natoDeterrence: number;
-    russiaDeterrence: number;
-  }> | null;
+  turnStatistics: TurnStatistics[] | null;
   lastUpdated: string | null;
   createdAt: string;
   finalReport: string | null;
@@ -141,8 +146,8 @@ export default function DatabaseSessions() {
     if (session.turnStatistics && Array.isArray(session.turnStatistics) && session.turnStatistics.length > 0) {
       const latest = session.turnStatistics[session.turnStatistics.length - 1];
       return {
-        nato: ensureNumber(latest?.natoDeterrence),
-        russia: ensureNumber(latest?.russiaDeterrence)
+        nato: latest.natoTotalDeterrence,
+        russia: latest.russiaTotalDeterrence
       };
     }
 
@@ -164,7 +169,7 @@ export default function DatabaseSessions() {
   };
 
   const handleDownloadReport = async (session: GameSession) => {
-    // Always try to download the finalReport if it exists (exact same PDF from "Finish Session")
+    // If finalReport exists in database, download that exact PDF
     if (session.finalReport) {
       try {
         // Convert base64 to blob and download
@@ -191,22 +196,49 @@ export default function DatabaseSessions() {
         });
         return;
       } catch (error) {
-        console.error('Failed to download stored report:', error);
-        toast({
-          title: "Download failed",
-          description: "Failed to download stored report. Please try again.",
-          variant: "destructive",
-        });
-        return;
+        console.error('Failed to download stored report, will generate new one:', error);
       }
     }
     
-    // If no finalReport exists, inform the user
-    toast({
-      title: "No report available",
-      description: "This session was not finished. Please finish the session to generate a final report.",
-      variant: "destructive",
-    });
+    // Generate report using the exact same format as "Finish Game Session"
+    try {
+      // Reconstruct the report data structure exactly as it's used in handleFinishGameSession
+      // Ensure all timestamps are Date objects
+      const turnStats = (session.turnStatistics || []).map(stat => ({
+        ...stat,
+        timestamp: typeof stat.timestamp === 'string' ? new Date(stat.timestamp) : stat.timestamp
+      }));
+
+      const reportData = {
+        currentTurn: session.gameState.turn,
+        maxTurns: session.gameState.maxTurns,
+        natoTeam: (session.gameState.teams as any)?.NATO || session.gameState.teams?.NATO,
+        russiaTeam: (session.gameState.teams as any)?.Russia || session.gameState.teams?.Russia,
+        turnStatistics: turnStats,
+        strategyLog: (session.gameState as any).strategyLog || [],
+        sessionInfo: {
+          sessionName: session.sessionName,
+          participants: (session.sessionInfo?.participants || []).map((p: any) => 
+            typeof p === 'string' ? { name: p, country: '' } : p
+          )
+        }
+      };
+
+      await generateMDDSReport(reportData);
+      
+      toast({
+        title: "Report generated",
+        description: "MDDS Strategic Analysis Report successfully generated.",
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error('Failed to generate report:', error);
+      toast({
+        title: "Generation failed",
+        description: "Failed to generate report. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const deleteMutation = useMutation({
