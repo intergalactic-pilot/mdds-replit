@@ -143,6 +143,10 @@ export const insertGameSessionSchema = createInsertSchema(gameSessions).extend({
 export const selectGameSessionSchema = z.object({
   sessionName: z.string(),
   gameState: gameStateSchema,
+  sessionInfo: z.any().nullable(),
+  turnStatistics: z.any().nullable(),
+  finalReport: z.string().nullable(),
+  lastUpdated: z.string().nullable(),
   createdAt: z.date(),
   updatedAt: z.date()
 });
