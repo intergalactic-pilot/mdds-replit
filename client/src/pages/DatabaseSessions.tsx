@@ -164,7 +164,7 @@ export default function DatabaseSessions() {
   };
 
   const handleDownloadReport = async (session: GameSession) => {
-    // If finalReport exists in database, download that
+    // Always try to download the finalReport if it exists (exact same PDF from "Finish Session")
     if (session.finalReport) {
       try {
         // Convert base64 to blob and download
@@ -183,36 +183,29 @@ export default function DatabaseSessions() {
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
+        
+        toast({
+          title: "Report downloaded",
+          description: "Final report successfully downloaded.",
+          duration: 3000,
+        });
         return;
       } catch (error) {
-        console.error('Failed to download stored report, generating new one:', error);
+        console.error('Failed to download stored report:', error);
+        toast({
+          title: "Download failed",
+          description: "Failed to download stored report. Please try again.",
+          variant: "destructive",
+        });
+        return;
       }
     }
     
-    // Otherwise generate a new report using the same format as "Finish Game Session"
-    // Map turnStatistics to match the expected format
-    const turnStats = (session.turnStatistics || []).map(stat => ({
-      turn: stat.turn,
-      natoTotalDeterrence: stat.natoDeterrence,
-      russiaTotalDeterrence: stat.russiaDeterrence,
-      natoDeterrence: {} as any, // Domain-specific data not available
-      russiaDeterrence: {} as any, // Domain-specific data not available
-      timestamp: new Date()
-    }));
-
-    await generateMDDSReport({
-      currentTurn: session.gameState.turn,
-      maxTurns: session.gameState.maxTurns,
-      natoTeam: session.gameState.teams?.NATO as any,
-      russiaTeam: session.gameState.teams?.Russia as any,
-      turnStatistics: turnStats,
-      strategyLog: (session.gameState as any).strategyLog || [],
-      sessionInfo: {
-        sessionName: session.sessionName,
-        participants: (session.sessionInfo?.participants || []).map((p: any) => 
-          typeof p === 'string' ? { name: p, country: '' } : p
-        )
-      }
+    // If no finalReport exists, inform the user
+    toast({
+      title: "No report available",
+      description: "This session was not finished. Please finish the session to generate a final report.",
+      variant: "destructive",
     });
   };
 
