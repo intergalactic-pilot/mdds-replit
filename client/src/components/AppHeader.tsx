@@ -166,6 +166,9 @@ export default function AppHeader({
             <Badge variant="outline" data-testid="badge-session-name">
               {sessionInfo.sessionName || 'MDDS Session'}
             </Badge>
+            <Badge variant="secondary" data-testid="badge-turn-number">
+              Turn {currentTurn}/{maxTurns}
+            </Badge>
           </div>
 
           {/* Actions */}
