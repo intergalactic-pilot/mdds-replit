@@ -3,15 +3,19 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Shield, Coins, RefreshCw } from 'lucide-react';
+import { Loader2, Shield, Coins, RefreshCw, Download } from 'lucide-react';
 import { SelectGameSession } from '@shared/schema';
 import DomainBadge from '@/components/DomainBadge';
 import { useState } from 'react';
+import { generateMDDSReport } from '@/utils/pdfGenerator';
+import { useToast } from '@/hooks/use-toast';
 
 export default function MobileSession() {
   const { sessionName } = useParams();
   const queryClient = useQueryClient();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const { toast } = useToast();
 
   const { data: session, isLoading, error } = useQuery<SelectGameSession>({
     queryKey: ['/api/sessions', sessionName],
@@ -32,6 +36,81 @@ export default function MobileSession() {
       console.error('Failed to refresh session:', error);
     } finally {
       setIsRefreshing(false);
+    }
+  };
+
+  const handleDownloadReport = async () => {
+    if (!session) return;
+
+    setIsDownloading(true);
+    try {
+      // If finalReport exists in database, download that exact PDF
+      if (session.finalReport) {
+        try {
+          const byteCharacters = atob(session.finalReport);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          const blob = new Blob([byteArray], { type: 'application/pdf' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `${sessionName}_Final_Report.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+          
+          toast({
+            title: "Report downloaded",
+            description: "Final report successfully downloaded.",
+            duration: 3000,
+          });
+          return;
+        } catch (error) {
+          console.error('Failed to download stored report, will generate new one:', error);
+        }
+      }
+      
+      // Generate report using the same format as "Finish Game Session"
+      const turnStats = (session.turnStatistics || []).map((stat: any) => ({
+        ...stat,
+        timestamp: typeof stat.timestamp === 'string' ? new Date(stat.timestamp) : stat.timestamp
+      }));
+
+      const reportData = {
+        currentTurn: session.gameState.turn,
+        maxTurns: session.gameState.maxTurns,
+        natoTeam: session.gameState.teams.NATO,
+        russiaTeam: session.gameState.teams.Russia,
+        turnStatistics: turnStats,
+        strategyLog: session.gameState.strategyLog || [],
+        sessionInfo: {
+          sessionName: sessionName || 'Unknown Session',
+          participants: (session.sessionInfo?.participants || []).map((p: any) => 
+            typeof p === 'string' ? { name: p, country: '' } : p
+          )
+        }
+      };
+
+      await generateMDDSReport(reportData);
+      
+      toast({
+        title: "Report generated",
+        description: "MDDS Strategic Analysis Report successfully generated.",
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error('Failed to generate report:', error);
+      toast({
+        title: "Generation failed",
+        description: "Failed to generate report. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -83,6 +162,15 @@ export default function MobileSession() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleDownloadReport}
+              disabled={isDownloading}
+              data-testid="button-download-report"
+            >
+              <Download className={`h-4 w-4 ${isDownloading ? 'animate-pulse' : ''}`} />
+            </Button>
             <Button
               variant="ghost"
               size="icon"
