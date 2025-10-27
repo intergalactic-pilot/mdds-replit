@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, Shield, Sword, Eye, EyeOff, ZoomIn } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { useMDDSStore } from '@/state/store';
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Domain, Card } from '@shared/schema';
@@ -22,9 +24,11 @@ interface IndividualChartProps {
   visibleDomains: Record<Domain, boolean>;
   onToggleDomain: (domain: Domain) => void;
   bgClass: string;
+  chartAnalysis: string;
+  onAnalysisChange: (value: string) => void;
 }
 
-function IndividualChart({ title, team, type, data, visibleDomains, onToggleDomain, bgClass }: IndividualChartProps) {
+function IndividualChart({ title, team, type, data, visibleDomains, onToggleDomain, bgClass, chartAnalysis, onAnalysisChange }: IndividualChartProps) {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
@@ -62,9 +66,22 @@ function IndividualChart({ title, team, type, data, visibleDomains, onToggleDoma
                 Expand
               </button>
             </DialogTrigger>
-            <DialogContent className="max-w-7xl w-[90vw] h-[65vh] p-4">
+            <DialogContent className="max-w-7xl w-[90vw] max-h-[90vh] overflow-y-auto">
               <DialogTitle className="text-center">{title}</DialogTitle>
-              <div className="flex-1 mt-1">
+              
+              {/* Chart Explanation */}
+              <div className="mt-4 p-4 bg-muted/30 rounded-lg border border-border/50">
+                <h4 className="font-semibold text-sm mb-2">Chart Explanation</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {type === 'Defense' 
+                    ? `This chart displays ${team}'s defensive strategy effectiveness across five domains (Joint, Economy, Cognitive, Space, Cyber). Each line represents the cumulative positive effects from cards purchased to strengthen ${team}'s own deterrence capabilities in that specific domain. Higher values indicate stronger defensive positioning in that domain during that turn.`
+                    : `This chart shows ${team}'s offensive strategy impact on the opponent across five domains. Each line tracks the cumulative negative effects inflicted on the opponent's deterrence through ${team}'s card purchases. Values below zero indicate successful offensive actions that weakened the opponent's position in that domain during that turn.`
+                  }
+                </p>
+              </div>
+
+              {/* Chart */}
+              <div className="mt-4">
                 <ResponsiveContainer width="100%" height={450}>
                   <RechartsLineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted-foreground) / 0.2)" />
@@ -95,6 +112,24 @@ function IndividualChart({ title, team, type, data, visibleDomains, onToggleDoma
                     })}
                   </RechartsLineChart>
                 </ResponsiveContainer>
+              </div>
+
+              {/* User Analysis Input */}
+              <div className="mt-4 space-y-2">
+                <Label htmlFor="chart-analysis" className="text-sm font-semibold">
+                  Your Analysis: What does this chart tell you?
+                </Label>
+                <Textarea
+                  id="chart-analysis"
+                  placeholder="Write your interpretation of what this chart reveals about the strategic patterns, trends, and decision-making..."
+                  value={chartAnalysis}
+                  onChange={(e) => onAnalysisChange(e.target.value)}
+                  className="min-h-[100px] resize-y"
+                  data-testid={`textarea-chart-analysis-${team.toLowerCase()}-${type.toLowerCase()}`}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Tip: Consider domain strengths, turn-by-turn changes, strategic focus areas, and how this compares to opponent activity.
+                </p>
               </div>
             </DialogContent>
           </Dialog>
@@ -168,6 +203,12 @@ export default function DefenseOffenseChart({ forceExpanded = false, hideToggle 
     space: true,
     cyber: true
   });
+  
+  // Chart analysis state for each of the 4 charts
+  const [natoDefenseAnalysis, setNatoDefenseAnalysis] = useState('');
+  const [natoOffenseAnalysis, setNatoOffenseAnalysis] = useState('');
+  const [russiaDefenseAnalysis, setRussiaDefenseAnalysis] = useState('');
+  const [russiaOffenseAnalysis, setRussiaOffenseAnalysis] = useState('');
   
   const turnStatistics = useMDDSStore(state => state.turnStatistics);
   const strategyLog = useMDDSStore(state => state.strategyLog);
@@ -378,6 +419,8 @@ export default function DefenseOffenseChart({ forceExpanded = false, hideToggle 
               visibleDomains={visibleDomains}
               onToggleDomain={toggleDomainVisibility}
               bgClass="bg-blue-50/5 dark:bg-blue-950/20"
+              chartAnalysis={natoDefenseAnalysis}
+              onAnalysisChange={setNatoDefenseAnalysis}
             />
             
             {/* NATO Offense Chart */}
@@ -389,6 +432,8 @@ export default function DefenseOffenseChart({ forceExpanded = false, hideToggle 
               visibleDomains={visibleDomains}
               onToggleDomain={toggleDomainVisibility}
               bgClass="bg-blue-50/5 dark:bg-blue-950/20"
+              chartAnalysis={natoOffenseAnalysis}
+              onAnalysisChange={setNatoOffenseAnalysis}
             />
             
             {/* Russia Offense Chart */}
@@ -400,6 +445,8 @@ export default function DefenseOffenseChart({ forceExpanded = false, hideToggle 
               visibleDomains={visibleDomains}
               onToggleDomain={toggleDomainVisibility}
               bgClass="bg-red-50/5 dark:bg-red-950/20"
+              chartAnalysis={russiaOffenseAnalysis}
+              onAnalysisChange={setRussiaOffenseAnalysis}
             />
             
             {/* Russia Defense Chart */}
@@ -411,6 +458,8 @@ export default function DefenseOffenseChart({ forceExpanded = false, hideToggle 
               visibleDomains={visibleDomains}
               onToggleDomain={toggleDomainVisibility}
               bgClass="bg-red-50/5 dark:bg-red-950/20"
+              chartAnalysis={russiaDefenseAnalysis}
+              onAnalysisChange={setRussiaDefenseAnalysis}
             />
           </div>
           
