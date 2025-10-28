@@ -166,21 +166,34 @@ export const useMDDSStore = create<MDDSStore>((set, get) => ({
 
   advanceGameTurn: () => {
     set((state) => {
-      const newState = advanceTurn(state);
-      
-      // Save deterrence statistics after turn advance
-      const newStatistics: TurnStatistics = {
-        turn: newState.turn,
-        natoTotalDeterrence: newState.teams.NATO.totalDeterrence,
-        russiaTotalDeterrence: newState.teams.Russia.totalDeterrence,
-        natoDeterrence: { ...newState.teams.NATO.deterrence },
-        russiaDeterrence: { ...newState.teams.Russia.deterrence },
+      // Save deterrence statistics for CURRENT turn BEFORE advancing
+      const currentTurnStatistics: TurnStatistics = {
+        turn: state.turn,
+        natoTotalDeterrence: state.teams.NATO.totalDeterrence,
+        russiaTotalDeterrence: state.teams.Russia.totalDeterrence,
+        natoDeterrence: { ...state.teams.NATO.deterrence },
+        russiaDeterrence: { ...state.teams.Russia.deterrence },
         timestamp: new Date()
       };
       
+      // Now advance to next turn
+      const newState = advanceTurn(state);
+      
+      // Update statistics array with the saved current turn data
+      const updatedStatistics = [...state.turnStatistics];
+      const existingIndex = updatedStatistics.findIndex(s => s.turn === currentTurnStatistics.turn);
+      
+      if (existingIndex >= 0) {
+        // Update existing entry for this turn
+        updatedStatistics[existingIndex] = currentTurnStatistics;
+      } else {
+        // Add new entry
+        updatedStatistics.push(currentTurnStatistics);
+      }
+      
       return { 
         ...newState, 
-        turnStatistics: [...state.turnStatistics, newStatistics]
+        turnStatistics: updatedStatistics
       };
     });
     // Sync to database after state change
