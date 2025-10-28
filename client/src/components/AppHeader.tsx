@@ -31,7 +31,8 @@ import {
   Unlock,
   Eye,
   EyeOff,
-  BookOpen
+  BookOpen,
+  Clock
 } from 'lucide-react';
 import logoUrl from '@assets/Logo_1758524556759.png';
 import { useTheme } from "./ThemeProvider";
@@ -77,6 +78,7 @@ export default function AppHeader({
   const [isPermanentCardsUnlocked, setIsPermanentCardsUnlocked] = useState(false);
   const [permanentCardsPassword, setPermanentCardsPassword] = useState("");
   const [permanentCardsPasswordError, setPermanentCardsPasswordError] = useState(false);
+  const [showLastTurnPurchases, setShowLastTurnPurchases] = useState(false);
   
   // Use store for session management
   const sessionInfo = useMDDSStore(state => state.sessionInfo);
@@ -85,6 +87,7 @@ export default function AppHeader({
   const updateParticipant = useMDDSStore(state => state.updateParticipant);
   const addParticipant = useMDDSStore(state => state.addParticipant);
   const removeParticipant = useMDDSStore(state => state.removeParticipant);
+  const teams = useMDDSStore(state => state.teams);
   
 
   const handleUnlockDatabase = () => {
@@ -193,6 +196,91 @@ export default function AppHeader({
             >
               {showShopAndCarts ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </Button>
+
+            {/* Last Turn Purchases */}
+            <Dialog open={showLastTurnPurchases} onOpenChange={setShowLastTurnPurchases}>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="icon" data-testid="button-last-turn-purchases">
+                  <Clock className="w-4 h-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>{sanitizeText(`Last Turn Purchases (Turn ${currentTurn > 1 ? currentTurn - 1 : currentTurn})`)}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  {/* NATO Purchases */}
+                  <div>
+                    <h4 className="font-semibold text-sm mb-2 text-blue-600 dark:text-blue-400">NATO Purchases</h4>
+                    <div className="space-y-2">
+                      {teams?.NATO?.recentPurchases
+                        ?.filter(purchase => purchase.purchasedTurn === (currentTurn > 1 ? currentTurn - 1 : currentTurn))
+                        .map((purchase, index) => {
+                          const card = cardsData.find((c: any) => c.id === purchase.cardId);
+                          return (
+                            <div key={index} className="p-2 rounded-lg border border-blue-500/20 bg-blue-50/5 dark:bg-blue-950/20">
+                              <div className="flex items-center gap-2">
+                                <CreditCard className="w-4 h-4 text-blue-500" />
+                                <span className="font-medium">{card?.name || purchase.cardId}</span>
+                                <span className="text-xs text-muted-foreground">({purchase.cardId})</span>
+                              </div>
+                              {card && (
+                                <div className="mt-1 ml-6 text-xs text-muted-foreground">
+                                  <DomainBadge domain={card.domain as Domain} className="inline-block mr-2" />
+                                  {card.effects?.map((effect: any, i: number) => (
+                                    <span key={i}>
+                                      {i > 0 && ', '}
+                                      {effect.target === 'self' ? 'Self' : 'Opponent'} {effect.domain}: {effect.delta > 0 ? '+' : ''}{effect.delta}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      {(!teams?.NATO?.recentPurchases || teams.NATO.recentPurchases.filter(p => p.purchasedTurn === (currentTurn > 1 ? currentTurn - 1 : currentTurn)).length === 0) && (
+                        <p className="text-sm text-muted-foreground italic">No purchases this turn</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Russia Purchases */}
+                  <div>
+                    <h4 className="font-semibold text-sm mb-2 text-red-600 dark:text-red-400">Russia Purchases</h4>
+                    <div className="space-y-2">
+                      {teams?.Russia?.recentPurchases
+                        ?.filter(purchase => purchase.purchasedTurn === (currentTurn > 1 ? currentTurn - 1 : currentTurn))
+                        .map((purchase, index) => {
+                          const card = cardsData.find((c: any) => c.id === purchase.cardId);
+                          return (
+                            <div key={index} className="p-2 rounded-lg border border-red-500/20 bg-red-50/5 dark:bg-red-950/20">
+                              <div className="flex items-center gap-2">
+                                <CreditCard className="w-4 h-4 text-red-500" />
+                                <span className="font-medium">{card?.name || purchase.cardId}</span>
+                                <span className="text-xs text-muted-foreground">({purchase.cardId})</span>
+                              </div>
+                              {card && (
+                                <div className="mt-1 ml-6 text-xs text-muted-foreground">
+                                  <DomainBadge domain={card.domain as Domain} className="inline-block mr-2" />
+                                  {card.effects?.map((effect: any, i: number) => (
+                                    <span key={i}>
+                                      {i > 0 && ', '}
+                                      {effect.target === 'self' ? 'Self' : 'Opponent'} {effect.domain}: {effect.delta > 0 ? '+' : ''}{effect.delta}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      {(!teams?.Russia?.recentPurchases || teams.Russia.recentPurchases.filter(p => p.purchasedTurn === (currentTurn > 1 ? currentTurn - 1 : currentTurn)).length === 0) && (
+                        <p className="text-sm text-muted-foreground italic">No purchases this turn</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
 
             {/* Participants */}
             <Dialog open={showSessionInfo} onOpenChange={setShowSessionInfo}>
