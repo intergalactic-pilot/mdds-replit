@@ -939,10 +939,13 @@ export const generateMDDSReport = async (data: PDFReportData) => {
     // Calculate effects similar to the web component
     const { natoDefenseData, natoOffenseData, russiaDefenseData, russiaOffenseData } = calculateDefenseOffenseEffects(data);
     
-    // Chart layout: increased gap between columns to accommodate y-axis labels
-    const chartWidth = (contentWidth - 24) / 2; // Reduced width to make room for labels
-    const leftChartX = margin + 5;
-    const rightChartX = margin + 5 + chartWidth + 14; // 14mm gap for y-axis labels
+    // Chart layout: proper spacing to accommodate y-axis labels on both columns
+    // Y-axis labels render at x - 8mm, so we need:
+    // - Left chart must start at margin + 10 (so labels at x-8 = margin+2, safely within page)
+    // - Right chart needs 12mm left of it for its y-axis labels (8mm offset + 4mm buffer for wide numbers)
+    const chartWidth = (contentWidth - 32) / 2; // 69mm each, leaving room for labels
+    const leftChartX = margin + 10; // Labels will be at margin + 2
+    const rightChartX = margin + 10 + chartWidth + 12; // 12mm gap for right chart's y-axis labels
     
     // NATO Defensive Effects
     checkPage(70);
