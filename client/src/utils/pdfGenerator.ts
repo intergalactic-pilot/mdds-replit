@@ -939,13 +939,18 @@ export const generateMDDSReport = async (data: PDFReportData) => {
     // Calculate effects similar to the web component
     const { natoDefenseData, natoOffenseData, russiaDefenseData, russiaOffenseData } = calculateDefenseOffenseEffects(data);
     
+    // Chart layout: increased gap between columns to accommodate y-axis labels
+    const chartWidth = (contentWidth - 24) / 2; // Reduced width to make room for labels
+    const leftChartX = margin + 5;
+    const rightChartX = margin + 5 + chartWidth + 14; // 14mm gap for y-axis labels
+    
     // NATO Defensive Effects
     checkPage(70);
     drawDomainChart(
       pdf,
-      margin + 5,
+      leftChartX,
       yPosition + 20,
-      (contentWidth - 10) / 2 - 5,
+      chartWidth,
       50,
       natoDefenseData,
       'NATO Defensive Effects'
@@ -954,9 +959,9 @@ export const generateMDDSReport = async (data: PDFReportData) => {
     // NATO Offensive Effects on Russia
     drawDomainChart(
       pdf,
-      margin + 5 + (contentWidth - 10) / 2 + 5,
+      rightChartX,
       yPosition + 20,
-      (contentWidth - 10) / 2 - 5,
+      chartWidth,
       50,
       natoOffenseData,
       'NATO Offensive Effects on Russia'
@@ -967,9 +972,9 @@ export const generateMDDSReport = async (data: PDFReportData) => {
     checkPage(70);
     drawDomainChart(
       pdf,
-      margin + 5,
+      leftChartX,
       yPosition + 20,
-      (contentWidth - 10) / 2 - 5,
+      chartWidth,
       50,
       russiaDefenseData,
       'Russia Defensive Effects'
@@ -978,9 +983,9 @@ export const generateMDDSReport = async (data: PDFReportData) => {
     // Russia Offensive Effects on NATO
     drawDomainChart(
       pdf,
-      margin + 5 + (contentWidth - 10) / 2 + 5,
+      rightChartX,
       yPosition + 20,
-      (contentWidth - 10) / 2 - 5,
+      chartWidth,
       50,
       russiaOffenseData,
       'Russia Offensive Effects on NATO'
