@@ -621,6 +621,102 @@ export default function Research() {
     return Array.from(new Set(recommendations)); // Remove duplicates
   }, [hypothesis]);
 
+  // Get statistical test recommendation based on hypothesis
+  const getHypothesisBasedTestRecommendation = useMemo(() => {
+    if (!hypothesis.trim()) return null;
+    
+    const lowerHypothesis = hypothesis.toLowerCase();
+    
+    // Analyze hypothesis structure
+    const hasCorrelation = /correlat|relationship|associat/.test(lowerHypothesis);
+    const hasComparison = /compare|differ|versus|vs\.?|between/.test(lowerHypothesis);
+    const hasPrediction = /predict|determin|effect|impact|influence|cause/.test(lowerHypothesis);
+    const hasMultipleVariables = /multiple\s+(variable|outcome|factor|dimension|metric)|several\s+(variable|outcome|factor|dimension|metric)|various\s+(variable|outcome|factor|dimension|metric)/.test(lowerHypothesis);
+    const hasTwoGroups = /nato.*russia|russia.*nato|two teams|both teams/.test(lowerHypothesis);
+    const hasMultipleGroups = /across.*domain|all.*domain|multiple.*group/.test(lowerHypothesis);
+    const hasTimeComponent = /over time|across turns|duration|temporal|longitudinal/.test(lowerHypothesis);
+    
+    // Determine recommended test based on hypothesis characteristics
+    if (hasCorrelation && recommendedVariables.length === 2 && !hasComparison) {
+      return {
+        name: "Correlation Analysis (Pearson/Spearman)",
+        justification: `This hypothesis explicitly examines the relationship between two variables, making correlation analysis the ideal choice. ${
+          lowerHypothesis.includes('positively') || lowerHypothesis.includes('negatively') 
+            ? 'The directional language ("positively" or "negatively") suggests you are testing for the strength and direction of association between variables.' 
+            : 'Correlation analysis will reveal both the strength and direction of the relationship.'
+        } Pearson correlation is appropriate when both variables are continuous and linearly related with normal distributions. If your data is skewed or contains outliers, Spearman's rank correlation provides a robust non-parametric alternative that assesses monotonic relationships.`,
+        application: `To apply correlation analysis: (1) Select your two continuous variables from the recommended list above. (2) Ensure you have at least 10-20 sessions for reliable correlation estimates. (3) Visualize the relationship using a scatterplot to check for linearity and outliers. (4) Calculate Pearson's r if assumptions are met, or Spearman's ρ if data is ordinal or non-normal. (5) Interpret the correlation coefficient: values near ±1 indicate strong relationships, while values near 0 suggest weak associations. (6) Report both the correlation coefficient and p-value to assess statistical significance. (7) Remember that correlation does not imply causation—it only measures association strength.`
+      };
+    }
+    
+    if (hasTwoGroups && !hasMultipleVariables && recommendedVariables.length <= 2) {
+      return {
+        name: "Independent Samples t-test",
+        justification: `Your hypothesis compares two independent groups (NATO vs. Russia) on a single outcome variable, which is the classic scenario for an independent samples t-test. This parametric test examines whether the mean deterrence score (or other metric) significantly differs between the two teams. The t-test is robust, widely recognized in research, and provides clear evidence of group differences. ${
+          recommendedVariables.length === 2 ? 'Since you have variables for both teams, the test will directly compare their means.' : ''
+        } This test assumes independent observations, approximately normal distributions within each group (or sample sizes ≥30), and similar variances between groups (homogeneity of variance).`,
+        application: `To conduct an independent samples t-test: (1) Select one continuous outcome variable (e.g., total deterrence score). (2) Define your two groups (NATO and Russia). (3) Verify assumptions: check for normality using histograms or Q-Q plots, and test homogeneity of variance with Levene's test. (4) If assumptions are violated and sample sizes are small (n<30), consider the Mann-Whitney U test instead. (5) Calculate the t-statistic and degrees of freedom. (6) Report the mean difference, confidence interval, t-value, and p-value. (7) Interpret results: p<0.05 suggests a statistically significant difference between teams. (8) Calculate effect size (Cohen's d) to quantify the magnitude of difference—small (0.2), medium (0.5), or large (0.8).`
+      };
+    }
+    
+    if (hasMultipleGroups && !hasMultipleVariables && recommendedVariables.length <= 2) {
+      return {
+        name: "One-Way ANOVA",
+        justification: `Your hypothesis involves comparing means across multiple groups (e.g., different domains, time periods, or strategic categories), making one-way Analysis of Variance (ANOVA) the appropriate test. ANOVA extends the t-test logic to three or more groups, testing whether at least one group mean differs significantly from the others. This is more efficient and statistically appropriate than running multiple t-tests, which would inflate Type I error rates. ${
+          lowerHypothesis.includes('domain') ? 'Since your hypothesis mentions domains, you are likely comparing performance across the five strategic dimensions (Joint, Economy, Cognitive, Space, Cyber).' : ''
+        } ANOVA provides an F-statistic that indicates overall group differences, followed by post-hoc tests to identify which specific groups differ.`,
+        application: `To perform one-way ANOVA: (1) Select one continuous dependent variable (e.g., deterrence score). (2) Define your grouping factor with 3+ levels (e.g., five domains). (3) Check assumptions: normality within each group (Shapiro-Wilk test), homogeneity of variance across groups (Levene's test), and independent observations. (4) If assumptions are violated, use the Kruskal-Wallis test instead. (5) Calculate the F-statistic and p-value. (6) If p<0.05, conclude that at least one group differs. (7) Conduct post-hoc comparisons (Tukey HSD, Bonferroni) to identify which specific groups differ. (8) Report means, standard deviations, F-value, degrees of freedom, p-value, and effect size (eta-squared). (9) Visualize results with boxplots or bar charts showing group means and error bars.`
+      };
+    }
+    
+    if (hasPrediction && recommendedVariables.length >= 2) {
+      return {
+        name: "Multiple Regression",
+        justification: `Your hypothesis suggests examining how one or more predictor variables influence an outcome variable, which is the domain of regression analysis. ${
+          recommendedVariables.length > 2 
+            ? 'Multiple regression is ideal here because you have several potential predictors that may jointly explain variance in the outcome.' 
+            : 'Simple regression can model the relationship between your predictor and outcome.'
+        } Regression goes beyond correlation by modeling the predictive relationship and quantifying how much change in the outcome is associated with unit changes in predictors. ${
+          lowerHypothesis.includes('predict') || lowerHypothesis.includes('determine') 
+            ? 'The causal/predictive language in your hypothesis aligns perfectly with regression methodology.' 
+            : ''
+        } This approach provides regression coefficients, R-squared values, and statistical significance for each predictor, offering comprehensive insights into determinants of strategic performance.`,
+        application: `To conduct multiple regression: (1) Identify your dependent variable (outcome you want to predict) and independent variables (predictors). (2) Ensure adequate sample size: at least 10-15 observations per predictor variable. (3) Check assumptions: linearity (scatterplots), independence of residuals, homoscedasticity (constant variance), normality of residuals (Q-Q plot), and absence of multicollinearity (VIF<10). (4) Run the regression model and examine R-squared to assess model fit (proportion of variance explained). (5) Evaluate each predictor's coefficient: magnitude indicates effect size, sign indicates direction, and p-value indicates significance. (6) Report standardized coefficients (beta weights) to compare relative importance of predictors. (7) Check for influential outliers using Cook's distance. (8) Interpret results carefully: regression suggests prediction, not necessarily causation. (9) Visualize with partial regression plots.`
+      };
+    }
+    
+    if (hasMultipleVariables && recommendedVariables.length >= 3 && hasTwoGroups) {
+      return {
+        name: "MANOVA (Multivariate ANOVA)",
+        justification: `Your hypothesis examines group differences across multiple outcome variables simultaneously, which requires Multivariate Analysis of Variance (MANOVA). Unlike running separate ANOVAs for each variable, MANOVA considers correlations among dependent variables and tests whether groups differ on a composite of outcomes. ${
+          lowerHypothesis.includes('domain') ? 'Since you are examining multiple domains, MANOVA can assess whether teams differ in their overall deterrence profile across all dimensions simultaneously.' : ''
+        } This approach is more powerful and controls for Type I error inflation that would occur with multiple univariate tests. MANOVA provides a comprehensive view of multivariate group differences and can detect patterns that univariate tests might miss.`,
+        application: `To perform MANOVA: (1) Select 2+ continuous dependent variables that are theoretically related. (2) Define your independent grouping variable (e.g., NATO vs. Russia). (3) Verify multivariate assumptions: multivariate normality (Mardia's test), homogeneity of covariance matrices (Box's M test), linear relationships among DVs, and adequate sample size (more observations than DVs). (4) Run MANOVA and examine multivariate test statistics: Wilks' Lambda, Pillai's Trace, Hotelling's Trace, or Roy's Largest Root. (5) If multivariate effect is significant (p<0.05), conduct follow-up univariate ANOVAs for each DV to identify which specific variables drive the difference. (6) Apply Bonferroni correction to control Type I error in follow-ups. (7) Report effect sizes (partial eta-squared) for both multivariate and univariate effects. (8) Interpret whether groups differ on the overall pattern of outcomes.`
+      };
+    }
+    
+    if (hasTimeComponent || lowerHypothesis.includes('longitudinal') || lowerHypothesis.includes('change')) {
+      return {
+        name: "Repeated Measures ANOVA",
+        justification: `Your hypothesis involves examining changes or patterns across time points or turns, which suggests a within-subjects design best analyzed with Repeated Measures ANOVA. This test accounts for the fact that the same sessions/teams are measured multiple times, recognizing that measurements from the same entity are correlated. ${
+          lowerHypothesis.includes('turn') ? 'Since your hypothesis mentions turns, you are tracking strategic performance across the temporal progression of the simulation.' : ''
+        } Repeated measures designs are more powerful than between-subjects designs because they control for individual differences, reducing error variance. This test is ideal for detecting developmental trends, strategic evolution, or cumulative effects over the course of sessions.`,
+        application: `To conduct Repeated Measures ANOVA: (1) Organize your data with the same subjects (sessions or teams) measured at multiple time points (e.g., deterrence at turns 1, 2, 3, etc.). (2) Ensure you have the same subjects measured at all time points (balanced design). (3) Check assumptions: normality of differences between time points and sphericity (equal variances of differences). (4) If sphericity is violated (Mauchly's test, p<0.05), apply Greenhouse-Geisser or Huynh-Feldt corrections. (5) Run the analysis and examine the within-subjects effect for time. (6) If significant, conduct pairwise comparisons with Bonferroni adjustments to identify which specific time points differ. (7) Report F-value, degrees of freedom (including any corrections), p-value, and partial eta-squared. (8) Visualize trends with line graphs showing means and error bars across time points. (9) Interpret whether performance changes significantly over time.`
+      };
+    }
+    
+    // Default recommendation for general hypotheses
+    return {
+      name: "Independent Samples t-test or Correlation Analysis",
+      justification: `Based on your hypothesis structure, the most appropriate test depends on whether you are comparing groups or examining relationships. If you are comparing NATO vs. Russia (or winners vs. losers) on a single metric, use an independent samples t-test to test for mean differences. If you are examining whether two continuous variables are related (e.g., whether economic deterrence correlates with total deterrence), use correlation analysis. ${
+        recommendedVariables.length === 0 
+          ? 'Select relevant variables above to refine this recommendation further.' 
+          : `With ${recommendedVariables.length} recommended variable${recommendedVariables.length !== 1 ? 's' : ''}, consider whether you want to compare groups (t-test) or measure association (correlation).`
+      } Both approaches are foundational statistical methods with clear interpretation and wide acceptance in research.`,
+      application: `For t-test: (1) Select one outcome variable and two groups to compare. (2) Check normality and variance assumptions. (3) Run the test and interpret mean differences with confidence intervals and p-values. For correlation: (1) Select two continuous variables you believe are related. (2) Visualize their relationship with a scatterplot. (3) Calculate Pearson's r (for linear relationships) or Spearman's ρ (for non-linear/monotonic relationships). (4) Report the correlation coefficient, interpret its strength and direction, and assess significance. (5) Use scatterplots with regression lines to communicate findings visually. Both tests require sufficient sample size (ideally 20+ sessions) and should be followed by effect size reporting to quantify practical significance beyond statistical significance.`
+    };
+  }, [hypothesis, recommendedVariables]);
+
   // Calculate card purchase frequency
   const cardFrequencyData = useMemo(() => {
     if (!sessions || selectedCards.length === 0 || selectedSessions.length === 0) {
@@ -1026,6 +1122,35 @@ export default function Research() {
                         No specific variable recommendations. Try mentioning team names (NATO/Russia), domains (economy, cyber, space, cognitive, joint), or comparison terms in your hypothesis.
                       </p>
                     )}
+                  </div>
+                )}
+
+                {/* Statistical Test Recommendation */}
+                {hypothesis.trim() && getHypothesisBasedTestRecommendation && (
+                  <div className="space-y-3 pt-4 border-t" data-testid="container-statistical-test-recommendation">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-primary" />
+                      <h3 className="text-sm font-semibold">Recommended Statistical Test</h3>
+                    </div>
+                    
+                    <div className="space-y-4 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                      <div>
+                        <Badge variant="default" className="mb-2" data-testid="badge-recommended-test-name">
+                          {getHypothesisBasedTestRecommendation.name}
+                        </Badge>
+                        <h4 className="text-xs font-semibold text-muted-foreground mb-2">Why This Test?</h4>
+                        <p className="text-sm leading-relaxed" data-testid="text-test-justification">
+                          {getHypothesisBasedTestRecommendation.justification}
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <h4 className="text-xs font-semibold text-muted-foreground mb-2">How to Apply</h4>
+                        <p className="text-sm leading-relaxed" data-testid="text-test-application">
+                          {getHypothesisBasedTestRecommendation.application}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 )}
 
