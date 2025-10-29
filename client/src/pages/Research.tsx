@@ -58,9 +58,67 @@ export default function Research() {
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
   const [cardTeamFilter, setCardTeamFilter] = useState<string>("both");
   
+  // Research Question Development
+  const [researchQuestion, setResearchQuestion] = useState<string>("");
+  const [selectedPredefinedQuestion, setSelectedPredefinedQuestion] = useState<string>("");
+  
   // Hypothesis Development
   const [hypothesis, setHypothesis] = useState<string>("");
   const [selectedPredefinedHypothesis, setSelectedPredefinedHypothesis] = useState<string>("");
+  
+  // Predefined research questions
+  const predefinedQuestions = [
+    {
+      id: "card-strategy-effectiveness",
+      label: "Card Strategy Effectiveness",
+      text: "Which card purchasing strategies are most effective at achieving victory across different strategic scenarios?"
+    },
+    {
+      id: "domain-investment-patterns",
+      label: "Domain Investment Patterns",
+      text: "How does investment distribution across the five domains (Joint, Economy, Cognitive, Space, Cyber) correlate with final deterrence scores?"
+    },
+    {
+      id: "team-performance-differences",
+      label: "Team Performance Differences",
+      text: "Are there significant performance differences between NATO and Russia teams in terms of deterrence outcomes and strategic approaches?"
+    },
+    {
+      id: "budget-allocation-efficiency",
+      label: "Budget Allocation Efficiency",
+      text: "What budget allocation patterns lead to the most efficient conversion of resources into deterrence capability?"
+    },
+    {
+      id: "permanent-vs-temporary-cards",
+      label: "Permanent vs Temporary Cards",
+      text: "How do permanent cards compare to temporary assets and expert cards in terms of overall strategic value?"
+    },
+    {
+      id: "early-vs-late-investment",
+      label: "Early vs Late Investment",
+      text: "Does the timing of strategic investments (early turns vs late turns) affect final deterrence outcomes?"
+    },
+    {
+      id: "defensive-offensive-balance",
+      label: "Defensive-Offensive Balance",
+      text: "What is the optimal balance between defensive and offensive card strategies for achieving victory?"
+    },
+    {
+      id: "comeback-possibility",
+      label: "Comeback Possibilities",
+      text: "Can teams successfully recover from early deterrence deficits, and what strategies enable such comebacks?"
+    },
+    {
+      id: "domain-specialization",
+      label: "Domain Specialization",
+      text: "Is domain specialization (focusing on 1-2 domains) more effective than balanced investment across all domains?"
+    },
+    {
+      id: "turn-duration-impact",
+      label: "Turn Duration Impact",
+      text: "How does the length of a strategic session (total number of turns) influence winning strategies and final outcomes?"
+    }
+  ];
   
   // Predefined scientific hypotheses
   const predefinedHypotheses = [
@@ -950,8 +1008,64 @@ export default function Research() {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* Left Panel: Session Filtering, Variable Selection, Card Analysis */}
+          {/* Left Panel: Research Question, Session Filtering, Variable Selection, Card Analysis */}
           <div className="lg:col-span-1 space-y-4">
+            {/* Develop Research Question */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="w-5 h-5" />
+                  Develop Research Question
+                </CardTitle>
+                <CardDescription>
+                  Define your research question to guide your analysis
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="predefined-question-left">Quick Select: Predefined Questions</Label>
+                  <Select 
+                    value={selectedPredefinedQuestion} 
+                    onValueChange={(value) => {
+                      setSelectedPredefinedQuestion(value);
+                      const selected = predefinedQuestions.find(q => q.id === value);
+                      if (selected) {
+                        setResearchQuestion(selected.text);
+                      }
+                    }}
+                  >
+                    <SelectTrigger data-testid="select-predefined-question-left">
+                      <SelectValue placeholder="Select a question template..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {predefinedQuestions.map(q => (
+                        <SelectItem key={q.id} value={q.id}>
+                          {q.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="research-question-left">Your Research Question</Label>
+                  <textarea
+                    id="research-question-left"
+                    value={researchQuestion}
+                    onChange={(e) => {
+                      setResearchQuestion(e.target.value);
+                      if (selectedPredefinedQuestion) {
+                        setSelectedPredefinedQuestion("");
+                      }
+                    }}
+                    placeholder="Example: How does early investment in economy domain correlate with final deterrence scores?"
+                    className="w-full min-h-[100px] p-3 rounded-md border border-input bg-background text-sm resize-y"
+                    data-testid="textarea-research-question-left"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -1421,8 +1535,64 @@ export default function Research() {
             )}
           </div>
 
-          {/* Right Panel: Hypothesis Development & Analysis */}
+          {/* Right Panel: Research Question, Hypothesis Development & Analysis */}
           <div className="lg:col-span-1 space-y-4">
+            {/* Develop Research Question */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="w-5 h-5" />
+                  Develop Research Question
+                </CardTitle>
+                <CardDescription>
+                  Define your research question to guide your analysis
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="predefined-question-right">Quick Select: Predefined Questions</Label>
+                  <Select 
+                    value={selectedPredefinedQuestion} 
+                    onValueChange={(value) => {
+                      setSelectedPredefinedQuestion(value);
+                      const selected = predefinedQuestions.find(q => q.id === value);
+                      if (selected) {
+                        setResearchQuestion(selected.text);
+                      }
+                    }}
+                  >
+                    <SelectTrigger data-testid="select-predefined-question-right">
+                      <SelectValue placeholder="Select a question template..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {predefinedQuestions.map(q => (
+                        <SelectItem key={q.id} value={q.id}>
+                          {q.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="research-question-right">Your Research Question</Label>
+                  <textarea
+                    id="research-question-right"
+                    value={researchQuestion}
+                    onChange={(e) => {
+                      setResearchQuestion(e.target.value);
+                      if (selectedPredefinedQuestion) {
+                        setSelectedPredefinedQuestion("");
+                      }
+                    }}
+                    placeholder="Example: How does early investment in economy domain correlate with final deterrence scores?"
+                    className="w-full min-h-[100px] p-3 rounded-md border border-input bg-background text-sm resize-y"
+                    data-testid="textarea-research-question-right"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Hypothesis Development */}
             <Card>
               <CardHeader>
