@@ -31,7 +31,11 @@ The frontend follows a component-based architecture with clear separation of con
     - **High-Correlation Cards**: Identifies specific cards with ≥60% win rate (minimum 2 uses) showing strong correlation with victory
     - **Permanent Card Holdings**: Average and maximum permanent cards held by winning teams
   - **Ask Questions**: Interactive Q&A interface with LLM-style chat experience for querying selected sessions. Provides authentic, data-driven answers based on real session data (winners, scores, domains, budgets, cards, turns, comparisons)
-- **Research Dashboard** (/research): Statistical analysis environment featuring:
+- **Research Dashboard** (/research): Statistical analysis environment featuring three-column responsive layout:
+  - **Layout Structure**: Three equal-width columns on large screens (lg:col-span-1 each):
+    - **Left Column**: Session filtering and variable selection
+    - **Middle Column**: Hypothesis development, statistics, test recommendations, and report generation
+    - **Right Column**: Card purchase frequency analysis only
   - **Hypothesis Development**: Interactive hypothesis analyzer that intelligently recommends relevant variables based on natural language input. Uses keyword matching and pattern detection to identify team mentions (NATO/Russia), domain references (economy, cyber, space, cognitive, joint), and comparison terms (correlation, impact, versus). Features include:
     - Real-time analysis of hypothesis text with useMemo optimization
     - Smart variable recommendations with deduplication logic
