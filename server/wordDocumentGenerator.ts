@@ -159,8 +159,7 @@ export async function createScientificReport(
     new Paragraph({
       text: '(1) What statistical patterns emerge in deterrence outcomes across multiple strategy sessions?',
       alignment: AlignmentType.JUSTIFIED,
-      spacing: { after: 100 },
-      numbering: { reference: "my-crazy-numbering", level: 0 }
+      spacing: { after: 100 }
     })
   );
   
@@ -843,7 +842,8 @@ function generateTTestSection(data: any, charts: { title: string; buffer: Buffer
     })
   );
   
-  if (data && data.tStatistic !== undefined) {
+  if (data && data.tStatistic !== undefined && data.mean1 !== undefined && data.mean2 !== undefined && 
+      data.sd1 !== undefined && data.sd2 !== undefined && data.n1 !== undefined && data.n2 !== undefined) {
     // Add a comprehensive results table
     items.push(
       new Paragraph({
@@ -968,6 +968,15 @@ function generateTTestSection(data: any, charts: { title: string; buffer: Buffer
         spacing: { after: 400 }
       })
     );
+  } else {
+    // Fallback when data is incomplete
+    items.push(
+      new Paragraph({
+        text: 'The t-test analysis was conducted, but complete statistical details are not available for this comparison. Please ensure all required data (group means, standard deviations, and sample sizes) are provided for comprehensive reporting.',
+        alignment: AlignmentType.JUSTIFIED,
+        spacing: { after: 400 }
+      })
+    );
   }
   
   if (charts.length > 0) {
@@ -1022,7 +1031,9 @@ function generateANOVASection(data: any, charts: { title: string; buffer: Buffer
     })
   );
   
-  if (data && data.fStatistic !== undefined) {
+  if (data && data.fStatistic !== undefined && data.betweenGroupsSS !== undefined && 
+      data.withinGroupsSS !== undefined && data.totalSS !== undefined && 
+      data.betweenGroupsDF !== undefined && data.withinGroupsDF !== undefined) {
     items.push(
       new Paragraph({
         text: 'Table 2',
@@ -1206,7 +1217,7 @@ function generateCorrelationSection(data: any, charts: { title: string; buffer: 
     })
   );
   
-  if (data && data.coefficient !== undefined) {
+  if (data && data.coefficient !== undefined && data.n !== undefined && data.pValue !== undefined) {
     // Add correlation results table
     items.push(
       new Paragraph({
@@ -1321,6 +1332,15 @@ function generateCorrelationSection(data: any, charts: { title: string; buffer: 
         spacing: { after: 400 }
       })
     );
+  } else {
+    // Fallback when data is incomplete
+    items.push(
+      new Paragraph({
+        text: 'The correlation analysis was conducted, but complete statistical details are not available for reporting. Please ensure all required data (correlation coefficient, sample size, and p-value) are provided for comprehensive reporting.',
+        alignment: AlignmentType.JUSTIFIED,
+        spacing: { after: 400 }
+      })
+    );
   }
   
   if (charts.length > 0) {
@@ -1375,7 +1395,9 @@ function generateRegressionSection(data: any, charts: { title: string; buffer: B
     })
   );
   
-  if (data && data.rSquared !== undefined) {
+  if (data && data.rSquared !== undefined && data.fStatistic !== undefined && 
+      data.intercept !== undefined && data.slope !== undefined && data.standardError !== undefined && 
+      data.n !== undefined) {
     // Model summary table
     items.push(
       new Paragraph({
@@ -1564,6 +1586,15 @@ function generateRegressionSection(data: any, charts: { title: string; buffer: B
     items.push(
       new Paragraph({
         text: `The regression coefficient (B = ${data.slope.toFixed(3)}) indicates that for each one-unit increase in the predictor variable, the outcome variable ${data.slope > 0 ? 'increases' : 'decreases'} by ${Math.abs(data.slope).toFixed(3)} units, on average. This ${data.significant ? 'statistically significant' : 'non-significant'} relationship ${data.significant ? 'provides evidence for' : 'does not provide strong evidence for'} a predictive association between the variables.`,
+        alignment: AlignmentType.JUSTIFIED,
+        spacing: { after: 400 }
+      })
+    );
+  } else {
+    // Fallback when data is incomplete
+    items.push(
+      new Paragraph({
+        text: 'The regression analysis was conducted, but complete statistical details are not available for reporting. Please ensure all required data (R², F-statistic, intercept, slope, standard error, and sample size) are provided for comprehensive reporting.',
         alignment: AlignmentType.JUSTIFIED,
         spacing: { after: 400 }
       })
