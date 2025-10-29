@@ -60,6 +60,101 @@ export default function Research() {
   
   // Hypothesis Development
   const [hypothesis, setHypothesis] = useState<string>("");
+  const [selectedPredefinedHypothesis, setSelectedPredefinedHypothesis] = useState<string>("");
+  
+  // Predefined scientific hypotheses
+  const predefinedHypotheses = [
+    {
+      id: "expert-cards-winning",
+      label: "Expert Cards & Victory",
+      text: "Purchasing expert cards is positively correlated with winning the strategy session."
+    },
+    {
+      id: "intelligence-cards-winning",
+      label: "Intelligence Cards & Victory",
+      text: "Purchasing intelligence cards is positively correlated with winning the strategy session."
+    },
+    {
+      id: "permanent-cards-winning",
+      label: "Permanent Cards & Victory",
+      text: "Purchasing permanent cards is positively correlated with winning the strategy session."
+    },
+    {
+      id: "early-permanent-cards",
+      label: "Early Permanent Card Advantage",
+      text: "Purchasing permanent cards earlier than the opponent is positively correlated with winning."
+    },
+    {
+      id: "economy-deterrence-total",
+      label: "Economy Domain & Total Deterrence",
+      text: "Deterrence in the economy dimension is positively correlated with total overall deterrence score."
+    },
+    {
+      id: "cyber-defense-investment",
+      label: "Cyber Defense Investment",
+      text: "Higher investment in cyber defensive cards is associated with improved cyber domain deterrence."
+    },
+    {
+      id: "space-domain-early",
+      label: "Early Space Domain Focus",
+      text: "Investing in space domain cards during early turns (1-3) is positively correlated with final space deterrence scores."
+    },
+    {
+      id: "budget-efficiency",
+      label: "Budget Efficiency & Victory",
+      text: "Teams that spend more efficiently (higher deterrence per budget unit) are more likely to win."
+    },
+    {
+      id: "cognitive-offensive",
+      label: "Cognitive Offensive Strategy",
+      text: "Offensive cards targeting the cognitive domain are more effective than defensive cognitive cards at influencing outcomes."
+    },
+    {
+      id: "joint-domain-balance",
+      label: "Joint Domain Balance",
+      text: "Balanced investment across all domains in the joint category correlates with higher overall strategic success."
+    },
+    {
+      id: "turn-count-winning",
+      label: "Strategy Duration & Victory",
+      text: "Longer strategy sessions (more turns) favor teams with stronger permanent card portfolios."
+    },
+    {
+      id: "first-mover-advantage",
+      label: "First Mover Advantage",
+      text: "The team making the first major card purchase has a strategic advantage in deterrence building."
+    },
+    {
+      id: "defensive-vs-offensive",
+      label: "Defensive vs Offensive Balance",
+      text: "Teams with a higher ratio of defensive to offensive cards have better long-term deterrence sustainability."
+    },
+    {
+      id: "domain-specialization",
+      label: "Domain Specialization Strategy",
+      text: "Specializing in one or two domains yields higher deterrence than spreading investments equally across all five domains."
+    },
+    {
+      id: "budget-pooling-timing",
+      label: "Budget Pooling Timing",
+      text: "Effective utilization of pooled budget phases (turns 2+) is correlated with higher final deterrence scores."
+    },
+    {
+      id: "nato-russia-asymmetry",
+      label: "NATO-Russia Strategic Asymmetry",
+      text: "NATO and Russia require different strategic approaches, with NATO performing better with economic focus and Russia with cyber/cognitive focus."
+    },
+    {
+      id: "comeback-mechanisms",
+      label: "Comeback Mechanisms",
+      text: "Teams that are behind after turn 3 can successfully employ offensive strategies to reduce opponent deterrence and achieve victory."
+    },
+    {
+      id: "permanent-card-quantity",
+      label: "Permanent Card Portfolio Size",
+      text: "The total number of permanent cards owned is positively correlated with final deterrence scores."
+    }
+  ];
   
   // Report generation
   const [selectedMethodology, setSelectedMethodology] = useState<string>("");
@@ -815,11 +910,42 @@ export default function Research() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
+                  <Label htmlFor="predefined-hypothesis">Quick Select: Predefined Hypotheses</Label>
+                  <Select 
+                    value={selectedPredefinedHypothesis} 
+                    onValueChange={(value) => {
+                      setSelectedPredefinedHypothesis(value);
+                      const selected = predefinedHypotheses.find(h => h.id === value);
+                      if (selected) {
+                        setHypothesis(selected.text);
+                      }
+                    }}
+                  >
+                    <SelectTrigger data-testid="select-predefined-hypothesis">
+                      <SelectValue placeholder="Select a hypothesis template..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {predefinedHypotheses.map(hyp => (
+                        <SelectItem key={hyp.id} value={hyp.id}>
+                          {hyp.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="hypothesis">Your Hypothesis</Label>
                   <textarea
                     id="hypothesis"
                     value={hypothesis}
-                    onChange={(e) => setHypothesis(e.target.value)}
+                    onChange={(e) => {
+                      setHypothesis(e.target.value);
+                      // Clear predefined selection if user manually edits
+                      if (selectedPredefinedHypothesis) {
+                        setSelectedPredefinedHypothesis("");
+                      }
+                    }}
                     placeholder="Example: NATO's economic domain performance is positively correlated with their overall deterrence score..."
                     className="w-full min-h-[100px] p-3 rounded-md border border-input bg-background text-sm resize-y"
                     data-testid="textarea-hypothesis"
