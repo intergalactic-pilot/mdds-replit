@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Download, Eye, Search, Trash2, ZoomIn, BarChart3, FlaskConical } from "lucide-react";
+import { ArrowLeft, Download, Eye, Search, Trash2, ZoomIn, BarChart3, FlaskConical, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
@@ -236,6 +236,96 @@ export default function DatabaseSessions() {
       toast({
         title: "Generation failed",
         description: "Failed to generate report. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDownloadCardLogs = (session: GameSession) => {
+    try {
+      // Extract card purchases from strategy log
+      const strategyLog = (session.gameState as any).strategyLog || [];
+      
+      // Filter for card purchase entries
+      const cardPurchases = strategyLog.filter((log: any) => 
+        log.action && log.action.includes('purchased')
+      );
+      
+      if (cardPurchases.length === 0) {
+        toast({
+          title: "No card purchases",
+          description: "This session has no card purchase logs to download.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Generate CSV content
+      let csvContent = "Turn,Team,Card Name,Card ID,Cost (K)\n";
+      let parsedCount = 0;
+      let skippedCount = 0;
+      
+      cardPurchases.forEach((log: any) => {
+        // Parse action string: "TEAM purchased CardName (ID) for XK"
+        const action = log.action;
+        const turnNum = log.turn || 'N/A';
+        const team = log.team || 'Unknown';
+        
+        // Extract card name, ID, and cost from action string
+        // Try case-insensitive match with flexible "K" or "k" for cost
+        const purchaseMatch = action.match(/purchased\s+(.+?)\s+\((.+?)\)\s+for\s+(\d+)[Kk]/i);
+        if (purchaseMatch) {
+          const cardName = purchaseMatch[1];
+          const cardId = purchaseMatch[2];
+          const cost = purchaseMatch[3];
+          
+          // Escape any commas in card names for CSV
+          const escapedCardName = cardName.includes(',') ? `"${cardName}"` : cardName;
+          
+          csvContent += `${turnNum},${team},${escapedCardName},${cardId},${cost}\n`;
+          parsedCount++;
+        } else {
+          skippedCount++;
+          console.warn('Failed to parse card purchase log:', action);
+        }
+      });
+      
+      // Verify that at least one row was parsed successfully
+      if (parsedCount === 0) {
+        toast({
+          title: "No parseable purchases",
+          description: `Found ${cardPurchases.length} purchase log(s), but could not extract card details. The log format may be incompatible.`,
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Create and download CSV file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${session.sessionName}_Card_Purchase_Logs.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      // Provide informative success message
+      const successMessage = skippedCount > 0
+        ? `${parsedCount} card purchase(s) exported. ${skippedCount} log(s) skipped due to format issues.`
+        : `${parsedCount} card purchase(s) successfully exported to CSV.`;
+      
+      toast({
+        title: "Card logs downloaded",
+        description: successMessage,
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error('Failed to download card logs:', error);
+      toast({
+        title: "Download failed",
+        description: "Failed to download card purchase logs. Please try again.",
         variant: "destructive",
       });
     }
@@ -536,6 +626,15 @@ export default function DatabaseSessions() {
                       data-testid={`button-details-${session.sessionName}`}
                     >
                       <Eye className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDownloadCardLogs(session)}
+                      data-testid={`button-card-logs-${session.sessionName}`}
+                      title="Download card purchase logs"
+                    >
+                      <FileText className="w-4 h-4" />
                     </Button>
                     <Button
                       variant="ghost"
