@@ -949,8 +949,8 @@ export default function Research() {
           </div>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Left Panel: Session Filtering */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Left Panel: Session Filtering, Variable Selection, Card Analysis */}
           <div className="lg:col-span-1 space-y-4">
             <Card>
               <CardHeader>
@@ -1119,9 +1119,309 @@ export default function Research() {
                 </ScrollArea>
               </CardContent>
             </Card>
+
+            {/* Card Purchase Frequency Analysis */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="w-5 h-5" />
+                  Card Purchase Frequency
+                </CardTitle>
+                <CardDescription>
+                  Analyze how often specific cards are purchased across selected sessions
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Card Selection and Team Filter */}
+                <div className="space-y-3">
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <Label>Team Filter</Label>
+                      <Select value={cardTeamFilter} onValueChange={setCardTeamFilter}>
+                        <SelectTrigger data-testid="select-card-team-filter">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="both">Both Teams</SelectItem>
+                          <SelectItem value="NATO">NATO Only</SelectItem>
+                          <SelectItem value="Russia">Russia Only</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>Select Cards to Analyze</Label>
+                    <ScrollArea className="h-48 border rounded-md p-2 mt-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        {cardsData
+                          .sort((a, b) => a.id.localeCompare(b.id))
+                          .map((card: any) => (
+                            <div
+                              key={card.id}
+                              className="flex items-center gap-2 p-1 rounded hover-elevate"
+                            >
+                              <Checkbox
+                                checked={selectedCards.includes(card.id)}
+                                onCheckedChange={() => toggleCard(card.id)}
+                                data-testid={`checkbox-card-${card.id}`}
+                              />
+                              <Label 
+                                className="text-xs cursor-pointer flex-1"
+                                onClick={() => toggleCard(card.id)}
+                              >
+                                <span className="font-mono font-semibold">{card.id}</span>
+                                {" - "}
+                                <span className="text-muted-foreground">{card.name}</span>
+                              </Label>
+                            </div>
+                          ))}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                </div>
+
+                {/* Frequency Results */}
+                {selectedCards.length > 0 && selectedSessions.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-semibold">Frequency Results</h3>
+                      <Badge variant="outline">
+                        {selectedSessions.length} session(s)
+                      </Badge>
+                    </div>
+
+                    {cardFrequencyData.length > 0 ? (
+                      <ScrollArea className="h-64">
+                        <div className="space-y-2">
+                          {cardFrequencyData.map((data) => (
+                            <div 
+                              key={data.cardId} 
+                              className="border rounded-lg p-3 space-y-2"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1">
+                                  <p className="text-sm font-semibold font-mono">
+                                    {data.cardId}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {data.cardName}
+                                  </p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-lg font-bold">{data.displayCount}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {data.displayCount === 1 ? 'purchase' : 'purchases'}
+                                  </p>
+                                  <p className="text-xs font-semibold text-primary mt-1">
+                                    {data.sessionsAppeared} / {selectedSessions.length} sessions ({data.percentage}%)
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Team breakdown when showing both teams */}
+                              {cardTeamFilter === "both" && (
+                                <div className="flex gap-2 text-xs">
+                                  <div className="flex-1 p-2 rounded bg-blue-500/10 border border-blue-500/20">
+                                    <p className="text-muted-foreground">NATO</p>
+                                    <p className="font-semibold">{data.natoCount}</p>
+                                  </div>
+                                  <div className="flex-1 p-2 rounded bg-red-500/10 border border-red-500/20">
+                                    <p className="text-muted-foreground">Russia</p>
+                                    <p className="font-semibold">{data.russiaCount}</p>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Visual bar */}
+                              <div className="relative h-2 bg-muted rounded-full overflow-hidden">
+                                <div
+                                  className="absolute left-0 top-0 h-full bg-primary rounded-full transition-all"
+                                  style={{ width: `${Math.min(parseFloat(data.percentage), 100)}%` }}
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        No purchases found for selected cards in the selected sessions.
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {selectedCards.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Select cards above to view purchase frequency analysis
+                  </p>
+                )}
+
+                {selectedSessions.length === 0 && selectedCards.length > 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Select sessions from the left panel to analyze card purchase frequency
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Card Rankings by Dimension */}
+            {selectedSessions.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5" />
+                    Card Rankings by Dimension
+                  </CardTitle>
+                  <CardDescription>
+                    Most purchased cards by NATO and Russia, organized by dimension
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <ScrollArea className="h-[600px]">
+                    <div className="space-y-6">
+                      {domains.map(domain => {
+                        const domainRankings = cardRankingsByDimension[domain];
+                        if (!domainRankings) return null;
+
+                        const hasNatoCards = domainRankings.nato.length > 0;
+                        const hasRussiaCards = domainRankings.russia.length > 0;
+
+                        if (!hasNatoCards && !hasRussiaCards) return null;
+
+                        return (
+                          <div key={domain} className="border rounded-lg p-4 space-y-4">
+                            <h3 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
+                              {domain} Domain
+                            </h3>
+
+                            <div className="grid grid-cols-2 gap-4">
+                              {/* NATO Rankings */}
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-3 h-3 rounded-full bg-blue-500" />
+                                  <p className="text-xs font-semibold text-muted-foreground">NATO</p>
+                                </div>
+                                
+                                {hasNatoCards ? (
+                                  <div className="space-y-2">
+                                    {domainRankings.nato.slice(0, 5).map((card: { cardId: string; cardName: string; count: number; domainPercentage: string; overallPercentage: string; }, index: number) => (
+                                      <div 
+                                        key={card.cardId}
+                                        className="border rounded-md p-2 space-y-1 bg-blue-500/5"
+                                        data-testid={`ranking-nato-${domain}-${card.cardId}`}
+                                      >
+                                        <div className="flex items-start justify-between gap-2">
+                                          <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2">
+                                              <Badge variant="outline" className="text-xs px-1 py-0">
+                                                #{index + 1}
+                                              </Badge>
+                                              <p className="text-xs font-mono font-semibold truncate">
+                                                {card.cardId}
+                                              </p>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground truncate mt-1">
+                                              {card.cardName}
+                                            </p>
+                                          </div>
+                                          <div className="text-right flex-shrink-0">
+                                            <p className="text-sm font-bold">{card.count}</p>
+                                            <p className="text-xs text-muted-foreground">purchases</p>
+                                          </div>
+                                        </div>
+                                        <div className="flex gap-3 text-xs">
+                                          <div className="flex-1">
+                                            <p className="text-muted-foreground">In Domain:</p>
+                                            <p className="font-semibold">{card.domainPercentage}%</p>
+                                          </div>
+                                          <div className="flex-1">
+                                            <p className="text-muted-foreground">Overall:</p>
+                                            <p className="font-semibold">{card.overallPercentage}%</p>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="text-xs text-muted-foreground text-center py-4">
+                                    No {domain} cards purchased
+                                  </p>
+                                )}
+                              </div>
+
+                              {/* Russia Rankings */}
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-3 h-3 rounded-full bg-red-500" />
+                                  <p className="text-xs font-semibold text-muted-foreground">Russia</p>
+                                </div>
+                                
+                                {hasRussiaCards ? (
+                                  <div className="space-y-2">
+                                    {domainRankings.russia.slice(0, 5).map((card: { cardId: string; cardName: string; count: number; domainPercentage: string; overallPercentage: string; }, index: number) => (
+                                      <div 
+                                        key={card.cardId}
+                                        className="border rounded-md p-2 space-y-1 bg-red-500/5"
+                                        data-testid={`ranking-russia-${domain}-${card.cardId}`}
+                                      >
+                                        <div className="flex items-start justify-between gap-2">
+                                          <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2">
+                                              <Badge variant="outline" className="text-xs px-1 py-0">
+                                                #{index + 1}
+                                              </Badge>
+                                              <p className="text-xs font-mono font-semibold truncate">
+                                                {card.cardId}
+                                              </p>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground truncate mt-1">
+                                              {card.cardName}
+                                            </p>
+                                          </div>
+                                          <div className="text-right flex-shrink-0">
+                                            <p className="text-sm font-bold">{card.count}</p>
+                                            <p className="text-xs text-muted-foreground">purchases</p>
+                                          </div>
+                                        </div>
+                                        <div className="flex gap-3 text-xs">
+                                          <div className="flex-1">
+                                            <p className="text-muted-foreground">In Domain:</p>
+                                            <p className="font-semibold">{card.domainPercentage}%</p>
+                                          </div>
+                                          <div className="flex-1">
+                                            <p className="text-muted-foreground">Overall:</p>
+                                            <p className="font-semibold">{card.overallPercentage}%</p>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="text-xs text-muted-foreground text-center py-4">
+                                    No {domain} cards purchased
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </ScrollArea>
+
+                  {selectedSessions.length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      Select sessions from the left panel to view card rankings by dimension
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
 
-          {/* Middle Panel: Hypothesis Development & Analysis */}
+          {/* Right Panel: Hypothesis Development & Analysis */}
           <div className="lg:col-span-1 space-y-4">
             {/* Hypothesis Development */}
             <Card>
@@ -1493,309 +1793,6 @@ export default function Research() {
                         <p className="text-sm">{generatedReport}</p>
                       </div>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-          </div>
-
-          {/* Right Panel: Card Purchase Frequency */}
-          <div className="lg:col-span-1 space-y-4">
-            {/* Card Purchase Frequency Analysis */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CreditCard className="w-5 h-5" />
-                  Card Purchase Frequency
-                </CardTitle>
-                <CardDescription>
-                  Analyze how often specific cards are purchased across selected sessions
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Card Selection and Team Filter */}
-                <div className="space-y-3">
-                  <div className="flex gap-2">
-                    <div className="flex-1">
-                      <Label>Team Filter</Label>
-                      <Select value={cardTeamFilter} onValueChange={setCardTeamFilter}>
-                        <SelectTrigger data-testid="select-card-team-filter">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="both">Both Teams</SelectItem>
-                          <SelectItem value="NATO">NATO Only</SelectItem>
-                          <SelectItem value="Russia">Russia Only</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label>Select Cards to Analyze</Label>
-                    <ScrollArea className="h-48 border rounded-md p-2 mt-2">
-                      <div className="grid grid-cols-2 gap-2">
-                        {cardsData
-                          .sort((a, b) => a.id.localeCompare(b.id))
-                          .map((card: any) => (
-                            <div
-                              key={card.id}
-                              className="flex items-center gap-2 p-1 rounded hover-elevate"
-                            >
-                              <Checkbox
-                                checked={selectedCards.includes(card.id)}
-                                onCheckedChange={() => toggleCard(card.id)}
-                                data-testid={`checkbox-card-${card.id}`}
-                              />
-                              <Label 
-                                className="text-xs cursor-pointer flex-1"
-                                onClick={() => toggleCard(card.id)}
-                              >
-                                <span className="font-mono font-semibold">{card.id}</span>
-                                {" - "}
-                                <span className="text-muted-foreground">{card.name}</span>
-                              </Label>
-                            </div>
-                          ))}
-                      </div>
-                    </ScrollArea>
-                  </div>
-                </div>
-
-                {/* Frequency Results */}
-                {selectedCards.length > 0 && selectedSessions.length > 0 && (
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-semibold">Frequency Results</h3>
-                      <Badge variant="outline">
-                        {selectedSessions.length} session(s)
-                      </Badge>
-                    </div>
-
-                    {cardFrequencyData.length > 0 ? (
-                      <ScrollArea className="h-64">
-                        <div className="space-y-2">
-                          {cardFrequencyData.map((data) => (
-                            <div 
-                              key={data.cardId} 
-                              className="border rounded-lg p-3 space-y-2"
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="flex-1">
-                                  <p className="text-sm font-semibold font-mono">
-                                    {data.cardId}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {data.cardName}
-                                  </p>
-                                </div>
-                                <div className="text-right">
-                                  <p className="text-lg font-bold">{data.displayCount}</p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {data.displayCount === 1 ? 'purchase' : 'purchases'}
-                                  </p>
-                                  <p className="text-xs font-semibold text-primary mt-1">
-                                    {data.sessionsAppeared} / {selectedSessions.length} sessions ({data.percentage}%)
-                                  </p>
-                                </div>
-                              </div>
-
-                              {/* Team breakdown when showing both teams */}
-                              {cardTeamFilter === "both" && (
-                                <div className="flex gap-2 text-xs">
-                                  <div className="flex-1 p-2 rounded bg-blue-500/10 border border-blue-500/20">
-                                    <p className="text-muted-foreground">NATO</p>
-                                    <p className="font-semibold">{data.natoCount}</p>
-                                  </div>
-                                  <div className="flex-1 p-2 rounded bg-red-500/10 border border-red-500/20">
-                                    <p className="text-muted-foreground">Russia</p>
-                                    <p className="font-semibold">{data.russiaCount}</p>
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* Visual bar */}
-                              <div className="relative h-2 bg-muted rounded-full overflow-hidden">
-                                <div
-                                  className="absolute left-0 top-0 h-full bg-primary rounded-full transition-all"
-                                  style={{ width: `${Math.min(parseFloat(data.percentage), 100)}%` }}
-                                />
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </ScrollArea>
-                    ) : (
-                      <p className="text-sm text-muted-foreground text-center py-4">
-                        No purchases found for selected cards in the selected sessions.
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {selectedCards.length === 0 && (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    Select cards above to view purchase frequency analysis
-                  </p>
-                )}
-
-                {selectedSessions.length === 0 && selectedCards.length > 0 && (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    Select sessions from the left panel to analyze card purchase frequency
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Card Rankings by Dimension */}
-            {selectedSessions.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="w-5 h-5" />
-                    Card Rankings by Dimension
-                  </CardTitle>
-                  <CardDescription>
-                    Most purchased cards by NATO and Russia, organized by dimension
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <ScrollArea className="h-[600px]">
-                    <div className="space-y-6">
-                      {domains.map(domain => {
-                        const domainRankings = cardRankingsByDimension[domain];
-                        if (!domainRankings) return null;
-
-                        const hasNatoCards = domainRankings.nato.length > 0;
-                        const hasRussiaCards = domainRankings.russia.length > 0;
-
-                        if (!hasNatoCards && !hasRussiaCards) return null;
-
-                        return (
-                          <div key={domain} className="border rounded-lg p-4 space-y-4">
-                            <h3 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
-                              {domain} Domain
-                            </h3>
-
-                            <div className="grid grid-cols-2 gap-4">
-                              {/* NATO Rankings */}
-                              <div className="space-y-2">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-3 h-3 rounded-full bg-blue-500" />
-                                  <p className="text-xs font-semibold text-muted-foreground">NATO</p>
-                                </div>
-                                
-                                {hasNatoCards ? (
-                                  <div className="space-y-2">
-                                    {domainRankings.nato.slice(0, 5).map((card: { cardId: string; cardName: string; count: number; domainPercentage: string; overallPercentage: string; }, index: number) => (
-                                      <div 
-                                        key={card.cardId}
-                                        className="border rounded-md p-2 space-y-1 bg-blue-500/5"
-                                        data-testid={`ranking-nato-${domain}-${card.cardId}`}
-                                      >
-                                        <div className="flex items-start justify-between gap-2">
-                                          <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2">
-                                              <Badge variant="outline" className="text-xs px-1 py-0">
-                                                #{index + 1}
-                                              </Badge>
-                                              <p className="text-xs font-mono font-semibold truncate">
-                                                {card.cardId}
-                                              </p>
-                                            </div>
-                                            <p className="text-xs text-muted-foreground truncate mt-1">
-                                              {card.cardName}
-                                            </p>
-                                          </div>
-                                          <div className="text-right flex-shrink-0">
-                                            <p className="text-sm font-bold">{card.count}</p>
-                                            <p className="text-xs text-muted-foreground">purchases</p>
-                                          </div>
-                                        </div>
-                                        <div className="flex gap-3 text-xs">
-                                          <div className="flex-1">
-                                            <p className="text-muted-foreground">In Domain:</p>
-                                            <p className="font-semibold">{card.domainPercentage}%</p>
-                                          </div>
-                                          <div className="flex-1">
-                                            <p className="text-muted-foreground">Overall:</p>
-                                            <p className="font-semibold">{card.overallPercentage}%</p>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <p className="text-xs text-muted-foreground text-center py-4">
-                                    No {domain} cards purchased
-                                  </p>
-                                )}
-                              </div>
-
-                              {/* Russia Rankings */}
-                              <div className="space-y-2">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-3 h-3 rounded-full bg-red-500" />
-                                  <p className="text-xs font-semibold text-muted-foreground">Russia</p>
-                                </div>
-                                
-                                {hasRussiaCards ? (
-                                  <div className="space-y-2">
-                                    {domainRankings.russia.slice(0, 5).map((card: { cardId: string; cardName: string; count: number; domainPercentage: string; overallPercentage: string; }, index: number) => (
-                                      <div 
-                                        key={card.cardId}
-                                        className="border rounded-md p-2 space-y-1 bg-red-500/5"
-                                        data-testid={`ranking-russia-${domain}-${card.cardId}`}
-                                      >
-                                        <div className="flex items-start justify-between gap-2">
-                                          <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2">
-                                              <Badge variant="outline" className="text-xs px-1 py-0">
-                                                #{index + 1}
-                                              </Badge>
-                                              <p className="text-xs font-mono font-semibold truncate">
-                                                {card.cardId}
-                                              </p>
-                                            </div>
-                                            <p className="text-xs text-muted-foreground truncate mt-1">
-                                              {card.cardName}
-                                            </p>
-                                          </div>
-                                          <div className="text-right flex-shrink-0">
-                                            <p className="text-sm font-bold">{card.count}</p>
-                                            <p className="text-xs text-muted-foreground">purchases</p>
-                                          </div>
-                                        </div>
-                                        <div className="flex gap-3 text-xs">
-                                          <div className="flex-1">
-                                            <p className="text-muted-foreground">In Domain:</p>
-                                            <p className="font-semibold">{card.domainPercentage}%</p>
-                                          </div>
-                                          <div className="flex-1">
-                                            <p className="text-muted-foreground">Overall:</p>
-                                            <p className="font-semibold">{card.overallPercentage}%</p>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <p className="text-xs text-muted-foreground text-center py-4">
-                                    No {domain} cards purchased
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </ScrollArea>
-
-                  {selectedSessions.length === 0 && (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      Select sessions from the left panel to view card rankings by dimension
-                    </p>
                   )}
                 </CardContent>
               </Card>
