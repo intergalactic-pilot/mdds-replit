@@ -35,7 +35,7 @@ The frontend follows a component-based architecture with clear separation of con
   - **Layout Structure**: Three equal-width columns on large screens (lg:col-span-1 each):
     - **Left Column**: Session filtering and variable selection
     - **Middle Column**: Hypothesis development, statistics, test recommendations, and report generation
-    - **Right Column**: Card purchase frequency analysis only
+    - **Right Column**: Card purchase frequency analysis and card rankings by dimension
   - **Hypothesis Development**: Interactive hypothesis analyzer that intelligently recommends relevant variables based on natural language input. Uses keyword matching and pattern detection to identify team mentions (NATO/Russia), domain references (economy, cyber, space, cognitive, joint), and comparison terms (correlation, impact, versus). Features include:
     - Real-time analysis of hypothesis text with useMemo optimization
     - Smart variable recommendations with deduplication logic
@@ -45,6 +45,12 @@ The frontend follows a component-based architecture with clear separation of con
   - **Session Filtering**: Search, winner filtering, and date-based filtering for research dataset selection
   - **Variable Selection**: 14+ dependent variables (deterrence scores, budget metrics, turn counts) across NATO/Russia teams
   - **Card Purchase Frequency**: Multi-card selection analysis showing percentage of sessions where cards were purchased, with team filtering (Both/NATO/Russia) and session-based percentage calculations using Set-based tracking to prevent >100% values
+  - **Card Rankings by Dimension**: Comprehensive ranking system displaying top 5 most-purchased cards by NATO and Russia, organized by dimension (Joint, Economy, Cognitive, Space, Cyber). For each card, displays:
+    - Purchase count and ranking position
+    - Domain percentage (frequency within that specific dimension)
+    - Overall percentage (frequency across all card purchases)
+    - Side-by-side NATO (blue) and Russia (red) comparisons
+    - Empty states for dimensions with no purchases
   - **Descriptive Statistics**: Automated calculation of N, Mean, SD, Min, Max, Range, Median, and IQR for selected variables
   - **Statistical Test Recommendations**: Intelligent recommendation system for 11 statistical methodologies (t-tests, ANOVA, MANOVA, correlation, regression, non-parametric tests) with appropriateness detection based on data characteristics
   - **Scientific Word Document Generation**: Automated creation of publication-ready .docx reports including:
