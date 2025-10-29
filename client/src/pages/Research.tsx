@@ -785,6 +785,136 @@ export default function Research() {
     }).sort((a, b) => b.displayCount - a.displayCount);
   }, [sessions, selectedSessions, selectedCards, cardTeamFilter]);
 
+  // Calculate card rankings by dimension for NATO and Russia
+  const cardRankingsByDimension = useMemo(() => {
+    if (!sessions || selectedSessions.length === 0) {
+      return {
+        joint: { nato: [], russia: [] },
+        economy: { nato: [], russia: [] },
+        cognitive: { nato: [], russia: [] },
+        space: { nato: [], russia: [] },
+        cyber: { nato: [], russia: [] }
+      };
+    }
+
+    const selectedSessionData = sessions.filter(s => selectedSessions.includes(s.sessionName));
+    
+    // Initialize rankings structure by dimension
+    const rankings: Record<Domain, {
+      nato: Array<{ cardId: string; cardName: string; count: number; domainPercentage: string; overallPercentage: string; }>;
+      russia: Array<{ cardId: string; cardName: string; count: number; domainPercentage: string; overallPercentage: string; }>;
+    }> = {
+      joint: { nato: [], russia: [] },
+      economy: { nato: [], russia: [] },
+      cognitive: { nato: [], russia: [] },
+      space: { nato: [], russia: [] },
+      cyber: { nato: [], russia: [] }
+    };
+    
+    // Count total purchases by team for overall percentage calculation
+    let natoTotalPurchases = 0;
+    let russiaTotalPurchases = 0;
+    
+    // Count purchases by domain for domain percentage calculation
+    const natoDomainCounts: Record<Domain, number> = {
+      joint: 0,
+      economy: 0,
+      cognitive: 0,
+      space: 0,
+      cyber: 0
+    };
+    const russiaDomainCounts: Record<Domain, number> = {
+      joint: 0,
+      economy: 0,
+      cognitive: 0,
+      space: 0,
+      cyber: 0
+    };
+
+    // Map to track card purchase counts
+    const cardCounts: Record<string, { nato: number; russia: number; domain: Domain; name: string; }> = {};
+
+    selectedSessionData.forEach(session => {
+      const strategyLog = session.gameState?.strategyLog || [];
+      
+      strategyLog.forEach((log: any) => {
+        // Match pattern: "TEAM purchased CardName (ID) for XK"
+        const purchaseMatch = log.action.match(/purchased.*\(([^)]+)\)/i);
+        if (purchaseMatch) {
+          const cardId = purchaseMatch[1];
+          const card = cardsData.find(c => c.id === cardId);
+          
+          if (card && card.domain) {
+            const domain = card.domain as Domain;
+            
+            // Initialize card entry if not exists
+            if (!cardCounts[cardId]) {
+              cardCounts[cardId] = { nato: 0, russia: 0, domain, name: card.name };
+            }
+            
+            if (log.team === "NATO") {
+              cardCounts[cardId].nato++;
+              natoTotalPurchases++;
+              natoDomainCounts[domain]++;
+            } else if (log.team === "Russia") {
+              cardCounts[cardId].russia++;
+              russiaTotalPurchases++;
+              russiaDomainCounts[domain]++;
+            }
+          }
+        }
+      });
+    });
+
+    // Build rankings for each domain
+    domains.forEach(domain => {
+      const natoCardsInDomain: Array<{ cardId: string; cardName: string; count: number; domainPercentage: string; overallPercentage: string; }> = [];
+      const russiaCardsInDomain: Array<{ cardId: string; cardName: string; count: number; domainPercentage: string; overallPercentage: string; }> = [];
+
+      Object.entries(cardCounts).forEach(([cardId, data]) => {
+        if (data.domain === domain) {
+          if (data.nato > 0) {
+            const domainPercentage = natoDomainCounts[domain] > 0 
+              ? ((data.nato / natoDomainCounts[domain]) * 100).toFixed(1)
+              : "0.0";
+            const overallPercentage = natoTotalPurchases > 0
+              ? ((data.nato / natoTotalPurchases) * 100).toFixed(1)
+              : "0.0";
+            natoCardsInDomain.push({
+              cardId,
+              cardName: data.name,
+              count: data.nato,
+              domainPercentage,
+              overallPercentage
+            });
+          }
+          
+          if (data.russia > 0) {
+            const domainPercentage = russiaDomainCounts[domain] > 0
+              ? ((data.russia / russiaDomainCounts[domain]) * 100).toFixed(1)
+              : "0.0";
+            const overallPercentage = russiaTotalPurchases > 0
+              ? ((data.russia / russiaTotalPurchases) * 100).toFixed(1)
+              : "0.0";
+            russiaCardsInDomain.push({
+              cardId,
+              cardName: data.name,
+              count: data.russia,
+              domainPercentage,
+              overallPercentage
+            });
+          }
+        }
+      });
+
+      // Sort by count descending
+      rankings[domain].nato = natoCardsInDomain.sort((a, b) => b.count - a.count);
+      rankings[domain].russia = russiaCardsInDomain.sort((a, b) => b.count - a.count);
+    });
+
+    return rankings;
+  }, [sessions, selectedSessions]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -1516,6 +1646,160 @@ export default function Research() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Card Rankings by Dimension */}
+            {selectedSessions.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5" />
+                    Card Rankings by Dimension
+                  </CardTitle>
+                  <CardDescription>
+                    Most purchased cards by NATO and Russia, organized by dimension
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <ScrollArea className="h-[600px]">
+                    <div className="space-y-6">
+                      {domains.map(domain => {
+                        const domainRankings = cardRankingsByDimension[domain];
+                        if (!domainRankings) return null;
+
+                        const hasNatoCards = domainRankings.nato.length > 0;
+                        const hasRussiaCards = domainRankings.russia.length > 0;
+
+                        if (!hasNatoCards && !hasRussiaCards) return null;
+
+                        return (
+                          <div key={domain} className="border rounded-lg p-4 space-y-4">
+                            <h3 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
+                              {domain} Domain
+                            </h3>
+
+                            <div className="grid grid-cols-2 gap-4">
+                              {/* NATO Rankings */}
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-3 h-3 rounded-full bg-blue-500" />
+                                  <p className="text-xs font-semibold text-muted-foreground">NATO</p>
+                                </div>
+                                
+                                {hasNatoCards ? (
+                                  <div className="space-y-2">
+                                    {domainRankings.nato.slice(0, 5).map((card: { cardId: string; cardName: string; count: number; domainPercentage: string; overallPercentage: string; }, index: number) => (
+                                      <div 
+                                        key={card.cardId}
+                                        className="border rounded-md p-2 space-y-1 bg-blue-500/5"
+                                        data-testid={`ranking-nato-${domain}-${card.cardId}`}
+                                      >
+                                        <div className="flex items-start justify-between gap-2">
+                                          <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2">
+                                              <Badge variant="outline" className="text-xs px-1 py-0">
+                                                #{index + 1}
+                                              </Badge>
+                                              <p className="text-xs font-mono font-semibold truncate">
+                                                {card.cardId}
+                                              </p>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground truncate mt-1">
+                                              {card.cardName}
+                                            </p>
+                                          </div>
+                                          <div className="text-right flex-shrink-0">
+                                            <p className="text-sm font-bold">{card.count}</p>
+                                            <p className="text-xs text-muted-foreground">purchases</p>
+                                          </div>
+                                        </div>
+                                        <div className="flex gap-3 text-xs">
+                                          <div className="flex-1">
+                                            <p className="text-muted-foreground">In Domain:</p>
+                                            <p className="font-semibold">{card.domainPercentage}%</p>
+                                          </div>
+                                          <div className="flex-1">
+                                            <p className="text-muted-foreground">Overall:</p>
+                                            <p className="font-semibold">{card.overallPercentage}%</p>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="text-xs text-muted-foreground text-center py-4">
+                                    No {domain} cards purchased
+                                  </p>
+                                )}
+                              </div>
+
+                              {/* Russia Rankings */}
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-3 h-3 rounded-full bg-red-500" />
+                                  <p className="text-xs font-semibold text-muted-foreground">Russia</p>
+                                </div>
+                                
+                                {hasRussiaCards ? (
+                                  <div className="space-y-2">
+                                    {domainRankings.russia.slice(0, 5).map((card: { cardId: string; cardName: string; count: number; domainPercentage: string; overallPercentage: string; }, index: number) => (
+                                      <div 
+                                        key={card.cardId}
+                                        className="border rounded-md p-2 space-y-1 bg-red-500/5"
+                                        data-testid={`ranking-russia-${domain}-${card.cardId}`}
+                                      >
+                                        <div className="flex items-start justify-between gap-2">
+                                          <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2">
+                                              <Badge variant="outline" className="text-xs px-1 py-0">
+                                                #{index + 1}
+                                              </Badge>
+                                              <p className="text-xs font-mono font-semibold truncate">
+                                                {card.cardId}
+                                              </p>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground truncate mt-1">
+                                              {card.cardName}
+                                            </p>
+                                          </div>
+                                          <div className="text-right flex-shrink-0">
+                                            <p className="text-sm font-bold">{card.count}</p>
+                                            <p className="text-xs text-muted-foreground">purchases</p>
+                                          </div>
+                                        </div>
+                                        <div className="flex gap-3 text-xs">
+                                          <div className="flex-1">
+                                            <p className="text-muted-foreground">In Domain:</p>
+                                            <p className="font-semibold">{card.domainPercentage}%</p>
+                                          </div>
+                                          <div className="flex-1">
+                                            <p className="text-muted-foreground">Overall:</p>
+                                            <p className="font-semibold">{card.overallPercentage}%</p>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="text-xs text-muted-foreground text-center py-4">
+                                    No {domain} cards purchased
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </ScrollArea>
+
+                  {selectedSessions.length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      Select sessions from the left panel to view card rankings by dimension
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </div>
