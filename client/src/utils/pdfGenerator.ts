@@ -934,66 +934,125 @@ export const generateMDDSReport = async (data: PDFReportData) => {
     }
   });
   
-  // Four Individual Defense/Offense Charts
+  // Strategic Effects Analysis - Full-width vertical layout
   if (data.turnStatistics.length > 1 && data.strategyLog.length > 0) {
     // Calculate effects similar to the web component
     const { natoDefenseData, natoOffenseData, russiaDefenseData, russiaOffenseData } = calculateDefenseOffenseEffects(data);
     
-    // Chart layout: proper spacing to accommodate y-axis labels on both columns
-    // Y-axis labels render at x - 8mm, so we need:
-    // - Left chart must start at margin + 10 (so labels at x-8 = margin+2, safely within page)
-    // - Right chart needs 12mm left of it for its y-axis labels (8mm offset + 4mm buffer for wide numbers)
-    const chartWidth = (contentWidth - 32) / 2; // 69mm each, leaving room for labels
-    const leftChartX = margin + 10; // Labels will be at margin + 2
-    const rightChartX = margin + 10 + chartWidth + 12; // 12mm gap for right chart's y-axis labels
+    // Chart layout: Full-width charts with proper margin for y-axis labels
+    // Y-axis labels render at x - 8mm, so chart starts at margin + 10
+    const chartWidth = contentWidth - 20; // Full width with 10mm margins on each side
+    const chartX = margin + 10; // Labels will be at margin + 2
+    const chartHeight = 50;
+    
+    // Section header
+    checkPage(30);
+    pdf.setFontSize(16);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('STRATEGIC EFFECTS ANALYSIS', margin, yPosition);
+    yPosition += 15;
     
     // NATO Defensive Effects
-    checkPage(70);
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(60, 60, 60);
+    const natoDefText = pdf.splitTextToSize(
+      'This chart shows NATO\'s defensive card effects across all five domains (Joint, Economy, Cognitive, Space, Cyber) throughout the strategy session. Defensive effects strengthen NATO\'s own deterrence capabilities and represent investments in self-protection and resilience.',
+      contentWidth
+    );
+    const natoDefBlockHeight = natoDefText.length * 5 + 5 + chartHeight + 25;
+    checkPage(natoDefBlockHeight);
+    
+    pdf.text(natoDefText, margin, yPosition);
+    yPosition += natoDefText.length * 5 + 5;
+    
     drawDomainChart(
       pdf,
-      leftChartX,
-      yPosition + 20,
+      chartX,
+      yPosition,
       chartWidth,
-      50,
+      chartHeight,
       natoDefenseData,
       'NATO Defensive Effects'
     );
+    yPosition += chartHeight + 25;
     
     // NATO Offensive Effects on Russia
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(60, 60, 60);
+    const natoOffText = pdf.splitTextToSize(
+      'This chart displays NATO\'s offensive card effects on Russia across all domains. Offensive effects reduce the opponent\'s deterrence scores and represent strategic actions aimed at weakening adversary capabilities.',
+      contentWidth
+    );
+    const natoOffBlockHeight = natoOffText.length * 5 + 5 + chartHeight + 25;
+    checkPage(natoOffBlockHeight);
+    
+    pdf.text(natoOffText, margin, yPosition);
+    yPosition += natoOffText.length * 5 + 5;
+    
     drawDomainChart(
       pdf,
-      rightChartX,
-      yPosition + 20,
+      chartX,
+      yPosition,
       chartWidth,
-      50,
+      chartHeight,
       natoOffenseData,
       'NATO Offensive Effects on Russia'
     );
-    yPosition += 85;
+    yPosition += chartHeight + 25;
     
     // Russia Defensive Effects
-    checkPage(70);
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(60, 60, 60);
+    const russiaDefText = pdf.splitTextToSize(
+      'This chart shows Russia\'s defensive card effects across all five domains throughout the strategy session. Defensive effects strengthen Russia\'s own deterrence capabilities and represent investments in self-protection and resilience.',
+      contentWidth
+    );
+    const russiaDefBlockHeight = russiaDefText.length * 5 + 5 + chartHeight + 25;
+    checkPage(russiaDefBlockHeight);
+    
+    pdf.text(russiaDefText, margin, yPosition);
+    yPosition += russiaDefText.length * 5 + 5;
+    
     drawDomainChart(
       pdf,
-      leftChartX,
-      yPosition + 20,
+      chartX,
+      yPosition,
       chartWidth,
-      50,
+      chartHeight,
       russiaDefenseData,
       'Russia Defensive Effects'
     );
+    yPosition += chartHeight + 25;
     
     // Russia Offensive Effects on NATO
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(60, 60, 60);
+    const russiaOffText = pdf.splitTextToSize(
+      'This chart displays Russia\'s offensive card effects on NATO across all domains. Offensive effects reduce the opponent\'s deterrence scores and represent strategic actions aimed at weakening adversary capabilities.',
+      contentWidth
+    );
+    const russiaOffBlockHeight = russiaOffText.length * 5 + 5 + chartHeight + 15;
+    checkPage(russiaOffBlockHeight);
+    
+    pdf.text(russiaOffText, margin, yPosition);
+    yPosition += russiaOffText.length * 5 + 5;
+    
     drawDomainChart(
       pdf,
-      rightChartX,
-      yPosition + 20,
+      chartX,
+      yPosition,
       chartWidth,
-      50,
+      chartHeight,
       russiaOffenseData,
       'Russia Offensive Effects on NATO'
     );
-    yPosition += 75;
+    yPosition += chartHeight + 15;
+    
+    pdf.setTextColor(0, 0, 0); // Reset text color
   }
   
   // Final footer
