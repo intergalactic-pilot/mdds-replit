@@ -991,8 +991,8 @@ export default function Research() {
             </Card>
           </div>
 
-          {/* Right Panel: Analysis Results */}
-          <div className="lg:col-span-2 space-y-4">
+          {/* Middle Panel: Hypothesis Development & Analysis */}
+          <div className="lg:col-span-1 space-y-4">
             {/* Hypothesis Development */}
             <Card>
               <CardHeader>
@@ -1157,152 +1157,6 @@ export default function Research() {
                 {!hypothesis.trim() && (
                   <p className="text-sm text-muted-foreground p-3 bg-muted/30 rounded-md">
                     Enter a hypothesis above to receive personalized variable recommendations for your analysis.
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Card Purchase Frequency Analysis */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CreditCard className="w-5 h-5" />
-                  Card Purchase Frequency
-                </CardTitle>
-                <CardDescription>
-                  Analyze how often specific cards are purchased across selected sessions
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Card Selection and Team Filter */}
-                <div className="space-y-3">
-                  <div className="flex gap-2">
-                    <div className="flex-1">
-                      <Label>Team Filter</Label>
-                      <Select value={cardTeamFilter} onValueChange={setCardTeamFilter}>
-                        <SelectTrigger data-testid="select-card-team-filter">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="both">Both Teams</SelectItem>
-                          <SelectItem value="NATO">NATO Only</SelectItem>
-                          <SelectItem value="Russia">Russia Only</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label>Select Cards to Analyze</Label>
-                    <ScrollArea className="h-48 border rounded-md p-2 mt-2">
-                      <div className="grid grid-cols-2 gap-2">
-                        {cardsData
-                          .sort((a, b) => a.id.localeCompare(b.id))
-                          .map((card: any) => (
-                            <div
-                              key={card.id}
-                              className="flex items-center gap-2 p-1 rounded hover-elevate"
-                            >
-                              <Checkbox
-                                checked={selectedCards.includes(card.id)}
-                                onCheckedChange={() => toggleCard(card.id)}
-                                data-testid={`checkbox-card-${card.id}`}
-                              />
-                              <Label 
-                                className="text-xs cursor-pointer flex-1"
-                                onClick={() => toggleCard(card.id)}
-                              >
-                                <span className="font-mono font-semibold">{card.id}</span>
-                                {" - "}
-                                <span className="text-muted-foreground">{card.name}</span>
-                              </Label>
-                            </div>
-                          ))}
-                      </div>
-                    </ScrollArea>
-                  </div>
-                </div>
-
-                {/* Frequency Results */}
-                {selectedCards.length > 0 && selectedSessions.length > 0 && (
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-semibold">Frequency Results</h3>
-                      <Badge variant="outline">
-                        {selectedSessions.length} session(s)
-                      </Badge>
-                    </div>
-
-                    {cardFrequencyData.length > 0 ? (
-                      <ScrollArea className="h-64">
-                        <div className="space-y-2">
-                          {cardFrequencyData.map((data) => (
-                            <div 
-                              key={data.cardId} 
-                              className="border rounded-lg p-3 space-y-2"
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="flex-1">
-                                  <p className="text-sm font-semibold font-mono">
-                                    {data.cardId}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {data.cardName}
-                                  </p>
-                                </div>
-                                <div className="text-right">
-                                  <p className="text-lg font-bold">{data.displayCount}</p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {data.displayCount === 1 ? 'purchase' : 'purchases'}
-                                  </p>
-                                  <p className="text-xs font-semibold text-primary mt-1">
-                                    {data.sessionsAppeared} / {selectedSessions.length} sessions ({data.percentage}%)
-                                  </p>
-                                </div>
-                              </div>
-
-                              {/* Team breakdown when showing both teams */}
-                              {cardTeamFilter === "both" && (
-                                <div className="flex gap-2 text-xs">
-                                  <div className="flex-1 p-2 rounded bg-blue-500/10 border border-blue-500/20">
-                                    <p className="text-muted-foreground">NATO</p>
-                                    <p className="font-semibold">{data.natoCount}</p>
-                                  </div>
-                                  <div className="flex-1 p-2 rounded bg-red-500/10 border border-red-500/20">
-                                    <p className="text-muted-foreground">Russia</p>
-                                    <p className="font-semibold">{data.russiaCount}</p>
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* Visual bar */}
-                              <div className="relative h-2 bg-muted rounded-full overflow-hidden">
-                                <div
-                                  className="absolute left-0 top-0 h-full bg-primary rounded-full transition-all"
-                                  style={{ width: `${Math.min(parseFloat(data.percentage), 100)}%` }}
-                                />
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </ScrollArea>
-                    ) : (
-                      <p className="text-sm text-muted-foreground text-center py-4">
-                        No purchases found for selected cards in the selected sessions.
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {selectedCards.length === 0 && (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    Select cards above to view purchase frequency analysis
-                  </p>
-                )}
-
-                {selectedSessions.length === 0 && selectedCards.length > 0 && (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    Select sessions from the left panel to analyze card purchase frequency
                   </p>
                 )}
               </CardContent>
@@ -1513,6 +1367,155 @@ export default function Research() {
                 </CardContent>
               </Card>
             )}
+          </div>
+
+          {/* Right Panel: Card Purchase Frequency */}
+          <div className="lg:col-span-1 space-y-4">
+            {/* Card Purchase Frequency Analysis */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="w-5 h-5" />
+                  Card Purchase Frequency
+                </CardTitle>
+                <CardDescription>
+                  Analyze how often specific cards are purchased across selected sessions
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Card Selection and Team Filter */}
+                <div className="space-y-3">
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <Label>Team Filter</Label>
+                      <Select value={cardTeamFilter} onValueChange={setCardTeamFilter}>
+                        <SelectTrigger data-testid="select-card-team-filter">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="both">Both Teams</SelectItem>
+                          <SelectItem value="NATO">NATO Only</SelectItem>
+                          <SelectItem value="Russia">Russia Only</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>Select Cards to Analyze</Label>
+                    <ScrollArea className="h-48 border rounded-md p-2 mt-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        {cardsData
+                          .sort((a, b) => a.id.localeCompare(b.id))
+                          .map((card: any) => (
+                            <div
+                              key={card.id}
+                              className="flex items-center gap-2 p-1 rounded hover-elevate"
+                            >
+                              <Checkbox
+                                checked={selectedCards.includes(card.id)}
+                                onCheckedChange={() => toggleCard(card.id)}
+                                data-testid={`checkbox-card-${card.id}`}
+                              />
+                              <Label 
+                                className="text-xs cursor-pointer flex-1"
+                                onClick={() => toggleCard(card.id)}
+                              >
+                                <span className="font-mono font-semibold">{card.id}</span>
+                                {" - "}
+                                <span className="text-muted-foreground">{card.name}</span>
+                              </Label>
+                            </div>
+                          ))}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                </div>
+
+                {/* Frequency Results */}
+                {selectedCards.length > 0 && selectedSessions.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-semibold">Frequency Results</h3>
+                      <Badge variant="outline">
+                        {selectedSessions.length} session(s)
+                      </Badge>
+                    </div>
+
+                    {cardFrequencyData.length > 0 ? (
+                      <ScrollArea className="h-64">
+                        <div className="space-y-2">
+                          {cardFrequencyData.map((data) => (
+                            <div 
+                              key={data.cardId} 
+                              className="border rounded-lg p-3 space-y-2"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1">
+                                  <p className="text-sm font-semibold font-mono">
+                                    {data.cardId}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {data.cardName}
+                                  </p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-lg font-bold">{data.displayCount}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {data.displayCount === 1 ? 'purchase' : 'purchases'}
+                                  </p>
+                                  <p className="text-xs font-semibold text-primary mt-1">
+                                    {data.sessionsAppeared} / {selectedSessions.length} sessions ({data.percentage}%)
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Team breakdown when showing both teams */}
+                              {cardTeamFilter === "both" && (
+                                <div className="flex gap-2 text-xs">
+                                  <div className="flex-1 p-2 rounded bg-blue-500/10 border border-blue-500/20">
+                                    <p className="text-muted-foreground">NATO</p>
+                                    <p className="font-semibold">{data.natoCount}</p>
+                                  </div>
+                                  <div className="flex-1 p-2 rounded bg-red-500/10 border border-red-500/20">
+                                    <p className="text-muted-foreground">Russia</p>
+                                    <p className="font-semibold">{data.russiaCount}</p>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Visual bar */}
+                              <div className="relative h-2 bg-muted rounded-full overflow-hidden">
+                                <div
+                                  className="absolute left-0 top-0 h-full bg-primary rounded-full transition-all"
+                                  style={{ width: `${Math.min(parseFloat(data.percentage), 100)}%` }}
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        No purchases found for selected cards in the selected sessions.
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {selectedCards.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Select cards above to view purchase frequency analysis
+                  </p>
+                )}
+
+                {selectedSessions.length === 0 && selectedCards.length > 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Select sessions from the left panel to analyze card purchase frequency
+                  </p>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
