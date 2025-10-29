@@ -164,13 +164,15 @@ function performANOVA(sessions: GameSession[], variableId: string, groupingVar: 
   
   sessions.forEach(session => {
     const value = extractVariableValue(session, variableId);
-    const groupValue = String(extractVariableValue(session, groupingVar));
+    const groupValue = extractVariableValue(session, groupingVar);
     
-    if (value !== null) {
-      if (!groupsMap.has(groupValue)) {
-        groupsMap.set(groupValue, []);
+    // Skip sessions with null grouping values (ties, incomplete data)
+    if (value !== null && groupValue !== null) {
+      const groupKey = String(groupValue);
+      if (!groupsMap.has(groupKey)) {
+        groupsMap.set(groupKey, []);
       }
-      groupsMap.get(groupValue)!.push(value);
+      groupsMap.get(groupKey)!.push(value);
     }
   });
   
@@ -283,22 +285,60 @@ function extractVariableValue(session: GameSession, variableId: string): number 
   }
   
   if (variableId === 'team') {
-    return null;
+    // Determine winner by comparing total deterrence scores
+    // Try multiple paths to find the total deterrence score
+    const natoScore = 
+      session.gameState.teams?.NATO?.totalDeterrence ?? 
+      session.gameState.teams?.NATO?.deterrenceScores?.total ?? 
+      session.gameState.nato?.totalDeterrence ?? 
+      session.gameState.nato?.deterrenceScores?.total ?? 
+      null;
+    
+    const russiaScore = 
+      session.gameState.teams?.Russia?.totalDeterrence ?? 
+      session.gameState.teams?.Russia?.deterrenceScores?.total ?? 
+      session.gameState.russia?.totalDeterrence ?? 
+      session.gameState.russia?.deterrenceScores?.total ?? 
+      null;
+    
+    // Only determine winner if BOTH scores are valid numbers
+    // Return null for incomplete data or ties to exclude from grouping
+    if (natoScore === null || russiaScore === null) return null;
+    if (natoScore > russiaScore) return 1;
+    if (russiaScore > natoScore) return 2;
+    return null; // Tie - exclude from grouping
   }
   
   const team = parts[0];
   const metric = parts.slice(1).join('_');
   
   if (team === 'nato' || team === 'russia') {
-    const teamState = session.gameState[team];
+    // Try new structure first (teams.NATO / teams.Russia)
+    const teamKey = team === 'nato' ? 'NATO' : 'Russia';
+    let teamState = session.gameState.teams?.[teamKey];
+    
+    // Fallback to old structure if needed
+    if (!teamState) {
+      teamState = session.gameState[team];
+    }
+    
     if (!teamState) return null;
     
     if (metric === 'total') {
-      return teamState.deterrenceScores?.total || 0;
+      return teamState.totalDeterrence || teamState.deterrenceScores?.total || 0;
     } else if (metric === 'budget' || metric === 'used') {
       return teamState.budget || 0;
-    } else if (teamState.deterrenceScores && metric in teamState.deterrenceScores) {
-      return teamState.deterrenceScores[metric] || 0;
+    } else if (metric === 'remaining') {
+      return teamState.budget || 0;
+    } else {
+      // Try domain deterrence scores
+      if (teamState.deterrenceScores && metric in teamState.deterrenceScores) {
+        return teamState.deterrenceScores[metric] || 0;
+      }
+      // Try direct deterrence (new structure)
+      if (teamState.deterrence && metric in teamState.deterrence) {
+        return teamState.deterrence[metric] || 0;
+      }
     }
   }
   
