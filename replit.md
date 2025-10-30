@@ -33,21 +33,24 @@ The frontend follows a component-based architecture with clear separation of con
   - **Ask Questions**: Interactive Q&A interface with LLM-style chat experience for querying selected sessions. Provides authentic, data-driven answers based on real session data (winners, scores, domains, budgets, cards, turns, comparisons)
 - **Research Dashboard** (/research): Statistical analysis environment featuring two-column responsive layout:
   - **Layout Structure**: Two equal-width columns on large screens (lg:col-span-1 each, 50% width):
-    - **Left Column**: Research question development, session filtering, variable selection, card purchase frequency analysis, and card rankings by dimension
-    - **Right Column**: Research question development, hypothesis development, statistics, test recommendations, and report generation
-  - **Research Question Development**: Interactive research question formulation tool appearing at the top of both columns. Features include:
+    - **Left Column**: Research Question 1, Hypothesis 1, session filtering, variable selection, card purchase frequency analysis, and card rankings by dimension
+    - **Right Column**: Research Question 2, Hypothesis 2, statistics, test recommendations, and report generation
+  - **Research Question 1 & 2**: Two independent research question formulation tools appearing at the top of left and right columns respectively. Features include:
     - 10 predefined research question templates (Card Strategy Effectiveness, Domain Investment Patterns, Team Performance Differences, Budget Allocation Efficiency, Permanent vs Temporary Cards, Early vs Late Investment, Defensive-Offensive Balance, Comeback Possibilities, Domain Specialization, Turn Duration Impact)
     - Dropdown selector for quick template selection
     - Free-form textarea for custom research questions
-    - Independent state management for left and right columns (two separate research questions)
+    - Independent state management for each research question
     - Auto-clear dropdown when manually editing research question
     - Guides exploratory analysis with structured inquiry frameworks
-  - **Hypothesis Development**: Interactive hypothesis analyzer that intelligently recommends relevant variables based on natural language input. Uses keyword matching and pattern detection to identify team mentions (NATO/Russia), domain references (economy, cyber, space, cognitive, joint), and comparison terms (correlation, impact, versus). Features include:
+  - **Hypothesis 1 & 2**: Two independent hypothesis analyzers that intelligently recommend relevant variables based on natural language input. Uses keyword matching and pattern detection to identify team mentions (NATO/Russia), domain references (economy, cyber, space, cognitive, joint), and comparison terms (correlation, impact, versus). Features include:
+    - 10 predefined hypothesis templates shared between both sections
     - Real-time analysis of hypothesis text with useMemo optimization
     - Smart variable recommendations with deduplication logic
     - Visual distinction between Selected and Recommended variables
     - Bulk "Select All Recommended" functionality
     - Fallback suggestions when hypothesis lacks specific keywords
+    - Independent state management for each hypothesis
+    - Hypothesis-based statistical test recommendations tailored to each hypothesis
   - **Session Filtering**: Search, winner filtering, and date-based filtering for research dataset selection
   - **Variable Selection**: 14+ dependent variables (deterrence scores, budget metrics, turn counts) across NATO/Russia teams
   - **Card Purchase Frequency**: Multi-card selection analysis showing percentage of sessions where cards were purchased, with team filtering (Both/NATO/Russia) and session-based percentage calculations using Set-based tracking to prevent >100% values
