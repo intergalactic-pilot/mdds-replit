@@ -1189,166 +1189,119 @@ export default function Research() {
           </div>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Left Column: Filter Sessions */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Left Panel: Research Question 1, Hypothesis 1, Session Filtering, Variable Selection, Card Analysis */}
           <div className="lg:col-span-1 space-y-4">
+            {/* Research Question 1 */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Filter className="w-5 h-5" />
-                  Filter Sessions
+                  <FileText className="w-5 h-5" />
+                  Research Question 1
                 </CardTitle>
-                <CardDescription>Select sessions for analysis</CardDescription>
+                <CardDescription>
+                  Define your first research question to guide your analysis
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Search Sessions</Label>
-                  <Input
-                    placeholder="Search by name..."
-                    value={sessionSearch}
-                    onChange={(e) => setSessionSearch(e.target.value)}
-                    data-testid="input-session-search"
+                  <Label htmlFor="predefined-question-left">Quick Select: Predefined Questions</Label>
+                  <Select 
+                    value={selectedPredefinedQuestionLeft} 
+                    onValueChange={(value) => {
+                      setSelectedPredefinedQuestionLeft(value);
+                      const selected = predefinedQuestions.find(q => q.id === value);
+                      if (selected) {
+                        setResearchQuestionLeft(selected.text);
+                      }
+                    }}
+                  >
+                    <SelectTrigger data-testid="select-predefined-question-left">
+                      <SelectValue placeholder="Select a question template..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {predefinedQuestions.map(q => (
+                        <SelectItem key={q.id} value={q.id}>
+                          {q.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="research-question-left">Your Research Question</Label>
+                  <textarea
+                    id="research-question-left"
+                    value={researchQuestionLeft}
+                    onChange={(e) => {
+                      setResearchQuestionLeft(e.target.value);
+                      if (selectedPredefinedQuestionLeft) {
+                        setSelectedPredefinedQuestionLeft("");
+                      }
+                    }}
+                    placeholder="Example: How does early investment in economy domain correlate with final deterrence scores?"
+                    className="w-full min-h-[100px] p-3 rounded-md border border-input bg-background text-sm resize-y"
+                    data-testid="textarea-research-question-left"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Hypothesis 1 */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FlaskConical className="w-5 h-5" />
+                  Hypothesis 1
+                </CardTitle>
+                <CardDescription>
+                  Enter your first research hypothesis to get variable recommendations
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="predefined-hypothesis-1">Quick Select: Predefined Hypotheses</Label>
+                  <Select 
+                    value={selectedPredefinedHypothesis1} 
+                    onValueChange={(value) => {
+                      setSelectedPredefinedHypothesis1(value);
+                      const selected = predefinedHypotheses.find(h => h.id === value);
+                      if (selected) {
+                        setHypothesis1(selected.text);
+                      }
+                    }}
+                  >
+                    <SelectTrigger data-testid="select-predefined-hypothesis-1">
+                      <SelectValue placeholder="Select a hypothesis template..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {predefinedHypotheses.map(hyp => (
+                        <SelectItem key={hyp.id} value={hyp.id}>
+                          {hyp.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="hypothesis-1">Your Hypothesis</Label>
+                  <textarea
+                    id="hypothesis-1"
+                    value={hypothesis1}
+                    onChange={(e) => {
+                      setHypothesis1(e.target.value);
+                      if (selectedPredefinedHypothesis1) {
+                        setSelectedPredefinedHypothesis1("");
+                      }
+                    }}
+                    placeholder="Example: NATO's economic domain performance is positively correlated with their overall deterrence score..."
+                    className="w-full min-h-[100px] p-3 rounded-md border border-input bg-background text-sm resize-y"
+                    data-testid="textarea-hypothesis-1"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Date Range</Label>
-                  <Select value={dateFilter} onValueChange={setDateFilter}>
-                    <SelectTrigger data-testid="select-date-filter">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Time</SelectItem>
-                      <SelectItem value="week">Past Week</SelectItem>
-                      <SelectItem value="month">Past Month</SelectItem>
-                      <SelectItem value="3months">Past 3 Months</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Winner Filter</Label>
-                  <Select value={winnerFilter} onValueChange={setWinnerFilter}>
-                    <SelectTrigger data-testid="select-winner-filter">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Winners</SelectItem>
-                      <SelectItem value="NATO">NATO Wins</SelectItem>
-                      <SelectItem value="Russia">Russia Wins</SelectItem>
-                      <SelectItem value="Tie">Ties</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex items-center gap-2 pt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={selectAllSessions}
-                    data-testid="button-select-all-sessions"
-                  >
-                    <ListChecks className="w-4 h-4 mr-2" />
-                    {selectedSessions.length === filteredSessions.length ? "Deselect All" : "Select All"}
-                  </Button>
-                  <Badge variant="secondary">
-                    {selectedSessions.length} / {filteredSessions.length} selected
-                  </Badge>
-                </div>
-
-                <ScrollArea className="h-64 border rounded-md p-2">
-                  <div className="space-y-2">
-                    {filteredSessions.map(session => (
-                      <div
-                        key={session.sessionName}
-                        className="flex items-start gap-2 p-2 rounded hover-elevate"
-                      >
-                        <Checkbox
-                          checked={selectedSessions.includes(session.sessionName)}
-                          onCheckedChange={() => toggleSession(session.sessionName)}
-                          data-testid={`checkbox-session-${session.sessionName}`}
-                        />
-                        <div 
-                          className="flex-1 min-w-0 cursor-pointer"
-                          onClick={() => toggleSession(session.sessionName)}
-                        >
-                          <p className="text-sm font-medium truncate">{session.sessionName}</p>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <Badge variant="outline" className="text-xs">
-                              {getWinner(session)}
-                            </Badge>
-                            <span>Turn {session.gameState?.turn || 0}</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Right Columns (2-3): Sub-grid with all other components */}
-          <div className="lg:col-span-2">
-            <div className="grid gap-4 lg:grid-cols-2">
-              {/* Research Question 1 */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="w-5 h-5" />
-                    Research Question 1
-                  </CardTitle>
-                  <CardDescription>
-                    Define your first research question to guide your analysis
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="predefined-question-left">Quick Select: Predefined Questions</Label>
-                    <Select 
-                      value={selectedPredefinedQuestionLeft} 
-                      onValueChange={(value) => {
-                        setSelectedPredefinedQuestionLeft(value);
-                        const selected = predefinedQuestions.find(q => q.id === value);
-                        if (selected) {
-                          setResearchQuestionLeft(selected.text);
-                        }
-                      }}
-                    >
-                      <SelectTrigger data-testid="select-predefined-question-left">
-                        <SelectValue placeholder="Select a question template..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {predefinedQuestions.map(q => (
-                          <SelectItem key={q.id} value={q.id}>
-                            {q.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="research-question-left">Your Research Question</Label>
-                    <textarea
-                      id="research-question-left"
-                      value={researchQuestionLeft}
-                      onChange={(e) => {
-                        setResearchQuestionLeft(e.target.value);
-                        if (selectedPredefinedQuestionLeft) {
-                          setSelectedPredefinedQuestionLeft("");
-                        }
-                      }}
-                      placeholder="Example: How does early investment in economy domain correlate with final deterrence scores?"
-                      className="w-full min-h-[100px] p-3 rounded-md border border-input bg-background text-sm resize-y"
-                      data-testid="textarea-research-question-left"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* PLACEHOLDER - Rest of content will go here temporarily */}
-              <div>
                 {hypothesis1.trim() && (
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
@@ -1458,17 +1411,10 @@ export default function Research() {
                     Enter a hypothesis above to receive personalized variable recommendations for your analysis.
                   </p>
                 )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+              </CardContent>
+            </Card>
 
-// Helper function to generate scientific Results report
-function generateScientificReport(
+            <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Filter className="w-5 h-5" />
