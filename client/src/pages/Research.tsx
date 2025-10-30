@@ -1458,10 +1458,17 @@ export default function Research() {
                     Enter a hypothesis above to receive personalized variable recommendations for your analysis.
                   </p>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-            <Card>
+// Helper function to generate scientific Results report
+function generateScientificReport(
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Filter className="w-5 h-5" />
