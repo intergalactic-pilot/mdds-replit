@@ -1189,8 +1189,8 @@ export default function Research() {
           </div>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* Left Panel: Research Question 1, Hypothesis 1, Session Filtering, Variable Selection, Card Analysis */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* Left Column: Filter Sessions */}
           <div className="lg:col-span-1 space-y-4">
             {/* Research Question 1 */}
             <Card>
