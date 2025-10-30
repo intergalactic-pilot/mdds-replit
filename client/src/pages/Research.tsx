@@ -66,9 +66,13 @@ export default function Research() {
   const [researchQuestionRight, setResearchQuestionRight] = useState<string>("");
   const [selectedPredefinedQuestionRight, setSelectedPredefinedQuestionRight] = useState<string>("");
   
-  // Hypothesis Development
-  const [hypothesis, setHypothesis] = useState<string>("");
-  const [selectedPredefinedHypothesis, setSelectedPredefinedHypothesis] = useState<string>("");
+  // Hypothesis Development 1 (Left Column)
+  const [hypothesis1, setHypothesis1] = useState<string>("");
+  const [selectedPredefinedHypothesis1, setSelectedPredefinedHypothesis1] = useState<string>("");
+  
+  // Hypothesis Development 2 (Right Column)
+  const [hypothesis2, setHypothesis2] = useState<string>("");
+  const [selectedPredefinedHypothesis2, setSelectedPredefinedHypothesis2] = useState<string>("");
   
   // Predefined research questions
   const predefinedQuestions = [
@@ -1012,17 +1016,17 @@ export default function Research() {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* Left Panel: Research Question, Session Filtering, Variable Selection, Card Analysis */}
+          {/* Left Panel: Research Question 1, Hypothesis 1, Session Filtering, Variable Selection, Card Analysis */}
           <div className="lg:col-span-1 space-y-4">
-            {/* Develop Research Question */}
+            {/* Research Question 1 */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="w-5 h-5" />
-                  Develop Research Question
+                  Research Question 1
                 </CardTitle>
                 <CardDescription>
-                  Define your research question to guide your analysis
+                  Define your first research question to guide your analysis
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -1539,17 +1543,17 @@ export default function Research() {
             )}
           </div>
 
-          {/* Right Panel: Research Question, Hypothesis Development & Analysis */}
+          {/* Right Panel: Research Question 2, Hypothesis 2 & Analysis */}
           <div className="lg:col-span-1 space-y-4">
-            {/* Develop Research Question */}
+            {/* Research Question 2 */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="w-5 h-5" />
-                  Develop Research Question
+                  Research Question 2
                 </CardTitle>
                 <CardDescription>
-                  Define your research question to guide your analysis
+                  Define your second research question to guide your analysis
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
