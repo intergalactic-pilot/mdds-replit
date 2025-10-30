@@ -609,11 +609,11 @@ export default function Research() {
     sessions
   ]);
 
-  // Analyze hypothesis and recommend variables
-  const recommendedVariables = useMemo(() => {
-    if (!hypothesis.trim()) return [];
+  // Analyze hypothesis 2 and recommend variables
+  const recommendedVariables2 = useMemo(() => {
+    if (!hypothesis2.trim()) return [];
     
-    const lowerHypothesis = hypothesis.toLowerCase();
+    const lowerHypothesis = hypothesis2.toLowerCase();
     const recommendations: string[] = [];
     
     // Keywords for different variable types
@@ -685,13 +685,13 @@ export default function Research() {
     }
     
     return Array.from(new Set(recommendations)); // Remove duplicates
-  }, [hypothesis]);
+  }, [hypothesis2]);
 
-  // Get statistical test recommendation based on hypothesis
-  const getHypothesisBasedTestRecommendation = useMemo(() => {
-    if (!hypothesis.trim()) return null;
+  // Get statistical test recommendation based on hypothesis 2
+  const getHypothesisBasedTestRecommendation2 = useMemo(() => {
+    if (!hypothesis2.trim()) return null;
     
-    const lowerHypothesis = hypothesis.toLowerCase();
+    const lowerHypothesis = hypothesis2.toLowerCase();
     
     // Analyze hypothesis structure
     const hasCorrelation = /correlat|relationship|associat/.test(lowerHypothesis);
@@ -703,7 +703,7 @@ export default function Research() {
     const hasTimeComponent = /over time|across turns|duration|temporal|longitudinal/.test(lowerHypothesis);
     
     // Determine recommended test based on hypothesis characteristics
-    if (hasCorrelation && recommendedVariables.length === 2 && !hasComparison) {
+    if (hasCorrelation && recommendedVariables2.length === 2 && !hasComparison) {
       return {
         name: "Correlation Analysis (Pearson/Spearman)",
         justification: `This hypothesis explicitly examines the relationship between two variables, making correlation analysis the ideal choice. ${
@@ -715,17 +715,17 @@ export default function Research() {
       };
     }
     
-    if (hasTwoGroups && !hasMultipleVariables && recommendedVariables.length <= 2) {
+    if (hasTwoGroups && !hasMultipleVariables && recommendedVariables2.length <= 2) {
       return {
         name: "Independent Samples t-test",
         justification: `Your hypothesis compares two independent groups (NATO vs. Russia) on a single outcome variable, which is the classic scenario for an independent samples t-test. This parametric test examines whether the mean deterrence score (or other metric) significantly differs between the two teams. The t-test is robust, widely recognized in research, and provides clear evidence of group differences. ${
-          recommendedVariables.length === 2 ? 'Since you have variables for both teams, the test will directly compare their means.' : ''
+          recommendedVariables2.length === 2 ? 'Since you have variables for both teams, the test will directly compare their means.' : ''
         } This test assumes independent observations, approximately normal distributions within each group (or sample sizes ≥30), and similar variances between groups (homogeneity of variance).`,
         application: `To conduct an independent samples t-test: (1) Select one continuous outcome variable (e.g., total deterrence score). (2) Define your two groups (NATO and Russia). (3) Verify assumptions: check for normality using histograms or Q-Q plots, and test homogeneity of variance with Levene's test. (4) If assumptions are violated and sample sizes are small (n<30), consider the Mann-Whitney U test instead. (5) Calculate the t-statistic and degrees of freedom. (6) Report the mean difference, confidence interval, t-value, and p-value. (7) Interpret results: p<0.05 suggests a statistically significant difference between teams. (8) Calculate effect size (Cohen's d) to quantify the magnitude of difference—small (0.2), medium (0.5), or large (0.8).`
       };
     }
     
-    if (hasMultipleGroups && !hasMultipleVariables && recommendedVariables.length <= 2) {
+    if (hasMultipleGroups && !hasMultipleVariables && recommendedVariables2.length <= 2) {
       return {
         name: "One-Way ANOVA",
         justification: `Your hypothesis involves comparing means across multiple groups (e.g., different domains, time periods, or strategic categories), making one-way Analysis of Variance (ANOVA) the appropriate test. ANOVA extends the t-test logic to three or more groups, testing whether at least one group mean differs significantly from the others. This is more efficient and statistically appropriate than running multiple t-tests, which would inflate Type I error rates. ${
@@ -735,11 +735,11 @@ export default function Research() {
       };
     }
     
-    if (hasPrediction && recommendedVariables.length >= 2) {
+    if (hasPrediction && recommendedVariables2.length >= 2) {
       return {
         name: "Multiple Regression",
         justification: `Your hypothesis suggests examining how one or more predictor variables influence an outcome variable, which is the domain of regression analysis. ${
-          recommendedVariables.length > 2 
+          recommendedVariables2.length > 2 
             ? 'Multiple regression is ideal here because you have several potential predictors that may jointly explain variance in the outcome.' 
             : 'Simple regression can model the relationship between your predictor and outcome.'
         } Regression goes beyond correlation by modeling the predictive relationship and quantifying how much change in the outcome is associated with unit changes in predictors. ${
@@ -751,7 +751,7 @@ export default function Research() {
       };
     }
     
-    if (hasMultipleVariables && recommendedVariables.length >= 3 && hasTwoGroups) {
+    if (hasMultipleVariables && recommendedVariables2.length >= 3 && hasTwoGroups) {
       return {
         name: "MANOVA (Multivariate ANOVA)",
         justification: `Your hypothesis examines group differences across multiple outcome variables simultaneously, which requires Multivariate Analysis of Variance (MANOVA). Unlike running separate ANOVAs for each variable, MANOVA considers correlations among dependent variables and tests whether groups differ on a composite of outcomes. ${
@@ -775,13 +775,187 @@ export default function Research() {
     return {
       name: "Independent Samples t-test or Correlation Analysis",
       justification: `Based on your hypothesis structure, the most appropriate test depends on whether you are comparing groups or examining relationships. If you are comparing NATO vs. Russia (or winners vs. losers) on a single metric, use an independent samples t-test to test for mean differences. If you are examining whether two continuous variables are related (e.g., whether economic deterrence correlates with total deterrence), use correlation analysis. ${
-        recommendedVariables.length === 0 
+        recommendedVariables2.length === 0 
           ? 'Select relevant variables above to refine this recommendation further.' 
-          : `With ${recommendedVariables.length} recommended variable${recommendedVariables.length !== 1 ? 's' : ''}, consider whether you want to compare groups (t-test) or measure association (correlation).`
+          : `With ${recommendedVariables2.length} recommended variable${recommendedVariables2.length !== 1 ? 's' : ''}, consider whether you want to compare groups (t-test) or measure association (correlation).`
       } Both approaches are foundational statistical methods with clear interpretation and wide acceptance in research.`,
       application: `For t-test: (1) Select one outcome variable and two groups to compare. (2) Check normality and variance assumptions. (3) Run the test and interpret mean differences with confidence intervals and p-values. For correlation: (1) Select two continuous variables you believe are related. (2) Visualize their relationship with a scatterplot. (3) Calculate Pearson's r (for linear relationships) or Spearman's ρ (for non-linear/monotonic relationships). (4) Report the correlation coefficient, interpret its strength and direction, and assess significance. (5) Use scatterplots with regression lines to communicate findings visually. Both tests require sufficient sample size (ideally 20+ sessions) and should be followed by effect size reporting to quantify practical significance beyond statistical significance.`
     };
-  }, [hypothesis, recommendedVariables]);
+  }, [hypothesis2, recommendedVariables2]);
+
+  // Analyze hypothesis 1 and recommend variables
+  const recommendedVariables1 = useMemo(() => {
+    if (!hypothesis1.trim()) return [];
+    
+    const lowerHypothesis = hypothesis1.toLowerCase();
+    const recommendations: string[] = [];
+    
+    // Keywords for different variable types
+    const keywords = {
+      nato_total: ['nato total', 'nato overall', 'nato deterrence score', 'nato performance'],
+      russia_total: ['russia total', 'russia overall', 'russia deterrence score', 'russia performance'],
+      nato_joint: ['nato joint', 'nato military'],
+      nato_economy: ['nato economy', 'nato economic'],
+      nato_cognitive: ['nato cognitive', 'nato information', 'nato perception'],
+      nato_space: ['nato space', 'nato satellite'],
+      nato_cyber: ['nato cyber', 'nato digital'],
+      russia_joint: ['russia joint', 'russia military'],
+      russia_economy: ['russia economy', 'russia economic'],
+      russia_cognitive: ['russia cognitive', 'russia information', 'russia perception'],
+      russia_space: ['russia space', 'russia satellite'],
+      russia_cyber: ['russia cyber', 'russia digital'],
+      turn_count: ['turn', 'duration', 'length', 'time', 'rounds'],
+      card_count: ['card', 'purchase', 'investment', 'spending']
+    };
+
+    // Check for general team mentions
+    const hasNato = /\bnato\b/.test(lowerHypothesis);
+    const hasRussia = /\brussia\b/.test(lowerHypothesis);
+    
+    // Check for domain mentions
+    const hasJoint = /\bjoint\b|military|forces/.test(lowerHypothesis);
+    const hasEconomy = /\beconom/.test(lowerHypothesis);
+    const hasCognitive = /\bcognitive\b|information|perception|narrative/.test(lowerHypothesis);
+    const hasSpace = /\bspace\b|satellite/.test(lowerHypothesis);
+    const hasCyber = /\bcyber\b|digital|network/.test(lowerHypothesis);
+    
+    // Match specific keywords
+    Object.entries(keywords).forEach(([varId, terms]) => {
+      if (terms.some(term => lowerHypothesis.includes(term))) {
+        recommendations.push(varId);
+      }
+    });
+    
+    // Add domain-based recommendations if team mentioned but no specific match
+    if (hasNato && !recommendations.some(r => r.startsWith('nato_'))) {
+      if (hasJoint) recommendations.push('nato_joint');
+      if (hasEconomy) recommendations.push('nato_economy');
+      if (hasCognitive) recommendations.push('nato_cognitive');
+      if (hasSpace) recommendations.push('nato_space');
+      if (hasCyber) recommendations.push('nato_cyber');
+      if (!hasJoint && !hasEconomy && !hasCognitive && !hasSpace && !hasCyber) {
+        recommendations.push('nato_total');
+      }
+    }
+    
+    if (hasRussia && !recommendations.some(r => r.startsWith('russia_'))) {
+      if (hasJoint) recommendations.push('russia_joint');
+      if (hasEconomy) recommendations.push('russia_economy');
+      if (hasCognitive) recommendations.push('russia_cognitive');
+      if (hasSpace) recommendations.push('russia_space');
+      if (hasCyber) recommendations.push('russia_cyber');
+      if (!hasJoint && !hasEconomy && !hasCognitive && !hasSpace && !hasCyber) {
+        recommendations.push('russia_total');
+      }
+    }
+    
+    // Check for comparison/correlation terms
+    const hasComparison = /\bcompare|versus|vs|between|differ|relationship|correlat|impact|effect|influence/.test(lowerHypothesis);
+    if (hasComparison && recommendations.length === 0) {
+      // If comparing but no specific variables, suggest both teams' totals
+      if (hasNato || hasRussia || (!hasNato && !hasRussia)) {
+        recommendations.push('nato_total', 'russia_total');
+      }
+    }
+    
+    return Array.from(new Set(recommendations)); // Remove duplicates
+  }, [hypothesis1]);
+
+  // Get statistical test recommendation based on hypothesis 1
+  const getHypothesisBasedTestRecommendation1 = useMemo(() => {
+    if (!hypothesis1.trim()) return null;
+    
+    const lowerHypothesis = hypothesis1.toLowerCase();
+    
+    // Analyze hypothesis structure
+    const hasCorrelation = /correlat|relationship|associat/.test(lowerHypothesis);
+    const hasComparison = /compare|differ|versus|vs\.?|between/.test(lowerHypothesis);
+    const hasPrediction = /predict|determin|effect|impact|influence|cause/.test(lowerHypothesis);
+    const hasMultipleVariables = /multiple\s+(variable|outcome|factor|dimension|metric)|several\s+(variable|outcome|factor|dimension|metric)|various\s+(variable|outcome|factor|dimension|metric)/.test(lowerHypothesis);
+    const hasTwoGroups = /nato.*russia|russia.*nato|two teams|both teams/.test(lowerHypothesis);
+    const hasMultipleGroups = /across.*domain|all.*domain|multiple.*group/.test(lowerHypothesis);
+    const hasTimeComponent = /over time|across turns|duration|temporal|longitudinal/.test(lowerHypothesis);
+    
+    // Determine recommended test based on hypothesis characteristics
+    if (hasCorrelation && recommendedVariables1.length === 2 && !hasComparison) {
+      return {
+        name: "Correlation Analysis (Pearson/Spearman)",
+        justification: `This hypothesis explicitly examines the relationship between two variables, making correlation analysis the ideal choice. ${
+          lowerHypothesis.includes('positively') || lowerHypothesis.includes('negatively') 
+            ? 'The directional language ("positively" or "negatively") suggests you are testing for the strength and direction of association between variables.' 
+            : 'Correlation analysis will reveal both the strength and direction of the relationship.'
+        } Pearson correlation is appropriate when both variables are continuous and linearly related with normal distributions. If your data is skewed or contains outliers, Spearman's rank correlation provides a robust non-parametric alternative that assesses monotonic relationships.`,
+        application: `To apply correlation analysis: (1) Select your two continuous variables from the recommended list above. (2) Ensure you have at least 10-20 sessions for reliable correlation estimates. (3) Visualize the relationship using a scatterplot to check for linearity and outliers. (4) Calculate Pearson's r if assumptions are met, or Spearman's ρ if data is ordinal or non-normal. (5) Interpret the correlation coefficient: values near ±1 indicate strong relationships, while values near 0 suggest weak associations. (6) Report both the correlation coefficient and p-value to assess statistical significance. (7) Remember that correlation does not imply causation—it only measures association strength.`
+      };
+    }
+    
+    if (hasTwoGroups && !hasMultipleVariables && recommendedVariables1.length <= 2) {
+      return {
+        name: "Independent Samples t-test",
+        justification: `Your hypothesis compares two independent groups (NATO vs. Russia) on a single outcome variable, which is the classic scenario for an independent samples t-test. This parametric test examines whether the mean deterrence score (or other metric) significantly differs between the two teams. The t-test is robust, widely recognized in research, and provides clear evidence of group differences. ${
+          recommendedVariables1.length === 2 ? 'Since you have variables for both teams, the test will directly compare their means.' : ''
+        } This test assumes independent observations, approximately normal distributions within each group (or sample sizes ≥30), and similar variances between groups (homogeneity of variance).`,
+        application: `To conduct an independent samples t-test: (1) Select one continuous outcome variable (e.g., total deterrence score). (2) Define your two groups (NATO and Russia). (3) Verify assumptions: check for normality using histograms or Q-Q plots, and test homogeneity of variance with Levene's test. (4) If assumptions are violated and sample sizes are small (n<30), consider the Mann-Whitney U test instead. (5) Calculate the t-statistic and degrees of freedom. (6) Report the mean difference, confidence interval, t-value, and p-value. (7) Interpret results: p<0.05 suggests a statistically significant difference between teams. (8) Calculate effect size (Cohen's d) to quantify the magnitude of difference—small (0.2), medium (0.5), or large (0.8).`
+      };
+    }
+    
+    if (hasMultipleGroups && !hasMultipleVariables && recommendedVariables1.length <= 2) {
+      return {
+        name: "One-Way ANOVA",
+        justification: `Your hypothesis involves comparing means across multiple groups (e.g., different domains, time periods, or strategic categories), making one-way Analysis of Variance (ANOVA) the appropriate test. ANOVA extends the t-test logic to three or more groups, testing whether at least one group mean differs significantly from the others. This is more efficient and statistically appropriate than running multiple t-tests, which would inflate Type I error rates. ${
+          lowerHypothesis.includes('domain') ? 'Since your hypothesis mentions domains, you are likely comparing performance across the five strategic dimensions (Joint, Economy, Cognitive, Space, Cyber).' : ''
+        } ANOVA provides an F-statistic that indicates overall group differences, followed by post-hoc tests to identify which specific groups differ.`,
+        application: `To perform one-way ANOVA: (1) Select one continuous dependent variable (e.g., deterrence score). (2) Define your grouping factor with 3+ levels (e.g., five domains). (3) Check assumptions: normality within each group (Shapiro-Wilk test), homogeneity of variance across groups (Levene's test), and independent observations. (4) If assumptions are violated, use the Kruskal-Wallis test instead. (5) Calculate the F-statistic and p-value. (6) If p<0.05, conclude that at least one group differs. (7) Conduct post-hoc comparisons (Tukey HSD, Bonferroni) to identify which specific groups differ. (8) Report means, standard deviations, F-value, degrees of freedom, p-value, and effect size (eta-squared). (9) Visualize results with boxplots or bar charts showing group means and error bars.`
+      };
+    }
+    
+    if (hasPrediction && recommendedVariables1.length >= 2) {
+      return {
+        name: "Multiple Regression",
+        justification: `Your hypothesis suggests examining how one or more predictor variables influence an outcome variable, which is the domain of regression analysis. ${
+          recommendedVariables1.length > 2 
+            ? 'Multiple regression is ideal here because you have several potential predictors that may jointly explain variance in the outcome.' 
+            : 'Simple regression can model the relationship between your predictor and outcome.'
+        } Regression goes beyond correlation by modeling the predictive relationship and quantifying how much change in the outcome is associated with unit changes in predictors. ${
+          lowerHypothesis.includes('predict') || lowerHypothesis.includes('determine') 
+            ? 'The causal/predictive language in your hypothesis aligns perfectly with regression methodology.' 
+            : ''
+        } This approach provides regression coefficients, R-squared values, and statistical significance for each predictor, offering comprehensive insights into determinants of strategic performance.`,
+        application: `To conduct multiple regression: (1) Identify your dependent variable (outcome you want to predict) and independent variables (predictors). (2) Ensure adequate sample size: at least 10-15 observations per predictor variable. (3) Check assumptions: linearity (scatterplots), independence of residuals, homoscedasticity (constant variance), normality of residuals (Q-Q plot), and absence of multicollinearity (VIF<10). (4) Run the regression model and examine R-squared to assess model fit (proportion of variance explained). (5) Evaluate each predictor's coefficient: magnitude indicates effect size, sign indicates direction, and p-value indicates significance. (6) Report standardized coefficients (beta weights) to compare relative importance of predictors. (7) Check for influential outliers using Cook's distance. (8) Interpret results carefully: regression suggests prediction, not necessarily causation. (9) Visualize with partial regression plots.`
+      };
+    }
+    
+    if (hasMultipleVariables && recommendedVariables1.length >= 3 && hasTwoGroups) {
+      return {
+        name: "MANOVA (Multivariate ANOVA)",
+        justification: `Your hypothesis examines group differences across multiple outcome variables simultaneously, which requires Multivariate Analysis of Variance (MANOVA). Unlike running separate ANOVAs for each variable, MANOVA considers correlations among dependent variables and tests whether groups differ on a composite of outcomes. ${
+          lowerHypothesis.includes('domain') ? 'Since you are examining multiple domains, MANOVA can assess whether teams differ in their overall deterrence profile across all dimensions simultaneously.' : ''
+        } This approach is more powerful and controls for Type I error inflation that would occur with multiple univariate tests. MANOVA provides a comprehensive view of multivariate group differences and can detect patterns that univariate tests might miss.`,
+        application: `To perform MANOVA: (1) Select 2+ continuous dependent variables that are theoretically related. (2) Define your independent grouping variable (e.g., NATO vs. Russia). (3) Verify multivariate assumptions: multivariate normality (Mardia's test), homogeneity of covariance matrices (Box's M test), linear relationships among DVs, and adequate sample size (more observations than DVs). (4) Run MANOVA and examine multivariate test statistics: Wilks' Lambda, Pillai's Trace, Hotelling's Trace, or Roy's Largest Root. (5) If multivariate effect is significant (p<0.05), conduct follow-up univariate ANOVAs for each DV to identify which specific variables drive the difference. (6) Apply Bonferroni correction to control Type I error in follow-ups. (7) Report effect sizes (partial eta-squared) for both multivariate and univariate effects. (8) Interpret whether groups differ on the overall pattern of outcomes.`
+      };
+    }
+    
+    if (hasTimeComponent || lowerHypothesis.includes('longitudinal') || lowerHypothesis.includes('change')) {
+      return {
+        name: "Repeated Measures ANOVA",
+        justification: `Your hypothesis involves examining changes or patterns across time points or turns, which suggests a within-subjects design best analyzed with Repeated Measures ANOVA. This test accounts for the fact that the same sessions/teams are measured multiple times, recognizing that measurements from the same entity are correlated. ${
+          lowerHypothesis.includes('turn') ? 'Since your hypothesis mentions turns, you are tracking strategic performance across the temporal progression of the simulation.' : ''
+        } Repeated measures designs are more powerful than between-subjects designs because they control for individual differences, reducing error variance. This test is ideal for detecting developmental trends, strategic evolution, or cumulative effects over the course of sessions.`,
+        application: `To conduct Repeated Measures ANOVA: (1) Organize your data with the same subjects (sessions or teams) measured at multiple time points (e.g., deterrence at turns 1, 2, 3, etc.). (2) Ensure you have the same subjects measured at all time points (balanced design). (3) Check assumptions: normality of differences between time points and sphericity (equal variances of differences). (4) If sphericity is violated (Mauchly's test, p<0.05), apply Greenhouse-Geisser or Huynh-Feldt corrections. (5) Run the analysis and examine the within-subjects effect for time. (6) If significant, conduct pairwise comparisons with Bonferroni adjustments to identify which specific time points differ. (7) Report F-value, degrees of freedom (including any corrections), p-value, and partial eta-squared. (8) Visualize trends with line graphs showing means and error bars across time points. (9) Interpret whether performance changes significantly over time.`
+      };
+    }
+    
+    // Default recommendation for general hypotheses
+    return {
+      name: "Independent Samples t-test or Correlation Analysis",
+      justification: `Based on your hypothesis structure, the most appropriate test depends on whether you are comparing groups or examining relationships. If you are comparing NATO vs. Russia (or winners vs. losers) on a single metric, use an independent samples t-test to test for mean differences. If you are examining whether two continuous variables are related (e.g., whether economic deterrence correlates with total deterrence), use correlation analysis. ${
+        recommendedVariables1.length === 0 
+          ? 'Select relevant variables above to refine this recommendation further.' 
+          : `With ${recommendedVariables1.length} recommended variable${recommendedVariables1.length !== 1 ? 's' : ''}, consider whether you want to compare groups (t-test) or measure association (correlation).`
+      } Both approaches are foundational statistical methods with clear interpretation and wide acceptance in research.`,
+      application: `For t-test: (1) Select one outcome variable and two groups to compare. (2) Check normality and variance assumptions. (3) Run the test and interpret mean differences with confidence intervals and p-values. For correlation: (1) Select two continuous variables you believe are related. (2) Visualize their relationship with a scatterplot. (3) Calculate Pearson's r (for linear relationships) or Spearman's ρ (for non-linear/monotonic relationships). (4) Report the correlation coefficient, interpret its strength and direction, and assess significance. (5) Use scatterplots with regression lines to communicate findings visually. Both tests require sufficient sample size (ideally 20+ sessions) and should be followed by effect size reporting to quantify practical significance beyond statistical significance.`
+    };
+  }, [hypothesis1, recommendedVariables1]);
 
   // Calculate card purchase frequency
   const cardFrequencyData = useMemo(() => {
@@ -1071,6 +1245,172 @@ export default function Research() {
                     data-testid="textarea-research-question-left"
                   />
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Hypothesis 1 */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FlaskConical className="w-5 h-5" />
+                  Hypothesis 1
+                </CardTitle>
+                <CardDescription>
+                  Enter your first research hypothesis to get variable recommendations
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="predefined-hypothesis-1">Quick Select: Predefined Hypotheses</Label>
+                  <Select 
+                    value={selectedPredefinedHypothesis1} 
+                    onValueChange={(value) => {
+                      setSelectedPredefinedHypothesis1(value);
+                      const selected = predefinedHypotheses.find(h => h.id === value);
+                      if (selected) {
+                        setHypothesis1(selected.text);
+                      }
+                    }}
+                  >
+                    <SelectTrigger data-testid="select-predefined-hypothesis-1">
+                      <SelectValue placeholder="Select a hypothesis template..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {predefinedHypotheses.map(hyp => (
+                        <SelectItem key={hyp.id} value={hyp.id}>
+                          {hyp.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="hypothesis-1">Your Hypothesis</Label>
+                  <textarea
+                    id="hypothesis-1"
+                    value={hypothesis1}
+                    onChange={(e) => {
+                      setHypothesis1(e.target.value);
+                      if (selectedPredefinedHypothesis1) {
+                        setSelectedPredefinedHypothesis1("");
+                      }
+                    }}
+                    placeholder="Example: NATO's economic domain performance is positively correlated with their overall deterrence score..."
+                    className="w-full min-h-[100px] p-3 rounded-md border border-input bg-background text-sm resize-y"
+                    data-testid="textarea-hypothesis-1"
+                  />
+                </div>
+
+                {hypothesis1.trim() && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-semibold">Recommended Variables</h3>
+                      {recommendedVariables1.length > 0 && (
+                        <Badge variant="outline" className="text-xs">
+                          {recommendedVariables1.length} suggestion{recommendedVariables1.length !== 1 ? 's' : ''}
+                        </Badge>
+                      )}
+                    </div>
+
+                    {recommendedVariables1.length > 0 ? (
+                      <div className="space-y-2">
+                        <p className="text-xs text-muted-foreground">
+                          Based on your hypothesis, consider selecting these variables:
+                        </p>
+                        <div className="grid grid-cols-1 gap-2">
+                          {recommendedVariables1.map(varId => {
+                            const variable = availableVariables.find(v => v.id === varId);
+                            const isSelected = selectedVariables.includes(varId);
+                            
+                            return (
+                              <div
+                                key={varId}
+                                className={`flex items-center justify-between p-2 rounded-md border transition-colors ${
+                                  isSelected 
+                                    ? 'border-primary bg-primary/5' 
+                                    : 'border-border bg-muted/30 hover-elevate'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 flex-1">
+                                  {isSelected ? (
+                                    <Badge variant="default" className="text-xs">Selected</Badge>
+                                  ) : (
+                                    <Badge variant="outline" className="text-xs">Recommended</Badge>
+                                  )}
+                                  <span className="text-sm">{variable?.label}</span>
+                                </div>
+                                {!isSelected && (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => toggleVariable(varId)}
+                                    data-testid={`button-select-${varId}`}
+                                  >
+                                    Select
+                                  </Button>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                        
+                        {recommendedVariables1.some(v => !selectedVariables.includes(v)) && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              const toAdd = recommendedVariables1.filter(v => !selectedVariables.includes(v));
+                              setSelectedVariables(prev => [...prev, ...toAdd]);
+                            }}
+                            className="w-full"
+                            data-testid="button-select-all-recommended-1"
+                          >
+                            Select All Recommended
+                          </Button>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground p-3 bg-muted/30 rounded-md">
+                        No specific variable recommendations. Try mentioning team names (NATO/Russia), domains (economy, cyber, space, cognitive, joint), or comparison terms in your hypothesis.
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {hypothesis1.trim() && getHypothesisBasedTestRecommendation1 && (
+                  <div className="space-y-3 pt-4 border-t" data-testid="container-statistical-test-recommendation-1">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-primary" />
+                      <h3 className="text-sm font-semibold">Recommended Statistical Test</h3>
+                    </div>
+                    
+                    <div className="space-y-4 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                      <div>
+                        <Badge variant="default" className="mb-2" data-testid="badge-recommended-test-name-1">
+                          {getHypothesisBasedTestRecommendation1.name}
+                        </Badge>
+                        <h4 className="text-xs font-semibold text-muted-foreground mb-2">Why This Test?</h4>
+                        <p className="text-sm leading-relaxed" data-testid="text-test-justification-1">
+                          {getHypothesisBasedTestRecommendation1.justification}
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <h4 className="text-xs font-semibold text-muted-foreground mb-2">How to Apply</h4>
+                        <p className="text-sm leading-relaxed" data-testid="text-test-application-1">
+                          {getHypothesisBasedTestRecommendation1.application}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {!hypothesis1.trim() && (
+                  <p className="text-sm text-muted-foreground p-3 bg-muted/30 rounded-md">
+                    Enter a hypothesis above to receive personalized variable recommendations for your analysis.
+                  </p>
+                )}
               </CardContent>
             </Card>
 
@@ -1601,31 +1941,31 @@ export default function Research() {
               </CardContent>
             </Card>
 
-            {/* Hypothesis Development */}
+            {/* Hypothesis 2 */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FlaskConical className="w-5 h-5" />
-                  Hypothesis Development
+                  Hypothesis 2
                 </CardTitle>
                 <CardDescription>
-                  Enter your research hypothesis to get variable recommendations
+                  Enter your second research hypothesis to get variable recommendations
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="predefined-hypothesis">Quick Select: Predefined Hypotheses</Label>
+                  <Label htmlFor="predefined-hypothesis-2">Quick Select: Predefined Hypotheses</Label>
                   <Select 
-                    value={selectedPredefinedHypothesis} 
+                    value={selectedPredefinedHypothesis2} 
                     onValueChange={(value) => {
-                      setSelectedPredefinedHypothesis(value);
+                      setSelectedPredefinedHypothesis2(value);
                       const selected = predefinedHypotheses.find(h => h.id === value);
                       if (selected) {
-                        setHypothesis(selected.text);
+                        setHypothesis2(selected.text);
                       }
                     }}
                   >
-                    <SelectTrigger data-testid="select-predefined-hypothesis">
+                    <SelectTrigger data-testid="select-predefined-hypothesis-2">
                       <SelectValue placeholder="Select a hypothesis template..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -1639,42 +1979,40 @@ export default function Research() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="hypothesis">Your Hypothesis</Label>
+                  <Label htmlFor="hypothesis-2">Your Hypothesis</Label>
                   <textarea
-                    id="hypothesis"
-                    value={hypothesis}
+                    id="hypothesis-2"
+                    value={hypothesis2}
                     onChange={(e) => {
-                      setHypothesis(e.target.value);
-                      // Clear predefined selection if user manually edits
-                      if (selectedPredefinedHypothesis) {
-                        setSelectedPredefinedHypothesis("");
+                      setHypothesis2(e.target.value);
+                      if (selectedPredefinedHypothesis2) {
+                        setSelectedPredefinedHypothesis2("");
                       }
                     }}
                     placeholder="Example: NATO's economic domain performance is positively correlated with their overall deterrence score..."
                     className="w-full min-h-[100px] p-3 rounded-md border border-input bg-background text-sm resize-y"
-                    data-testid="textarea-hypothesis"
+                    data-testid="textarea-hypothesis-2"
                   />
                 </div>
 
-                {/* Recommendations */}
-                {hypothesis.trim() && (
+                {hypothesis2.trim() && (
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <h3 className="text-sm font-semibold">Recommended Variables</h3>
-                      {recommendedVariables.length > 0 && (
+                      {recommendedVariables2.length > 0 && (
                         <Badge variant="outline" className="text-xs">
-                          {recommendedVariables.length} suggestion{recommendedVariables.length !== 1 ? 's' : ''}
+                          {recommendedVariables2.length} suggestion{recommendedVariables2.length !== 1 ? 's' : ''}
                         </Badge>
                       )}
                     </div>
 
-                    {recommendedVariables.length > 0 ? (
+                    {recommendedVariables2.length > 0 ? (
                       <div className="space-y-2">
                         <p className="text-xs text-muted-foreground">
                           Based on your hypothesis, consider selecting these variables:
                         </p>
                         <div className="grid grid-cols-1 gap-2">
-                          {recommendedVariables.map(varId => {
+                          {recommendedVariables2.map(varId => {
                             const variable = availableVariables.find(v => v.id === varId);
                             const isSelected = selectedVariables.includes(varId);
                             
@@ -1710,16 +2048,16 @@ export default function Research() {
                           })}
                         </div>
                         
-                        {recommendedVariables.some(v => !selectedVariables.includes(v)) && (
+                        {recommendedVariables2.some(v => !selectedVariables.includes(v)) && (
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => {
-                              const toAdd = recommendedVariables.filter(v => !selectedVariables.includes(v));
+                              const toAdd = recommendedVariables2.filter(v => !selectedVariables.includes(v));
                               setSelectedVariables(prev => [...prev, ...toAdd]);
                             }}
                             className="w-full"
-                            data-testid="button-select-all-recommended"
+                            data-testid="button-select-all-recommended-2"
                           >
                             Select All Recommended
                           </Button>
@@ -1733,9 +2071,8 @@ export default function Research() {
                   </div>
                 )}
 
-                {/* Statistical Test Recommendation */}
-                {hypothesis.trim() && getHypothesisBasedTestRecommendation && (
-                  <div className="space-y-3 pt-4 border-t" data-testid="container-statistical-test-recommendation">
+                {hypothesis2.trim() && getHypothesisBasedTestRecommendation2 && (
+                  <div className="space-y-3 pt-4 border-t" data-testid="container-statistical-test-recommendation-2">
                     <div className="flex items-center gap-2">
                       <TrendingUp className="w-4 h-4 text-primary" />
                       <h3 className="text-sm font-semibold">Recommended Statistical Test</h3>
@@ -1743,26 +2080,26 @@ export default function Research() {
                     
                     <div className="space-y-4 p-4 bg-primary/5 border border-primary/20 rounded-lg">
                       <div>
-                        <Badge variant="default" className="mb-2" data-testid="badge-recommended-test-name">
-                          {getHypothesisBasedTestRecommendation.name}
+                        <Badge variant="default" className="mb-2" data-testid="badge-recommended-test-name-2">
+                          {getHypothesisBasedTestRecommendation2.name}
                         </Badge>
                         <h4 className="text-xs font-semibold text-muted-foreground mb-2">Why This Test?</h4>
-                        <p className="text-sm leading-relaxed" data-testid="text-test-justification">
-                          {getHypothesisBasedTestRecommendation.justification}
+                        <p className="text-sm leading-relaxed" data-testid="text-test-justification-2">
+                          {getHypothesisBasedTestRecommendation2.justification}
                         </p>
                       </div>
                       
                       <div>
                         <h4 className="text-xs font-semibold text-muted-foreground mb-2">How to Apply</h4>
-                        <p className="text-sm leading-relaxed" data-testid="text-test-application">
-                          {getHypothesisBasedTestRecommendation.application}
+                        <p className="text-sm leading-relaxed" data-testid="text-test-application-2">
+                          {getHypothesisBasedTestRecommendation2.application}
                         </p>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {!hypothesis.trim() && (
+                {!hypothesis2.trim() && (
                   <p className="text-sm text-muted-foreground p-3 bg-muted/30 rounded-md">
                     Enter a hypothesis above to receive personalized variable recommendations for your analysis.
                   </p>
