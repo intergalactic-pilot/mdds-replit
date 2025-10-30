@@ -611,9 +611,9 @@ export default function Research() {
 
   // Analyze hypothesis 2 and recommend variables
   const recommendedVariables2 = useMemo(() => {
-    if (!hypothesis2.trim()) return [];
+    if (!researchQuestionRight.trim() && !hypothesis2.trim()) return [];
     
-    const lowerHypothesis = hypothesis2.toLowerCase();
+    const combinedText = (researchQuestionRight + ' ' + hypothesis2).toLowerCase();
     const recommendations: string[] = [];
     
     // Keywords for different variable types
@@ -635,19 +635,19 @@ export default function Research() {
     };
 
     // Check for general team mentions
-    const hasNato = /\bnato\b/.test(lowerHypothesis);
-    const hasRussia = /\brussia\b/.test(lowerHypothesis);
+    const hasNato = /\bnato\b/.test(combinedText);
+    const hasRussia = /\brussia\b/.test(combinedText);
     
     // Check for domain mentions
-    const hasJoint = /\bjoint\b|military|forces/.test(lowerHypothesis);
-    const hasEconomy = /\beconom/.test(lowerHypothesis);
-    const hasCognitive = /\bcognitive\b|information|perception|narrative/.test(lowerHypothesis);
-    const hasSpace = /\bspace\b|satellite/.test(lowerHypothesis);
-    const hasCyber = /\bcyber\b|digital|network/.test(lowerHypothesis);
+    const hasJoint = /\bjoint\b|military|forces/.test(combinedText);
+    const hasEconomy = /\beconom/.test(combinedText);
+    const hasCognitive = /\bcognitive\b|information|perception|narrative/.test(combinedText);
+    const hasSpace = /\bspace\b|satellite/.test(combinedText);
+    const hasCyber = /\bcyber\b|digital|network/.test(combinedText);
     
     // Match specific keywords
     Object.entries(keywords).forEach(([varId, terms]) => {
-      if (terms.some(term => lowerHypothesis.includes(term))) {
+      if (terms.some(term => combinedText.includes(term))) {
         recommendations.push(varId);
       }
     });
@@ -676,7 +676,7 @@ export default function Research() {
     }
     
     // Check for comparison/correlation terms
-    const hasComparison = /\bcompare|versus|vs|between|differ|relationship|correlat|impact|effect|influence/.test(lowerHypothesis);
+    const hasComparison = /\bcompare|versus|vs|between|differ|relationship|correlat|impact|effect|influence/.test(combinedText);
     if (hasComparison && recommendations.length === 0) {
       // If comparing but no specific variables, suggest both teams' totals
       if (hasNato || hasRussia || (!hasNato && !hasRussia)) {
@@ -685,22 +685,22 @@ export default function Research() {
     }
     
     return Array.from(new Set(recommendations)); // Remove duplicates
-  }, [hypothesis2]);
+  }, [researchQuestionRight, hypothesis2]);
 
   // Get statistical test recommendation based on hypothesis 2
   const getHypothesisBasedTestRecommendation2 = useMemo(() => {
-    if (!hypothesis2.trim()) return null;
+    if (!researchQuestionRight.trim() && !hypothesis2.trim()) return null;
     
-    const lowerHypothesis = hypothesis2.toLowerCase();
+    const combinedText = (researchQuestionRight + ' ' + hypothesis2).toLowerCase();
     
     // Analyze hypothesis structure
-    const hasCorrelation = /correlat|relationship|associat/.test(lowerHypothesis);
-    const hasComparison = /compare|differ|versus|vs\.?|between/.test(lowerHypothesis);
-    const hasPrediction = /predict|determin|effect|impact|influence|cause/.test(lowerHypothesis);
-    const hasMultipleVariables = /multiple\s+(variable|outcome|factor|dimension|metric)|several\s+(variable|outcome|factor|dimension|metric)|various\s+(variable|outcome|factor|dimension|metric)/.test(lowerHypothesis);
-    const hasTwoGroups = /nato.*russia|russia.*nato|two teams|both teams/.test(lowerHypothesis);
-    const hasMultipleGroups = /across.*domain|all.*domain|multiple.*group/.test(lowerHypothesis);
-    const hasTimeComponent = /over time|across turns|duration|temporal|longitudinal/.test(lowerHypothesis);
+    const hasCorrelation = /correlat|relationship|associat/.test(combinedText);
+    const hasComparison = /compare|differ|versus|vs\.?|between/.test(combinedText);
+    const hasPrediction = /predict|determin|effect|impact|influence|cause/.test(combinedText);
+    const hasMultipleVariables = /multiple\s+(variable|outcome|factor|dimension|metric)|several\s+(variable|outcome|factor|dimension|metric)|various\s+(variable|outcome|factor|dimension|metric)/.test(combinedText);
+    const hasTwoGroups = /nato.*russia|russia.*nato|two teams|both teams/.test(combinedText);
+    const hasMultipleGroups = /across.*domain|all.*domain|multiple.*group/.test(combinedText);
+    const hasTimeComponent = /over time|across turns|duration|temporal|longitudinal/.test(combinedText);
     
     // Determine recommended tests based on hypothesis characteristics - return TWO complementary tests
     if (hasCorrelation && recommendedVariables2.length === 2 && !hasComparison) {
@@ -708,7 +708,7 @@ export default function Research() {
         {
           name: "Pearson Correlation",
           justification: `This hypothesis explicitly examines the relationship between two variables, making Pearson correlation the ideal parametric choice. ${
-            lowerHypothesis.includes('positively') || lowerHypothesis.includes('negatively') 
+            combinedText.includes('positively') || combinedText.includes('negatively') 
               ? 'The directional language ("positively" or "negatively") suggests you are testing for the strength and direction of linear association between variables.' 
               : 'Pearson correlation will reveal both the strength and direction of the linear relationship.'
           } This test is most powerful when both variables are continuous, have a linear relationship, and are normally distributed. It measures the degree to which two variables vary together in a straight-line relationship, providing a coefficient between -1 (perfect negative) and +1 (perfect positive correlation).`,
@@ -717,7 +717,7 @@ export default function Research() {
         {
           name: "Spearman Rank Correlation",
           justification: `As a robust non-parametric alternative to Pearson correlation, Spearman's rank correlation is ideal when your data violates normality assumptions, contains outliers, or exhibits non-linear but monotonic relationships. This test works by ranking your data points and then calculating correlation on the ranks rather than raw values, making it resistant to extreme scores and applicable to ordinal data. ${
-            lowerHypothesis.includes('positively') || lowerHypothesis.includes('negatively')
+            combinedText.includes('positively') || combinedText.includes('negatively')
               ? 'It will detect the directional monotonic trend you hypothesize, even if the relationship is curved rather than perfectly linear.'
               : 'It provides a robust measure of whether variables tend to increase or decrease together, regardless of the exact shape of their relationship.'
           } This makes it more versatile and reliable when assumptions are questionable.`,
@@ -750,14 +750,14 @@ export default function Research() {
         {
           name: "One-Way ANOVA",
           justification: `Your hypothesis involves comparing means across multiple groups (e.g., different domains, time periods, or strategic categories), making one-way Analysis of Variance (ANOVA) the appropriate parametric test. ANOVA extends t-test logic to three or more groups, testing whether at least one group mean differs significantly from the others while controlling Type I error. ${
-            lowerHypothesis.includes('domain') ? 'Since your hypothesis mentions domains, you are likely comparing performance across the five strategic dimensions (Joint, Economy, Cognitive, Space, Cyber).' : ''
+            combinedText.includes('domain') ? 'Since your hypothesis mentions domains, you are likely comparing performance across the five strategic dimensions (Joint, Economy, Cognitive, Space, Cyber).' : ''
           } This is statistically superior to running multiple t-tests, which would inflate false positive rates. ANOVA provides an F-statistic indicating overall group differences, then post-hoc tests identify which specific pairs differ.`,
           application: `To perform one-way ANOVA: (1) Select one continuous dependent variable (e.g., deterrence score). (2) Define your grouping factor with 3+ levels (e.g., five domains). (3) Check assumptions: normality within each group using Shapiro-Wilk test (robust if n≥30 per group), homogeneity of variance across groups using Levene's test, and independent observations. (4) Calculate the F-statistic by comparing between-group to within-group variance. (5) Report: F-value, degrees of freedom (between, within), and p-value. (6) If p<0.05, conclude that at least one group mean differs from others. (7) Conduct post-hoc comparisons (Tukey HSD for equal variances, Games-Howell for unequal) to identify which specific groups differ. (8) Report eta-squared or partial eta-squared effect size: 0.01=small, 0.06=medium, 0.14=large. (9) Visualize with grouped boxplots or bar charts showing means with error bars and significance brackets.`
         },
         {
           name: "Kruskal-Wallis Test",
           justification: `The Kruskal-Wallis test is the non-parametric alternative to one-way ANOVA for comparing three or more independent groups when parametric assumptions are violated. Instead of comparing means, it compares the distribution of ranks across groups, making it robust to outliers, skewness, and non-normal distributions. ${
-            lowerHypothesis.includes('domain') ? 'For your domain comparison, this test will determine if performance distributions differ significantly across the five strategic dimensions without assuming normal distributions within each domain.' : ''
+            combinedText.includes('domain') ? 'For your domain comparison, this test will determine if performance distributions differ significantly across the five strategic dimensions without assuming normal distributions within each domain.' : ''
           } This test is particularly valuable when you have small sample sizes per group, extreme scores, or ordinal data. It requires no distributional assumptions beyond independence and similar distributional shapes.`,
           application: `To perform Kruskal-Wallis test: (1) Select your continuous or ordinal outcome variable. (2) Define your grouping factor with 3+ levels. (3) No normality assumption required—the test ranks all observations across all groups. (4) Calculate the H-statistic (approximates chi-square distribution). (5) Report: H-statistic, degrees of freedom, and p-value. (6) If p<0.05, conclude that at least one group's distribution differs from others. (7) Conduct post-hoc pairwise comparisons using Dunn's test with Bonferroni correction to identify which specific groups differ. (8) Report median and interquartile range for each group. (9) Effect size: calculate epsilon-squared (similar to eta-squared interpretation). (10) Visualize with grouped boxplots showing medians, quartiles, and outliers for each group. (11) Particularly useful for small samples, outliers, skewed data, or when ANOVA assumptions are violated.`
         }
@@ -773,7 +773,7 @@ export default function Research() {
               ? 'Multiple regression is ideal here because you have several potential predictors that may jointly explain variance in the outcome, while controlling for each other.' 
               : 'Simple regression can model the predictive relationship between your predictor and outcome.'
           } Regression goes beyond correlation by providing a predictive model, quantifying exactly how much change in the outcome is associated with unit changes in each predictor. ${
-            lowerHypothesis.includes('predict') || lowerHypothesis.includes('determine') 
+            combinedText.includes('predict') || combinedText.includes('determine') 
               ? 'The predictive language in your hypothesis aligns perfectly with regression methodology.' 
               : ''
           } This approach provides regression coefficients (effect sizes), R-squared (variance explained), and tests each predictor's unique contribution.`,
@@ -796,33 +796,33 @@ export default function Research() {
         {
           name: "MANOVA (Multivariate ANOVA)",
           justification: `Your hypothesis examines group differences across multiple outcome variables simultaneously, which requires Multivariate Analysis of Variance (MANOVA). Unlike running separate ANOVAs for each variable, MANOVA considers correlations among dependent variables and tests whether groups differ on a composite of outcomes while controlling Type I error. ${
-            lowerHypothesis.includes('domain') ? 'Since you are examining multiple domains, MANOVA can assess whether teams differ in their overall deterrence profile across all dimensions simultaneously, detecting patterns that separate univariate tests might miss.' : ''
+            combinedText.includes('domain') ? 'Since you are examining multiple domains, MANOVA can assess whether teams differ in their overall deterrence profile across all dimensions simultaneously, detecting patterns that separate univariate tests might miss.' : ''
           } This approach is statistically more powerful and appropriate than multiple ANOVAs, providing a comprehensive view of multivariate group differences with a single omnibus test followed by targeted follow-ups.`,
           application: `To perform MANOVA: (1) Select 2+ continuous dependent variables that are theoretically related (e.g., deterrence scores across multiple domains). (2) Define your independent grouping variable (e.g., NATO vs. Russia). (3) Verify multivariate assumptions: (a) multivariate normality—can use Mardia's test or examine normality within each group, (b) homogeneity of covariance matrices—Box's M test (though robust to violations with equal sample sizes), (c) linear relationships among DVs—check scatterplot matrix, (d) adequate sample size—more observations than DVs, ideally n>20 per group. (4) Run MANOVA and examine multivariate test statistics: Wilks' Lambda (most common), Pillai's Trace (robust to violations), Hotelling's Trace, or Roy's Largest Root. (5) Report multivariate F-statistic and p-value from chosen test. (6) If multivariate effect is significant (p<0.05), groups differ on the combined set of DVs—proceed to follow-ups. (7) Conduct univariate ANOVAs for each DV to identify which specific variables drive the difference. (8) Apply Bonferroni correction to control Type I error in follow-ups (divide α by number of DVs). (9) Report partial eta-squared for both multivariate and univariate effects. (10) Visualize with profile plots showing group means across all DVs or with discriminant function plots.`
         },
         {
           name: "Separate ANOVAs with Bonferroni Correction",
           justification: `As a simpler alternative to MANOVA, you can conduct separate one-way ANOVAs for each outcome variable while applying Bonferroni correction to control the family-wise error rate. ${
-            lowerHypothesis.includes('domain') ? 'This approach tests each domain separately (Joint, Economy, Cognitive, Space, Cyber), making it easier to interpret which specific dimensions differ between teams.' : ''
+            combinedText.includes('domain') ? 'This approach tests each domain separately (Joint, Economy, Cognitive, Space, Cyber), making it easier to interpret which specific dimensions differ between teams.' : ''
           } While MANOVA tests a composite multivariate hypothesis, separate ANOVAs provide dimension-specific results that may be more actionable for strategic decision-making. The Bonferroni correction (dividing your alpha level by the number of tests) protects against false positives that would occur from multiple testing. This approach is particularly useful when DVs are not highly correlated or when you specifically want to know which individual variables differ, rather than just detecting an overall multivariate difference.`,
           application: `To conduct separate ANOVAs with Bonferroni: (1) Identify all dependent variables you want to test (e.g., 5 domains = 5 ANOVAs). (2) Determine your adjusted alpha level: divide your desired α (usually 0.05) by number of tests. For 5 tests: 0.05/5 = 0.01, so each individual test must reach p<0.01 to be considered significant. (3) For each dependent variable, conduct a one-way ANOVA comparing groups (e.g., NATO vs. Russia). (4) Check ANOVA assumptions for each test: normality within groups, homogeneity of variance. (5) Calculate F-statistic, df, and p-value for each ANOVA. (6) Compare each p-value to your Bonferroni-corrected alpha (e.g., 0.01). Only those below the corrected threshold are statistically significant. (7) For significant effects, conduct post-hoc tests if you have >2 groups. (8) Report results in a table showing F, df, p, and effect size (eta-squared) for each variable. (9) Clearly state your correction: "Using Bonferroni correction for 5 tests, alpha=0.01." (10) Visualize with separate bar charts or box plots for each dependent variable. (11) This approach is more conservative than uncorrected tests but easier to interpret than MANOVA, providing clear domain-specific findings.`
         }
       ];
     }
     
-    if (hasTimeComponent || lowerHypothesis.includes('longitudinal') || lowerHypothesis.includes('change')) {
+    if (hasTimeComponent || combinedText.includes('longitudinal') || combinedText.includes('change')) {
       return [
         {
           name: "Repeated Measures ANOVA",
           justification: `Your hypothesis involves examining changes or patterns across time points or turns, which suggests a within-subjects design best analyzed with Repeated Measures ANOVA. This test accounts for the fact that the same sessions/teams are measured multiple times, recognizing that measurements from the same entity are correlated. ${
-            lowerHypothesis.includes('turn') ? 'Since your hypothesis mentions turns, you are tracking strategic performance across the temporal progression of the simulation, making this within-subjects approach ideal.' : ''
+            combinedText.includes('turn') ? 'Since your hypothesis mentions turns, you are tracking strategic performance across the temporal progression of the simulation, making this within-subjects approach ideal.' : ''
           } Repeated measures designs are more powerful than between-subjects comparisons because they control for individual differences, reducing error variance and increasing statistical power. This test is specifically designed for detecting developmental trends, strategic evolution, or cumulative effects over the course of sessions.`,
           application: `To conduct Repeated Measures ANOVA: (1) Organize your data with the same subjects (sessions or teams) measured at multiple time points (e.g., deterrence at turns 1, 2, 3, 4). Each subject must have measurements at all time points (balanced design). (2) Identify your within-subjects factor (time/turn) with 3+ levels. (3) Check assumptions: (a) normality of differences between time points (can use Shapiro-Wilk on difference scores), (b) sphericity—equal variances of differences between all pairs of time points (test with Mauchly's test). (4) If sphericity is violated (Mauchly's p<0.05), apply Greenhouse-Geisser (conservative) or Huynh-Feldt (liberal) correction to degrees of freedom. (5) Run the analysis and examine the within-subjects effect for time. (6) Report: F-value, degrees of freedom (including any sphericity corrections), p-value, and partial eta-squared. (7) If significant (p<0.05), performance changes significantly across time—proceed to pairwise comparisons. (8) Conduct pairwise comparisons with Bonferroni adjustments to identify which specific time points differ from each other. (9) Visualize with line graphs showing means and error bars (or confidence intervals) across all time points, with one line per group if you also have between-subjects factors. (10) Interpret whether performance increases, decreases, or follows a non-linear pattern over time.`
         },
         {
           name: "Mixed-Effects Models (Linear Mixed Models)",
           justification: `Mixed-effects models (also called hierarchical linear models or multilevel models) are a flexible and powerful approach for analyzing repeated measures data, especially when you have unbalanced designs, missing data points, or want to model complex patterns of change over time. Unlike repeated measures ANOVA which requires complete data at all time points, mixed-effects models can handle missing values by using all available data. ${
-            lowerHypothesis.includes('turn') ? 'For your turn-by-turn analysis, mixed models can model non-linear trajectories of strategic performance, test whether teams differ in their rates of change (not just in average levels), and account for the fact that sessions may have different numbers of turns.' : ''
+            combinedText.includes('turn') ? 'For your turn-by-turn analysis, mixed models can model non-linear trajectories of strategic performance, test whether teams differ in their rates of change (not just in average levels), and account for the fact that sessions may have different numbers of turns.' : ''
           } These models separate fixed effects (average patterns across all subjects) from random effects (subject-specific deviations), providing richer insights into both population-level trends and individual variability.`,
           application: `To conduct mixed-effects modeling: (1) Structure your data in long format: one row per observation, with columns for subject ID, time point, outcome variable, and any predictors. (2) Missing time points are acceptable—the model uses all available data. (3) Specify your model structure: (a) Fixed effects—time (can be linear, quadratic, or categorical), group, and their interaction, (b) Random effects—minimally include random intercepts (each subject can have different baseline level); optionally include random slopes (each subject can have different rate of change). (4) Use specialized software (lme4 in R, mixed procedure in SPSS, mixed in Stata). (5) Fit the model using restricted maximum likelihood (REML). (6) Examine fixed effects: coefficients show average trends (e.g., how much outcome increases per turn). (7) Test significance of effects using t-tests or likelihood ratio tests. (8) Examine random effects: variance components show how much subjects vary in intercepts and slopes. (9) Report: fixed effect coefficients with SE and p-values, random effect variances, model fit (AIC, BIC). (10) Visualize with individual trajectory plots (spaghetti plots) showing each subject's trend plus the average fitted line. (11) Can model complex patterns: acceleration/deceleration, time-varying effects, interactions with group. (12) Particularly powerful for unequal time spacing, missing data, or when you want to test if groups differ in their rate of change over time.`
         }
@@ -850,13 +850,13 @@ export default function Research() {
         application: `For correlation analysis: (1) Select two continuous variables that you believe might be related (e.g., economy deterrence and total deterrence, or turn count and final score). (2) Create a scatterplot to visualize the relationship and check for patterns. (3) For Pearson: verify that the relationship appears roughly linear and both variables are approximately normally distributed. For Spearman: no distribution assumptions needed. (4) Look for outliers that might distort the correlation. (5) Calculate the correlation coefficient: Pearson's r for linear relationships, Spearman's ρ (rho) for monotonic relationships. (6) Interpret the coefficient: 0 = no relationship, ±0.1 to ±0.3 = weak, ±0.3 to ±0.7 = moderate, ±0.7 to ±1.0 = strong. Positive values indicate variables increase together; negative values indicate one increases as the other decreases. (7) Test significance: report the p-value, but remember that with large samples even weak correlations can be "significant"—focus on the magnitude of r or ρ for practical importance. (8) Report: correlation coefficient, sample size, and p-value (e.g., "r = 0.65, n = 40, p < 0.001"). (9) Visualize with scatterplot including the trend line. (10) Critically important: Correlation does NOT prove causation. A correlation between A and B could mean A causes B, B causes A, or both are caused by some third variable C. (11) Use scatterplots with regression lines to communicate findings clearly.`
       }
     ];
-  }, [hypothesis2, recommendedVariables2]);
+  }, [researchQuestionRight, hypothesis2, recommendedVariables2]);
 
   // Analyze hypothesis 1 and recommend variables
   const recommendedVariables1 = useMemo(() => {
-    if (!hypothesis1.trim()) return [];
+    if (!researchQuestionLeft.trim() && !hypothesis1.trim()) return [];
     
-    const lowerHypothesis = hypothesis1.toLowerCase();
+    const combinedText = (researchQuestionLeft + ' ' + hypothesis1).toLowerCase();
     const recommendations: string[] = [];
     
     // Keywords for different variable types
@@ -878,19 +878,19 @@ export default function Research() {
     };
 
     // Check for general team mentions
-    const hasNato = /\bnato\b/.test(lowerHypothesis);
-    const hasRussia = /\brussia\b/.test(lowerHypothesis);
+    const hasNato = /\bnato\b/.test(combinedText);
+    const hasRussia = /\brussia\b/.test(combinedText);
     
     // Check for domain mentions
-    const hasJoint = /\bjoint\b|military|forces/.test(lowerHypothesis);
-    const hasEconomy = /\beconom/.test(lowerHypothesis);
-    const hasCognitive = /\bcognitive\b|information|perception|narrative/.test(lowerHypothesis);
-    const hasSpace = /\bspace\b|satellite/.test(lowerHypothesis);
-    const hasCyber = /\bcyber\b|digital|network/.test(lowerHypothesis);
+    const hasJoint = /\bjoint\b|military|forces/.test(combinedText);
+    const hasEconomy = /\beconom/.test(combinedText);
+    const hasCognitive = /\bcognitive\b|information|perception|narrative/.test(combinedText);
+    const hasSpace = /\bspace\b|satellite/.test(combinedText);
+    const hasCyber = /\bcyber\b|digital|network/.test(combinedText);
     
     // Match specific keywords
     Object.entries(keywords).forEach(([varId, terms]) => {
-      if (terms.some(term => lowerHypothesis.includes(term))) {
+      if (terms.some(term => combinedText.includes(term))) {
         recommendations.push(varId);
       }
     });
@@ -919,7 +919,7 @@ export default function Research() {
     }
     
     // Check for comparison/correlation terms
-    const hasComparison = /\bcompare|versus|vs|between|differ|relationship|correlat|impact|effect|influence/.test(lowerHypothesis);
+    const hasComparison = /\bcompare|versus|vs|between|differ|relationship|correlat|impact|effect|influence/.test(combinedText);
     if (hasComparison && recommendations.length === 0) {
       // If comparing but no specific variables, suggest both teams' totals
       if (hasNato || hasRussia || (!hasNato && !hasRussia)) {
@@ -928,22 +928,22 @@ export default function Research() {
     }
     
     return Array.from(new Set(recommendations)); // Remove duplicates
-  }, [hypothesis1]);
+  }, [researchQuestionLeft, hypothesis1]);
 
   // Get statistical test recommendation based on hypothesis 1
   const getHypothesisBasedTestRecommendation1 = useMemo(() => {
-    if (!hypothesis1.trim()) return null;
+    if (!researchQuestionLeft.trim() && !hypothesis1.trim()) return null;
     
-    const lowerHypothesis = hypothesis1.toLowerCase();
+    const combinedText = (researchQuestionLeft + ' ' + hypothesis1).toLowerCase();
     
     // Analyze hypothesis structure
-    const hasCorrelation = /correlat|relationship|associat/.test(lowerHypothesis);
-    const hasComparison = /compare|differ|versus|vs\.?|between/.test(lowerHypothesis);
-    const hasPrediction = /predict|determin|effect|impact|influence|cause/.test(lowerHypothesis);
-    const hasMultipleVariables = /multiple\s+(variable|outcome|factor|dimension|metric)|several\s+(variable|outcome|factor|dimension|metric)|various\s+(variable|outcome|factor|dimension|metric)/.test(lowerHypothesis);
-    const hasTwoGroups = /nato.*russia|russia.*nato|two teams|both teams/.test(lowerHypothesis);
-    const hasMultipleGroups = /across.*domain|all.*domain|multiple.*group/.test(lowerHypothesis);
-    const hasTimeComponent = /over time|across turns|duration|temporal|longitudinal/.test(lowerHypothesis);
+    const hasCorrelation = /correlat|relationship|associat/.test(combinedText);
+    const hasComparison = /compare|differ|versus|vs\.?|between/.test(combinedText);
+    const hasPrediction = /predict|determin|effect|impact|influence|cause/.test(combinedText);
+    const hasMultipleVariables = /multiple\s+(variable|outcome|factor|dimension|metric)|several\s+(variable|outcome|factor|dimension|metric)|various\s+(variable|outcome|factor|dimension|metric)/.test(combinedText);
+    const hasTwoGroups = /nato.*russia|russia.*nato|two teams|both teams/.test(combinedText);
+    const hasMultipleGroups = /across.*domain|all.*domain|multiple.*group/.test(combinedText);
+    const hasTimeComponent = /over time|across turns|duration|temporal|longitudinal/.test(combinedText);
     
     // Determine recommended tests based on hypothesis characteristics - return TWO complementary tests
     if (hasCorrelation && recommendedVariables1.length === 2 && !hasComparison) {
@@ -951,7 +951,7 @@ export default function Research() {
         {
           name: "Pearson Correlation",
           justification: `This hypothesis explicitly examines the relationship between two variables, making Pearson correlation the ideal parametric choice. ${
-            lowerHypothesis.includes('positively') || lowerHypothesis.includes('negatively') 
+            combinedText.includes('positively') || combinedText.includes('negatively') 
               ? 'The directional language ("positively" or "negatively") suggests you are testing for the strength and direction of linear association between variables.' 
               : 'Pearson correlation will reveal both the strength and direction of the linear relationship.'
           } This test is most powerful when both variables are continuous, have a linear relationship, and are normally distributed. It measures the degree to which two variables vary together in a straight-line relationship, providing a coefficient between -1 (perfect negative) and +1 (perfect positive correlation).`,
@@ -960,7 +960,7 @@ export default function Research() {
         {
           name: "Spearman Rank Correlation",
           justification: `As a robust non-parametric alternative to Pearson correlation, Spearman's rank correlation is ideal when your data violates normality assumptions, contains outliers, or exhibits non-linear but monotonic relationships. This test works by ranking your data points and then calculating correlation on the ranks rather than raw values, making it resistant to extreme scores and applicable to ordinal data. ${
-            lowerHypothesis.includes('positively') || lowerHypothesis.includes('negatively')
+            combinedText.includes('positively') || combinedText.includes('negatively')
               ? 'It will detect the directional monotonic trend you hypothesize, even if the relationship is curved rather than perfectly linear.'
               : 'It provides a robust measure of whether variables tend to increase or decrease together, regardless of the exact shape of their relationship.'
           } This makes it more versatile and reliable when assumptions are questionable.`,
@@ -993,14 +993,14 @@ export default function Research() {
         {
           name: "One-Way ANOVA",
           justification: `Your hypothesis involves comparing means across multiple groups (e.g., different domains, time periods, or strategic categories), making one-way Analysis of Variance (ANOVA) the appropriate parametric test. ANOVA extends t-test logic to three or more groups, testing whether at least one group mean differs significantly from the others while controlling Type I error. ${
-            lowerHypothesis.includes('domain') ? 'Since your hypothesis mentions domains, you are likely comparing performance across the five strategic dimensions (Joint, Economy, Cognitive, Space, Cyber).' : ''
+            combinedText.includes('domain') ? 'Since your hypothesis mentions domains, you are likely comparing performance across the five strategic dimensions (Joint, Economy, Cognitive, Space, Cyber).' : ''
           } This is statistically superior to running multiple t-tests, which would inflate false positive rates. ANOVA provides an F-statistic indicating overall group differences, then post-hoc tests identify which specific pairs differ.`,
           application: `To perform one-way ANOVA: (1) Select one continuous dependent variable (e.g., deterrence score). (2) Define your grouping factor with 3+ levels (e.g., five domains). (3) Check assumptions: normality within each group using Shapiro-Wilk test (robust if n≥30 per group), homogeneity of variance across groups using Levene's test, and independent observations. (4) Calculate the F-statistic by comparing between-group to within-group variance. (5) Report: F-value, degrees of freedom (between, within), and p-value. (6) If p<0.05, conclude that at least one group mean differs from others. (7) Conduct post-hoc comparisons (Tukey HSD for equal variances, Games-Howell for unequal) to identify which specific groups differ. (8) Report eta-squared or partial eta-squared effect size: 0.01=small, 0.06=medium, 0.14=large. (9) Visualize with grouped boxplots or bar charts showing means with error bars and significance brackets.`
         },
         {
           name: "Kruskal-Wallis Test",
           justification: `The Kruskal-Wallis test is the non-parametric alternative to one-way ANOVA for comparing three or more independent groups when parametric assumptions are violated. Instead of comparing means, it compares the distribution of ranks across groups, making it robust to outliers, skewness, and non-normal distributions. ${
-            lowerHypothesis.includes('domain') ? 'For your domain comparison, this test will determine if performance distributions differ significantly across the five strategic dimensions without assuming normal distributions within each domain.' : ''
+            combinedText.includes('domain') ? 'For your domain comparison, this test will determine if performance distributions differ significantly across the five strategic dimensions without assuming normal distributions within each domain.' : ''
           } This test is particularly valuable when you have small sample sizes per group, extreme scores, or ordinal data. It requires no distributional assumptions beyond independence and similar distributional shapes.`,
           application: `To perform Kruskal-Wallis test: (1) Select your continuous or ordinal outcome variable. (2) Define your grouping factor with 3+ levels. (3) No normality assumption required—the test ranks all observations across all groups. (4) Calculate the H-statistic (approximates chi-square distribution). (5) Report: H-statistic, degrees of freedom, and p-value. (6) If p<0.05, conclude that at least one group's distribution differs from others. (7) Conduct post-hoc pairwise comparisons using Dunn's test with Bonferroni correction to identify which specific groups differ. (8) Report median and interquartile range for each group. (9) Effect size: calculate epsilon-squared (similar to eta-squared interpretation). (10) Visualize with grouped boxplots showing medians, quartiles, and outliers for each group. (11) Particularly useful for small samples, outliers, skewed data, or when ANOVA assumptions are violated.`
         }
@@ -1016,7 +1016,7 @@ export default function Research() {
               ? 'Multiple regression is ideal here because you have several potential predictors that may jointly explain variance in the outcome, while controlling for each other.' 
               : 'Simple regression can model the predictive relationship between your predictor and outcome.'
           } Regression goes beyond correlation by providing a predictive model, quantifying exactly how much change in the outcome is associated with unit changes in each predictor. ${
-            lowerHypothesis.includes('predict') || lowerHypothesis.includes('determine') 
+            combinedText.includes('predict') || combinedText.includes('determine') 
               ? 'The predictive language in your hypothesis aligns perfectly with regression methodology.' 
               : ''
           } This approach provides regression coefficients (effect sizes), R-squared (variance explained), and tests each predictor's unique contribution.`,
@@ -1039,33 +1039,33 @@ export default function Research() {
         {
           name: "MANOVA (Multivariate ANOVA)",
           justification: `Your hypothesis examines group differences across multiple outcome variables simultaneously, which requires Multivariate Analysis of Variance (MANOVA). Unlike running separate ANOVAs for each variable, MANOVA considers correlations among dependent variables and tests whether groups differ on a composite of outcomes while controlling Type I error. ${
-            lowerHypothesis.includes('domain') ? 'Since you are examining multiple domains, MANOVA can assess whether teams differ in their overall deterrence profile across all dimensions simultaneously, detecting patterns that separate univariate tests might miss.' : ''
+            combinedText.includes('domain') ? 'Since you are examining multiple domains, MANOVA can assess whether teams differ in their overall deterrence profile across all dimensions simultaneously, detecting patterns that separate univariate tests might miss.' : ''
           } This approach is statistically more powerful and appropriate than multiple ANOVAs, providing a comprehensive view of multivariate group differences with a single omnibus test followed by targeted follow-ups.`,
           application: `To perform MANOVA: (1) Select 2+ continuous dependent variables that are theoretically related (e.g., deterrence scores across multiple domains). (2) Define your independent grouping variable (e.g., NATO vs. Russia). (3) Verify multivariate assumptions: (a) multivariate normality—can use Mardia's test or examine normality within each group, (b) homogeneity of covariance matrices—Box's M test (though robust to violations with equal sample sizes), (c) linear relationships among DVs—check scatterplot matrix, (d) adequate sample size—more observations than DVs, ideally n>20 per group. (4) Run MANOVA and examine multivariate test statistics: Wilks' Lambda (most common), Pillai's Trace (robust to violations), Hotelling's Trace, or Roy's Largest Root. (5) Report multivariate F-statistic and p-value from chosen test. (6) If multivariate effect is significant (p<0.05), groups differ on the combined set of DVs—proceed to follow-ups. (7) Conduct univariate ANOVAs for each DV to identify which specific variables drive the difference. (8) Apply Bonferroni correction to control Type I error in follow-ups (divide α by number of DVs). (9) Report partial eta-squared for both multivariate and univariate effects. (10) Visualize with profile plots showing group means across all DVs or with discriminant function plots.`
         },
         {
           name: "Separate ANOVAs with Bonferroni Correction",
           justification: `As a simpler alternative to MANOVA, you can conduct separate one-way ANOVAs for each outcome variable while applying Bonferroni correction to control the family-wise error rate. ${
-            lowerHypothesis.includes('domain') ? 'This approach tests each domain separately (Joint, Economy, Cognitive, Space, Cyber), making it easier to interpret which specific dimensions differ between teams.' : ''
+            combinedText.includes('domain') ? 'This approach tests each domain separately (Joint, Economy, Cognitive, Space, Cyber), making it easier to interpret which specific dimensions differ between teams.' : ''
           } While MANOVA tests a composite multivariate hypothesis, separate ANOVAs provide dimension-specific results that may be more actionable for strategic decision-making. The Bonferroni correction (dividing your alpha level by the number of tests) protects against false positives that would occur from multiple testing. This approach is particularly useful when DVs are not highly correlated or when you specifically want to know which individual variables differ, rather than just detecting an overall multivariate difference.`,
           application: `To conduct separate ANOVAs with Bonferroni: (1) Identify all dependent variables you want to test (e.g., 5 domains = 5 ANOVAs). (2) Determine your adjusted alpha level: divide your desired α (usually 0.05) by number of tests. For 5 tests: 0.05/5 = 0.01, so each individual test must reach p<0.01 to be considered significant. (3) For each dependent variable, conduct a one-way ANOVA comparing groups (e.g., NATO vs. Russia). (4) Check ANOVA assumptions for each test: normality within groups, homogeneity of variance. (5) Calculate F-statistic, df, and p-value for each ANOVA. (6) Compare each p-value to your Bonferroni-corrected alpha (e.g., 0.01). Only those below the corrected threshold are statistically significant. (7) For significant effects, conduct post-hoc tests if you have >2 groups. (8) Report results in a table showing F, df, p, and effect size (eta-squared) for each variable. (9) Clearly state your correction: "Using Bonferroni correction for 5 tests, alpha=0.01." (10) Visualize with separate bar charts or box plots for each dependent variable. (11) This approach is more conservative than uncorrected tests but easier to interpret than MANOVA, providing clear domain-specific findings.`
         }
       ];
     }
     
-    if (hasTimeComponent || lowerHypothesis.includes('longitudinal') || lowerHypothesis.includes('change')) {
+    if (hasTimeComponent || combinedText.includes('longitudinal') || combinedText.includes('change')) {
       return [
         {
           name: "Repeated Measures ANOVA",
           justification: `Your hypothesis involves examining changes or patterns across time points or turns, which suggests a within-subjects design best analyzed with Repeated Measures ANOVA. This test accounts for the fact that the same sessions/teams are measured multiple times, recognizing that measurements from the same entity are correlated. ${
-            lowerHypothesis.includes('turn') ? 'Since your hypothesis mentions turns, you are tracking strategic performance across the temporal progression of the simulation, making this within-subjects approach ideal.' : ''
+            combinedText.includes('turn') ? 'Since your hypothesis mentions turns, you are tracking strategic performance across the temporal progression of the simulation, making this within-subjects approach ideal.' : ''
           } Repeated measures designs are more powerful than between-subjects comparisons because they control for individual differences, reducing error variance and increasing statistical power. This test is specifically designed for detecting developmental trends, strategic evolution, or cumulative effects over the course of sessions.`,
           application: `To conduct Repeated Measures ANOVA: (1) Organize your data with the same subjects (sessions or teams) measured at multiple time points (e.g., deterrence at turns 1, 2, 3, 4). Each subject must have measurements at all time points (balanced design). (2) Identify your within-subjects factor (time/turn) with 3+ levels. (3) Check assumptions: (a) normality of differences between time points (can use Shapiro-Wilk on difference scores), (b) sphericity—equal variances of differences between all pairs of time points (test with Mauchly's test). (4) If sphericity is violated (Mauchly's p<0.05), apply Greenhouse-Geisser (conservative) or Huynh-Feldt (liberal) correction to degrees of freedom. (5) Run the analysis and examine the within-subjects effect for time. (6) Report: F-value, degrees of freedom (including any sphericity corrections), p-value, and partial eta-squared. (7) If significant (p<0.05), performance changes significantly across time—proceed to pairwise comparisons. (8) Conduct pairwise comparisons with Bonferroni adjustments to identify which specific time points differ from each other. (9) Visualize with line graphs showing means and error bars (or confidence intervals) across all time points, with one line per group if you also have between-subjects factors. (10) Interpret whether performance increases, decreases, or follows a non-linear pattern over time.`
         },
         {
           name: "Mixed-Effects Models (Linear Mixed Models)",
           justification: `Mixed-effects models (also called hierarchical linear models or multilevel models) are a flexible and powerful approach for analyzing repeated measures data, especially when you have unbalanced designs, missing data points, or want to model complex patterns of change over time. Unlike repeated measures ANOVA which requires complete data at all time points, mixed-effects models can handle missing values by using all available data. ${
-            lowerHypothesis.includes('turn') ? 'For your turn-by-turn analysis, mixed models can model non-linear trajectories of strategic performance, test whether teams differ in their rates of change (not just in average levels), and account for the fact that sessions may have different numbers of turns.' : ''
+            combinedText.includes('turn') ? 'For your turn-by-turn analysis, mixed models can model non-linear trajectories of strategic performance, test whether teams differ in their rates of change (not just in average levels), and account for the fact that sessions may have different numbers of turns.' : ''
           } These models separate fixed effects (average patterns across all subjects) from random effects (subject-specific deviations), providing richer insights into both population-level trends and individual variability.`,
           application: `To conduct mixed-effects modeling: (1) Structure your data in long format: one row per observation, with columns for subject ID, time point, outcome variable, and any predictors. (2) Missing time points are acceptable—the model uses all available data. (3) Specify your model structure: (a) Fixed effects—time (can be linear, quadratic, or categorical), group, and their interaction, (b) Random effects—minimally include random intercepts (each subject can have different baseline level); optionally include random slopes (each subject can have different rate of change). (4) Use specialized software (lme4 in R, mixed procedure in SPSS, mixed in Stata). (5) Fit the model using restricted maximum likelihood (REML). (6) Examine fixed effects: coefficients show average trends (e.g., how much outcome increases per turn). (7) Test significance of effects using t-tests or likelihood ratio tests. (8) Examine random effects: variance components show how much subjects vary in intercepts and slopes. (9) Report: fixed effect coefficients with SE and p-values, random effect variances, model fit (AIC, BIC). (10) Visualize with individual trajectory plots (spaghetti plots) showing each subject's trend plus the average fitted line. (11) Can model complex patterns: acceleration/deceleration, time-varying effects, interactions with group. (12) Particularly powerful for unequal time spacing, missing data, or when you want to test if groups differ in their rate of change over time.`
         }
@@ -1710,8 +1710,22 @@ export default function Research() {
               </CardContent>
             </Card>
 
-            {/* Statistical Test Recommendations for Hypothesis 1 - Two Cards in Grid */}
-            {hypothesis1.trim() && getHypothesisBasedTestRecommendation1?.length === 2 && (
+            {/* Statistical Test Recommendations for Hypothesis 1 */}
+            {(!researchQuestionLeft.trim() && !hypothesis1.trim()) ? (
+              <Card data-testid="card-statistical-test-empty-1">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5" />
+                    Statistical Test Recommendations
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground p-3 bg-muted/30 rounded-md">
+                    Enter a research question and/or hypothesis above to receive personalized statistical test recommendations.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : getHypothesisBasedTestRecommendation1?.length === 2 ? (
               <div className="grid grid-cols-2 gap-4">
                 {/* Statistical Test Recommendation 1-1 */}
                 <Card data-testid="card-statistical-test-1-1">
@@ -1769,7 +1783,7 @@ export default function Research() {
                   </CardContent>
                 </Card>
               </div>
-            )}
+            ) : null}
 
             <Card>
               <CardHeader>
@@ -2464,8 +2478,22 @@ export default function Research() {
               </CardContent>
             </Card>
 
-            {/* Statistical Test Recommendations for Hypothesis 2 - Two Cards in Grid */}
-            {hypothesis2.trim() && getHypothesisBasedTestRecommendation2?.length === 2 && (
+            {/* Statistical Test Recommendations for Hypothesis 2 */}
+            {(!researchQuestionRight.trim() && !hypothesis2.trim()) ? (
+              <Card data-testid="card-statistical-test-empty-2">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5" />
+                    Statistical Test Recommendations
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground p-3 bg-muted/30 rounded-md">
+                    Enter a research question and/or hypothesis above to receive personalized statistical test recommendations.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : getHypothesisBasedTestRecommendation2?.length === 2 ? (
               <div className="grid grid-cols-2 gap-4">
                 {/* Statistical Test Recommendation 2-1 */}
                 <Card data-testid="card-statistical-test-2-1">
@@ -2523,7 +2551,7 @@ export default function Research() {
                   </CardContent>
                 </Card>
               </div>
-            )}
+            ) : null}
 
             {/* Summary Statistics */}
             {summaryStats && Object.keys(summaryStats).length > 0 && (
