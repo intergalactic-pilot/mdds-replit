@@ -957,6 +957,164 @@ export default function Research() {
     };
   }, [hypothesis1, recommendedVariables1]);
 
+  // Get statistical test recommendation based on research question 1
+  const getResearchQuestionBasedTestRecommendation1 = useMemo(() => {
+    if (!researchQuestionLeft.trim()) return null;
+    
+    const lowerQuestion = researchQuestionLeft.toLowerCase();
+    
+    // Analyze research question structure
+    const asksWhich = /\bwhich\b/.test(lowerQuestion);
+    const asksHow = /\bhow\b/.test(lowerQuestion);
+    const asksWhat = /\bwhat\b/.test(lowerQuestion);
+    const asksWhy = /\bwhy\b/.test(lowerQuestion);
+    const asksDoes = /\bdoes\b|\bdo\b/.test(lowerQuestion);
+    const asksAre = /\bare\b|\bis\b/.test(lowerQuestion);
+    
+    const mentionsComparison = /compar|differ|versus|vs\.?|between/.test(lowerQuestion);
+    const mentionsRelationship = /correlat|relationship|associat|pattern|connect/.test(lowerQuestion);
+    const mentionsEffect = /effect|impact|influence|affect|determin/.test(lowerQuestion);
+    const mentionsStrategy = /strateg|approach|method|tactic/.test(lowerQuestion);
+    const mentionsDomain = /domain|dimension/.test(lowerQuestion);
+    const mentionsTiming = /timing|when|early|late|over time|across turns/.test(lowerQuestion);
+    const mentionsTeams = /nato.*russia|russia.*nato|team|both teams/.test(lowerQuestion);
+    
+    // Exploratory questions asking "which" often need multiple comparisons
+    if (asksWhich && mentionsStrategy) {
+      return {
+        name: "Exploratory Analysis: Descriptive Statistics + Chi-Square or ANOVA",
+        justification: `Your research question explores which strategies are most effective, which is inherently exploratory and comparative. This requires examining multiple strategy types and their outcomes. Since research questions are broader than hypotheses, start with descriptive statistics to understand patterns in your data—calculate means, frequencies, and distributions for different strategies. Then, depending on your data structure, use Chi-Square tests to examine associations between categorical strategy types and outcomes (win/loss), or use One-Way ANOVA to compare continuous outcome measures (deterrence scores) across multiple strategy groups. This two-phase approach provides both descriptive insights and inferential statistical support for identifying effective strategies.`,
+        application: `Phase 1 - Descriptive Analysis: (1) Categorize sessions by dominant strategy type (e.g., economy-focused, cyber-focused, balanced). (2) Calculate win rates, average deterrence scores, and other relevant metrics for each strategy category. (3) Create frequency tables and visualizations (bar charts, pie charts) to identify patterns. Phase 2 - Inferential Testing: For categorical outcomes (wins): (4) Use Chi-Square test to determine if certain strategies are associated with higher win rates. (5) Calculate odds ratios to quantify strategy effectiveness. For continuous outcomes (deterrence scores): (6) Use One-Way ANOVA to compare mean deterrence across strategy groups. (7) Conduct post-hoc tests (Tukey HSD) to identify which specific strategies differ significantly. (8) Report effect sizes to quantify practical significance. (9) Create visualizations showing strategy effectiveness with confidence intervals.`
+      };
+    }
+    
+    if ((asksHow || asksWhat) && mentionsRelationship) {
+      return {
+        name: "Correlation Analysis (Pearson/Spearman) + Regression",
+        justification: `Your research question investigates how variables relate or what patterns exist, which calls for correlation and regression analysis. Unlike hypothesis testing with directional predictions, research questions are exploratory—you're discovering relationships rather than confirming them. Start with correlation analysis to examine bivariate relationships between variables (e.g., economic investment and total deterrence). Pearson correlation works for linear relationships with normally distributed continuous variables, while Spearman correlation handles non-linear monotonic relationships and ordinal data. If you find significant correlations and want to understand prediction, follow up with regression analysis to model how predictor variables explain variance in outcomes. This combination provides both the strength of relationships and their predictive power.`,
+        application: `Step 1 - Correlation Analysis: (1) Identify pairs of continuous variables that theoretically might be related based on your research question. (2) Create scatterplots to visualize relationships and check for linearity, outliers, and influential points. (3) Calculate Pearson's r for linear relationships or Spearman's ρ for monotonic relationships. (4) Interpret correlation strength: |r| < 0.3 (weak), 0.3-0.7 (moderate), > 0.7 (strong). (5) Assess statistical significance with p-values, but focus on effect sizes for practical importance. Step 2 - Regression Analysis (optional): (6) If correlations are promising, build regression models with theoretically meaningful predictors. (7) Examine R-squared values to understand variance explained. (8) Report standardized beta coefficients to compare relative importance of predictors. (9) Create visualization showing predicted relationships with confidence bands.`
+      };
+    }
+    
+    if ((asksAre || asksDoes) && mentionsComparison && mentionsTeams) {
+      return {
+        name: "Independent Samples t-test or Mann-Whitney U Test",
+        justification: `Your research question compares two groups (NATO vs. Russia) on outcome measures, making this a classic two-group comparison scenario. Since research questions are exploratory, you're investigating whether differences exist rather than confirming a predicted direction. Use an independent samples t-test when comparing mean deterrence scores or other continuous outcomes between the two teams. The t-test assumes approximately normal distributions and similar variances between groups—check these with visual diagnostics (histograms, Q-Q plots) and Levene's test. If assumptions are violated or you have small sample sizes, the non-parametric Mann-Whitney U test provides a robust alternative that compares distributions without normality assumptions. Both tests will reveal whether team differences are statistically and practically significant.`,
+        application: `For parametric t-test: (1) Select your continuous outcome variable (e.g., total deterrence, economic deterrence). (2) Split data by team (NATO vs. Russia). (3) Verify assumptions: check normality with Shapiro-Wilk test or Q-Q plots; assess homogeneity of variance with Levene's test. (4) If assumptions hold (or n≥30 per group), run independent samples t-test. (5) Report means, standard deviations, t-statistic, degrees of freedom, p-value, and 95% confidence interval for the difference. (6) Calculate and report Cohen's d effect size: small (0.2), medium (0.5), large (0.8). For non-parametric Mann-Whitney: (7) If assumptions fail, use Mann-Whitney U test to compare distributions. (8) Report medians, U-statistic, and p-value. (9) Visualize with side-by-side boxplots showing group distributions, medians, and outliers.`
+      };
+    }
+    
+    if ((asksHow || asksWhat) && mentionsDomain) {
+      return {
+        name: "One-Way ANOVA or Kruskal-Wallis Test",
+        justification: `Your research question examines patterns or differences across multiple domains (Joint, Economy, Cognitive, Space, Cyber), which requires comparing more than two groups simultaneously. One-Way ANOVA is the appropriate test for this scenario, extending t-test logic to multiple groups while controlling Type I error. ANOVA tests whether at least one domain shows significantly different performance from the others. Check assumptions: normality within each domain group (Shapiro-Wilk test), homogeneity of variance across domains (Levene's test), and independence of observations. If these assumptions are violated, especially with small samples or skewed data, use the Kruskal-Wallis test—a non-parametric alternative that compares ranks across groups. Follow significant results with post-hoc comparisons to identify which specific domains differ.`,
+        application: `For parametric ANOVA: (1) Select one continuous outcome measure (e.g., average deterrence in each domain). (2) Organize data with domain as the grouping factor (5 levels: joint, economy, cognitive, space, cyber). (3) Check assumptions: normality in each domain, equal variances, independence. (4) Run One-Way ANOVA and examine F-statistic and p-value. (5) If p<0.05, at least one domain differs—proceed to post-hoc tests. (6) Use Tukey HSD or Bonferroni corrections to identify specific domain pairs that differ significantly. (7) Report F-value, degrees of freedom, p-value, and partial eta-squared effect size. For non-parametric Kruskal-Wallis: (8) If assumptions fail, use Kruskal-Wallis test on ranks. (9) Follow up with Dunn's test for pairwise comparisons. (10) Visualize with grouped boxplots or bar charts with error bars showing domain means and confidence intervals.`
+      };
+    }
+    
+    if (mentionsTiming || /temporal|longitudinal|progression|across\s+turn/.test(lowerQuestion)) {
+      return {
+        name: "Repeated Measures ANOVA or Mixed-Effects Models",
+        justification: `Your research question investigates changes or patterns over time (across turns), which requires within-subjects analysis. Repeated Measures ANOVA is appropriate when the same sessions or teams are measured at multiple time points, accounting for the correlation between repeated measurements from the same entity. This design is more powerful than between-subjects comparisons because it controls for individual differences, isolating the effect of time. Check the sphericity assumption (equal variances of differences between time points) using Mauchly's test, and apply Greenhouse-Geisser corrections if violated. For more complex temporal patterns or unbalanced data, consider mixed-effects models that can handle missing data and model both fixed time effects and random subject effects.`,
+        application: `For Repeated Measures ANOVA: (1) Structure your data with sessions/teams as subjects and turns as repeated measurements. (2) Ensure balanced design (same time points for all subjects). (3) Test sphericity with Mauchly's test; if violated (p<0.05), apply Greenhouse-Geisser or Huynh-Feldt corrections. (4) Run the analysis examining the within-subjects effect of time/turn. (5) If significant, conduct pairwise comparisons with Bonferroni adjustments to identify which turns differ. (6) Report F-value, corrected degrees of freedom, p-value, and partial eta-squared. (7) Create line graphs showing mean outcome across turns with error bars. For Mixed-Effects Models: (8) Specify time as a fixed effect and sessions/teams as random effects. (9) Allow for missing data and unbalanced designs. (10) Examine fixed effect coefficients for time trends. (11) Visualize individual trajectories alongside population-average trends.`
+      };
+    }
+    
+    if (mentionsEffect || /predict|determin|influence/.test(lowerQuestion)) {
+      return {
+        name: "Multiple Regression or Path Analysis",
+        justification: `Your research question explores how variables influence or determine outcomes, suggesting a need for predictive modeling. Multiple regression allows you to examine how one or more predictor variables explain variance in an outcome variable. Unlike simple correlation, regression provides directionality and quantifies the unique contribution of each predictor while controlling for others. Check regression assumptions: linearity (scatterplots), independence of errors, homoscedasticity (constant variance), normality of residuals (Q-Q plots), and absence of multicollinearity (VIF < 10). For more complex causal pathways, consider path analysis or structural equation modeling to test mediation and indirect effects. Ensure adequate sample size: at least 10-15 observations per predictor variable for reliable estimates.`,
+        application: `Step 1 - Model Building: (1) Identify your dependent variable (outcome to explain) and independent variables (predictors). (2) Ensure minimum 10-15 observations per predictor. (3) Check for high correlations among predictors (multicollinearity); consider removing redundant variables. Step 2 - Assumption Checking: (4) Create scatterplots to verify linear relationships between predictors and outcome. (5) Run regression and examine residual plots for homoscedasticity and normality. (6) Calculate VIF values to check multicollinearity (VIF > 10 is problematic). Step 3 - Model Interpretation: (7) Examine R-squared to assess total variance explained (adjusted R-squared for multiple predictors). (8) Evaluate each predictor's beta coefficient (magnitude), direction (sign), and significance (p-value). (9) Report standardized betas to compare relative importance of predictors. (10) Check Cook's distance to identify influential outliers. (11) Visualize with partial regression plots showing each predictor's unique contribution.`
+      };
+    }
+    
+    // Default exploratory recommendation
+    return {
+      name: "Exploratory Data Analysis + Descriptive Statistics",
+      justification: `Your research question is exploratory in nature, seeking to understand patterns and relationships in your data. The most appropriate starting point is comprehensive Exploratory Data Analysis (EDA) combined with robust descriptive statistics. EDA helps you understand data distributions, identify outliers, discover patterns, and generate insights that can inform future hypothesis-driven research. Begin with univariate analyses (means, medians, standard deviations, ranges) for each variable, then move to bivariate analyses (cross-tabulations, correlation matrices, grouped comparisons). Visualizations are crucial: use histograms, boxplots, scatterplots, and heatmaps to reveal patterns that numbers alone might miss. This exploratory foundation will help you identify promising relationships to test with more targeted statistical methods.`,
+      application: `Phase 1 - Univariate Analysis: (1) Calculate descriptive statistics for all key variables: mean, median, standard deviation, range, quartiles. (2) Create frequency distributions and histograms to understand variable distributions. (3) Identify outliers using boxplots and z-scores. (4) Check for data quality issues (missing values, impossible values). Phase 2 - Bivariate Analysis: (5) Create correlation matrices to explore relationships between continuous variables. (6) Use cross-tabulations for categorical variables (e.g., team × outcome, strategy type × winner). (7) Generate grouped comparisons (e.g., mean deterrence by team, by domain, by strategy type). Phase 3 - Visualization: (8) Create comprehensive visualizations: scatterplot matrices, grouped boxplots, heatmaps, time series plots. (9) Look for patterns, trends, and anomalies. Phase 4 - Insight Generation: (10) Synthesize findings into key insights and patterns. (11) Formulate specific hypotheses for future confirmatory testing. (12) Identify which statistical tests would be most appropriate for follow-up analyses.`
+      };
+  }, [researchQuestionLeft]);
+
+  // Get statistical test recommendation based on research question 2
+  const getResearchQuestionBasedTestRecommendation2 = useMemo(() => {
+    if (!researchQuestionRight.trim()) return null;
+    
+    const lowerQuestion = researchQuestionRight.toLowerCase();
+    
+    // Analyze research question structure
+    const asksWhich = /\bwhich\b/.test(lowerQuestion);
+    const asksHow = /\bhow\b/.test(lowerQuestion);
+    const asksWhat = /\bwhat\b/.test(lowerQuestion);
+    const asksWhy = /\bwhy\b/.test(lowerQuestion);
+    const asksDoes = /\bdoes\b|\bdo\b/.test(lowerQuestion);
+    const asksAre = /\bare\b|\bis\b/.test(lowerQuestion);
+    
+    const mentionsComparison = /compar|differ|versus|vs\.?|between/.test(lowerQuestion);
+    const mentionsRelationship = /correlat|relationship|associat|pattern|connect/.test(lowerQuestion);
+    const mentionsEffect = /effect|impact|influence|affect|determin/.test(lowerQuestion);
+    const mentionsStrategy = /strateg|approach|method|tactic/.test(lowerQuestion);
+    const mentionsDomain = /domain|dimension/.test(lowerQuestion);
+    const mentionsTiming = /timing|when|early|late|over time|across turns/.test(lowerQuestion);
+    const mentionsTeams = /nato.*russia|russia.*nato|team|both teams/.test(lowerQuestion);
+    
+    // Exploratory questions asking "which" often need multiple comparisons
+    if (asksWhich && mentionsStrategy) {
+      return {
+        name: "Exploratory Analysis: Descriptive Statistics + Chi-Square or ANOVA",
+        justification: `Your research question explores which strategies are most effective, which is inherently exploratory and comparative. This requires examining multiple strategy types and their outcomes. Since research questions are broader than hypotheses, start with descriptive statistics to understand patterns in your data—calculate means, frequencies, and distributions for different strategies. Then, depending on your data structure, use Chi-Square tests to examine associations between categorical strategy types and outcomes (win/loss), or use One-Way ANOVA to compare continuous outcome measures (deterrence scores) across multiple strategy groups. This two-phase approach provides both descriptive insights and inferential statistical support for identifying effective strategies.`,
+        application: `Phase 1 - Descriptive Analysis: (1) Categorize sessions by dominant strategy type (e.g., economy-focused, cyber-focused, balanced). (2) Calculate win rates, average deterrence scores, and other relevant metrics for each strategy category. (3) Create frequency tables and visualizations (bar charts, pie charts) to identify patterns. Phase 2 - Inferential Testing: For categorical outcomes (wins): (4) Use Chi-Square test to determine if certain strategies are associated with higher win rates. (5) Calculate odds ratios to quantify strategy effectiveness. For continuous outcomes (deterrence scores): (6) Use One-Way ANOVA to compare mean deterrence across strategy groups. (7) Conduct post-hoc tests (Tukey HSD) to identify which specific strategies differ significantly. (8) Report effect sizes to quantify practical significance. (9) Create visualizations showing strategy effectiveness with confidence intervals.`
+      };
+    }
+    
+    if ((asksHow || asksWhat) && mentionsRelationship) {
+      return {
+        name: "Correlation Analysis (Pearson/Spearman) + Regression",
+        justification: `Your research question investigates how variables relate or what patterns exist, which calls for correlation and regression analysis. Unlike hypothesis testing with directional predictions, research questions are exploratory—you're discovering relationships rather than confirming them. Start with correlation analysis to examine bivariate relationships between variables (e.g., economic investment and total deterrence). Pearson correlation works for linear relationships with normally distributed continuous variables, while Spearman correlation handles non-linear monotonic relationships and ordinal data. If you find significant correlations and want to understand prediction, follow up with regression analysis to model how predictor variables explain variance in outcomes. This combination provides both the strength of relationships and their predictive power.`,
+        application: `Step 1 - Correlation Analysis: (1) Identify pairs of continuous variables that theoretically might be related based on your research question. (2) Create scatterplots to visualize relationships and check for linearity, outliers, and influential points. (3) Calculate Pearson's r for linear relationships or Spearman's ρ for monotonic relationships. (4) Interpret correlation strength: |r| < 0.3 (weak), 0.3-0.7 (moderate), > 0.7 (strong). (5) Assess statistical significance with p-values, but focus on effect sizes for practical importance. Step 2 - Regression Analysis (optional): (6) If correlations are promising, build regression models with theoretically meaningful predictors. (7) Examine R-squared values to understand variance explained. (8) Report standardized beta coefficients to compare relative importance of predictors. (9) Create visualization showing predicted relationships with confidence bands.`
+      };
+    }
+    
+    if ((asksAre || asksDoes) && mentionsComparison && mentionsTeams) {
+      return {
+        name: "Independent Samples t-test or Mann-Whitney U Test",
+        justification: `Your research question compares two groups (NATO vs. Russia) on outcome measures, making this a classic two-group comparison scenario. Since research questions are exploratory, you're investigating whether differences exist rather than confirming a predicted direction. Use an independent samples t-test when comparing mean deterrence scores or other continuous outcomes between the two teams. The t-test assumes approximately normal distributions and similar variances between groups—check these with visual diagnostics (histograms, Q-Q plots) and Levene's test. If assumptions are violated or you have small sample sizes, the non-parametric Mann-Whitney U test provides a robust alternative that compares distributions without normality assumptions. Both tests will reveal whether team differences are statistically and practically significant.`,
+        application: `For parametric t-test: (1) Select your continuous outcome variable (e.g., total deterrence, economic deterrence). (2) Split data by team (NATO vs. Russia). (3) Verify assumptions: check normality with Shapiro-Wilk test or Q-Q plots; assess homogeneity of variance with Levene's test. (4) If assumptions hold (or n≥30 per group), run independent samples t-test. (5) Report means, standard deviations, t-statistic, degrees of freedom, p-value, and 95% confidence interval for the difference. (6) Calculate and report Cohen's d effect size: small (0.2), medium (0.5), large (0.8). For non-parametric Mann-Whitney: (7) If assumptions fail, use Mann-Whitney U test to compare distributions. (8) Report medians, U-statistic, and p-value. (9) Visualize with side-by-side boxplots showing group distributions, medians, and outliers.`
+      };
+    }
+    
+    if ((asksHow || asksWhat) && mentionsDomain) {
+      return {
+        name: "One-Way ANOVA or Kruskal-Wallis Test",
+        justification: `Your research question examines patterns or differences across multiple domains (Joint, Economy, Cognitive, Space, Cyber), which requires comparing more than two groups simultaneously. One-Way ANOVA is the appropriate test for this scenario, extending t-test logic to multiple groups while controlling Type I error. ANOVA tests whether at least one domain shows significantly different performance from the others. Check assumptions: normality within each domain group (Shapiro-Wilk test), homogeneity of variance across domains (Levene's test), and independence of observations. If these assumptions are violated, especially with small samples or skewed data, use the Kruskal-Wallis test—a non-parametric alternative that compares ranks across groups. Follow significant results with post-hoc comparisons to identify which specific domains differ.`,
+        application: `For parametric ANOVA: (1) Select one continuous outcome measure (e.g., average deterrence in each domain). (2) Organize data with domain as the grouping factor (5 levels: joint, economy, cognitive, space, cyber). (3) Check assumptions: normality in each domain, equal variances, independence. (4) Run One-Way ANOVA and examine F-statistic and p-value. (5) If p<0.05, at least one domain differs—proceed to post-hoc tests. (6) Use Tukey HSD or Bonferroni corrections to identify specific domain pairs that differ significantly. (7) Report F-value, degrees of freedom, p-value, and partial eta-squared effect size. For non-parametric Kruskal-Wallis: (8) If assumptions fail, use Kruskal-Wallis test on ranks. (9) Follow up with Dunn's test for pairwise comparisons. (10) Visualize with grouped boxplots or bar charts with error bars showing domain means and confidence intervals.`
+      };
+    }
+    
+    if (mentionsTiming || /temporal|longitudinal|progression|across\s+turn/.test(lowerQuestion)) {
+      return {
+        name: "Repeated Measures ANOVA or Mixed-Effects Models",
+        justification: `Your research question investigates changes or patterns over time (across turns), which requires within-subjects analysis. Repeated Measures ANOVA is appropriate when the same sessions or teams are measured at multiple time points, accounting for the correlation between repeated measurements from the same entity. This design is more powerful than between-subjects comparisons because it controls for individual differences, isolating the effect of time. Check the sphericity assumption (equal variances of differences between time points) using Mauchly's test, and apply Greenhouse-Geisser corrections if violated. For more complex temporal patterns or unbalanced data, consider mixed-effects models that can handle missing data and model both fixed time effects and random subject effects.`,
+        application: `For Repeated Measures ANOVA: (1) Structure your data with sessions/teams as subjects and turns as repeated measurements. (2) Ensure balanced design (same time points for all subjects). (3) Test sphericity with Mauchly's test; if violated (p<0.05), apply Greenhouse-Geisser or Huynh-Feldt corrections. (4) Run the analysis examining the within-subjects effect of time/turn. (5) If significant, conduct pairwise comparisons with Bonferroni adjustments to identify which turns differ. (6) Report F-value, corrected degrees of freedom, p-value, and partial eta-squared. (7) Create line graphs showing mean outcome across turns with error bars. For Mixed-Effects Models: (8) Specify time as a fixed effect and sessions/teams as random effects. (9) Allow for missing data and unbalanced designs. (10) Examine fixed effect coefficients for time trends. (11) Visualize individual trajectories alongside population-average trends.`
+      };
+    }
+    
+    if (mentionsEffect || /predict|determin|influence/.test(lowerQuestion)) {
+      return {
+        name: "Multiple Regression or Path Analysis",
+        justification: `Your research question explores how variables influence or determine outcomes, suggesting a need for predictive modeling. Multiple regression allows you to examine how one or more predictor variables explain variance in an outcome variable. Unlike simple correlation, regression provides directionality and quantifies the unique contribution of each predictor while controlling for others. Check regression assumptions: linearity (scatterplots), independence of errors, homoscedasticity (constant variance), normality of residuals (Q-Q plots), and absence of multicollinearity (VIF < 10). For more complex causal pathways, consider path analysis or structural equation modeling to test mediation and indirect effects. Ensure adequate sample size: at least 10-15 observations per predictor variable for reliable estimates.`,
+        application: `Step 1 - Model Building: (1) Identify your dependent variable (outcome to explain) and independent variables (predictors). (2) Ensure minimum 10-15 observations per predictor. (3) Check for high correlations among predictors (multicollinearity); consider removing redundant variables. Step 2 - Assumption Checking: (4) Create scatterplots to verify linear relationships between predictors and outcome. (5) Run regression and examine residual plots for homoscedasticity and normality. (6) Calculate VIF values to check multicollinearity (VIF > 10 is problematic). Step 3 - Model Interpretation: (7) Examine R-squared to assess total variance explained (adjusted R-squared for multiple predictors). (8) Evaluate each predictor's beta coefficient (magnitude), direction (sign), and significance (p-value). (9) Report standardized betas to compare relative importance of predictors. (10) Check Cook's distance to identify influential outliers. (11) Visualize with partial regression plots showing each predictor's unique contribution.`
+      };
+    }
+    
+    // Default exploratory recommendation
+    return {
+      name: "Exploratory Data Analysis + Descriptive Statistics",
+      justification: `Your research question is exploratory in nature, seeking to understand patterns and relationships in your data. The most appropriate starting point is comprehensive Exploratory Data Analysis (EDA) combined with robust descriptive statistics. EDA helps you understand data distributions, identify outliers, discover patterns, and generate insights that can inform future hypothesis-driven research. Begin with univariate analyses (means, medians, standard deviations, ranges) for each variable, then move to bivariate analyses (cross-tabulations, correlation matrices, grouped comparisons). Visualizations are crucial: use histograms, boxplots, scatterplots, and heatmaps to reveal patterns that numbers alone might miss. This exploratory foundation will help you identify promising relationships to test with more targeted statistical methods.`,
+      application: `Phase 1 - Univariate Analysis: (1) Calculate descriptive statistics for all key variables: mean, median, standard deviation, range, quartiles. (2) Create frequency distributions and histograms to understand variable distributions. (3) Identify outliers using boxplots and z-scores. (4) Check for data quality issues (missing values, impossible values). Phase 2 - Bivariate Analysis: (5) Create correlation matrices to explore relationships between continuous variables. (6) Use cross-tabulations for categorical variables (e.g., team × outcome, strategy type × winner). (7) Generate grouped comparisons (e.g., mean deterrence by team, by domain, by strategy type). Phase 3 - Visualization: (8) Create comprehensive visualizations: scatterplot matrices, grouped boxplots, heatmaps, time series plots. (9) Look for patterns, trends, and anomalies. Phase 4 - Insight Generation: (10) Synthesize findings into key insights and patterns. (11) Formulate specific hypotheses for future confirmatory testing. (12) Identify which statistical tests would be most appropriate for follow-up analyses.`
+      };
+  }, [researchQuestionRight]);
+
   // Calculate card purchase frequency
   const cardFrequencyData = useMemo(() => {
     if (!sessions || selectedCards.length === 0 || selectedSessions.length === 0) {
@@ -1245,6 +1403,34 @@ export default function Research() {
                     data-testid="textarea-research-question-left"
                   />
                 </div>
+
+                {researchQuestionLeft.trim() && getResearchQuestionBasedTestRecommendation1 && (
+                  <div className="space-y-3 pt-4 border-t" data-testid="container-statistical-test-rq1">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-primary" />
+                      <h3 className="text-sm font-semibold">Recommended Statistical Approach</h3>
+                    </div>
+                    
+                    <div className="space-y-4 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                      <div>
+                        <Badge variant="default" className="mb-2" data-testid="badge-recommended-test-name-rq1">
+                          {getResearchQuestionBasedTestRecommendation1.name}
+                        </Badge>
+                        <h4 className="text-xs font-semibold text-muted-foreground mb-2">Why This Approach?</h4>
+                        <p className="text-sm leading-relaxed" data-testid="text-test-justification-rq1">
+                          {getResearchQuestionBasedTestRecommendation1.justification}
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <h4 className="text-xs font-semibold text-muted-foreground mb-2">How to Apply</h4>
+                        <p className="text-sm leading-relaxed" data-testid="text-test-application-rq1">
+                          {getResearchQuestionBasedTestRecommendation1.application}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -1938,6 +2124,34 @@ export default function Research() {
                     data-testid="textarea-research-question-right"
                   />
                 </div>
+
+                {researchQuestionRight.trim() && getResearchQuestionBasedTestRecommendation2 && (
+                  <div className="space-y-3 pt-4 border-t" data-testid="container-statistical-test-rq2">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-primary" />
+                      <h3 className="text-sm font-semibold">Recommended Statistical Approach</h3>
+                    </div>
+                    
+                    <div className="space-y-4 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                      <div>
+                        <Badge variant="default" className="mb-2" data-testid="badge-recommended-test-name-rq2">
+                          {getResearchQuestionBasedTestRecommendation2.name}
+                        </Badge>
+                        <h4 className="text-xs font-semibold text-muted-foreground mb-2">Why This Approach?</h4>
+                        <p className="text-sm leading-relaxed" data-testid="text-test-justification-rq2">
+                          {getResearchQuestionBasedTestRecommendation2.justification}
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <h4 className="text-xs font-semibold text-muted-foreground mb-2">How to Apply</h4>
+                        <p className="text-sm leading-relaxed" data-testid="text-test-application-rq2">
+                          {getResearchQuestionBasedTestRecommendation2.application}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
