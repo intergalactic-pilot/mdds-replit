@@ -39,7 +39,7 @@ The frontend follows a component-based architecture with clear separation of con
     - 10 predefined research question templates (Card Strategy Effectiveness, Domain Investment Patterns, Team Performance Differences, Budget Allocation Efficiency, Permanent vs Temporary Cards, Early vs Late Investment, Defensive-Offensive Balance, Comeback Possibilities, Domain Specialization, Turn Duration Impact)
     - Dropdown selector for quick template selection
     - Free-form textarea for custom research questions
-    - Two-way state synchronization between left and right column sections
+    - Independent state management for left and right columns (two separate research questions)
     - Auto-clear dropdown when manually editing research question
     - Guides exploratory analysis with structured inquiry frameworks
   - **Hypothesis Development**: Interactive hypothesis analyzer that intelligently recommends relevant variables based on natural language input. Uses keyword matching and pattern detection to identify team mentions (NATO/Russia), domain references (economy, cyber, space, cognitive, joint), and comparison terms (correlation, impact, versus). Features include:

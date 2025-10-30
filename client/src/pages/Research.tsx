@@ -58,9 +58,13 @@ export default function Research() {
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
   const [cardTeamFilter, setCardTeamFilter] = useState<string>("both");
   
-  // Research Question Development
-  const [researchQuestion, setResearchQuestion] = useState<string>("");
-  const [selectedPredefinedQuestion, setSelectedPredefinedQuestion] = useState<string>("");
+  // Research Question Development (Left Column)
+  const [researchQuestionLeft, setResearchQuestionLeft] = useState<string>("");
+  const [selectedPredefinedQuestionLeft, setSelectedPredefinedQuestionLeft] = useState<string>("");
+  
+  // Research Question Development (Right Column)
+  const [researchQuestionRight, setResearchQuestionRight] = useState<string>("");
+  const [selectedPredefinedQuestionRight, setSelectedPredefinedQuestionRight] = useState<string>("");
   
   // Hypothesis Development
   const [hypothesis, setHypothesis] = useState<string>("");
@@ -1025,12 +1029,12 @@ export default function Research() {
                 <div className="space-y-2">
                   <Label htmlFor="predefined-question-left">Quick Select: Predefined Questions</Label>
                   <Select 
-                    value={selectedPredefinedQuestion} 
+                    value={selectedPredefinedQuestionLeft} 
                     onValueChange={(value) => {
-                      setSelectedPredefinedQuestion(value);
+                      setSelectedPredefinedQuestionLeft(value);
                       const selected = predefinedQuestions.find(q => q.id === value);
                       if (selected) {
-                        setResearchQuestion(selected.text);
+                        setResearchQuestionLeft(selected.text);
                       }
                     }}
                   >
@@ -1051,11 +1055,11 @@ export default function Research() {
                   <Label htmlFor="research-question-left">Your Research Question</Label>
                   <textarea
                     id="research-question-left"
-                    value={researchQuestion}
+                    value={researchQuestionLeft}
                     onChange={(e) => {
-                      setResearchQuestion(e.target.value);
-                      if (selectedPredefinedQuestion) {
-                        setSelectedPredefinedQuestion("");
+                      setResearchQuestionLeft(e.target.value);
+                      if (selectedPredefinedQuestionLeft) {
+                        setSelectedPredefinedQuestionLeft("");
                       }
                     }}
                     placeholder="Example: How does early investment in economy domain correlate with final deterrence scores?"
@@ -1552,12 +1556,12 @@ export default function Research() {
                 <div className="space-y-2">
                   <Label htmlFor="predefined-question-right">Quick Select: Predefined Questions</Label>
                   <Select 
-                    value={selectedPredefinedQuestion} 
+                    value={selectedPredefinedQuestionRight} 
                     onValueChange={(value) => {
-                      setSelectedPredefinedQuestion(value);
+                      setSelectedPredefinedQuestionRight(value);
                       const selected = predefinedQuestions.find(q => q.id === value);
                       if (selected) {
-                        setResearchQuestion(selected.text);
+                        setResearchQuestionRight(selected.text);
                       }
                     }}
                   >
@@ -1578,11 +1582,11 @@ export default function Research() {
                   <Label htmlFor="research-question-right">Your Research Question</Label>
                   <textarea
                     id="research-question-right"
-                    value={researchQuestion}
+                    value={researchQuestionRight}
                     onChange={(e) => {
-                      setResearchQuestion(e.target.value);
-                      if (selectedPredefinedQuestion) {
-                        setSelectedPredefinedQuestion("");
+                      setResearchQuestionRight(e.target.value);
+                      if (selectedPredefinedQuestionRight) {
+                        setSelectedPredefinedQuestionRight("");
                       }
                     }}
                     placeholder="Example: How does early investment in economy domain correlate with final deterrence scores?"
