@@ -1,0 +1,468 @@
+# MDDS Plesk Deployment - Windows Commands Reference
+
+Bu dosya, Plesk sunucusunda kullanılacak tüm deployment komutlarının hızlı referansidir.
+
+---
+
+## 🚀 HIZLI BAŞLANGAÇ
+
+### Tam Deployment (Önerilen)
+```cmd
+cd D:\httpdocs\yourdomain.com\httpdocs
+npm install
+npm run build
+taskkill /F /IM node.exe
+iisreset /restart
+```
+
+### Tek Komut ile Deployment
+```cmd
+cd D:\httpdocs\yourdomain.com\httpdocs && npm run plesk-deploy
+```
+
+### Interactive Menu ile
+```cmd
+D:\httpdocs\yourdomain.com\httpdocs\plesk-deploy.bat
+```
+
+### PowerShell ile (Daha Güçlü)
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+.\plesk-deploy.ps1 -Scenario "full"
+```
+
+---
+
+## 📦 NPM COMMANDS
+
+### Development
+```cmd
+npm run dev                    # Local geliştirme (Hot reload)
+```
+
+### Build & Deployment
+```cmd
+npm run build                  # TypeScript'i derle, frontend build et
+npm run plesk-build            # npm install + build (tam deployment)
+npm run plesk-build-prod       # npm ci + build (production)
+npm run plesk-start            # Production'da başlat
+npm run plesk-deploy           # npm install + build + start
+```
+
+### Database
+```cmd
+npm run db:push                # Database schema'sını push et
+```
+
+### TypeScript Check
+```cmd
+npm run check                  # TypeScript syntax kontrol
+```
+
+---
+
+## ⚙️ IIS COMMANDS
+
+### IIS Restart
+```cmd
+iisreset /restart              # IIS'i tamamen yeniden başlat
+iisreset /stop                 # IIS'i durdur
+iisreset /start                # IIS'i başlat
+iisreset /status               # IIS durumu kontrol et
+```
+
+### Application Pool Yönetimi
+```cmd
+REM Application pool'ları listele
+%windir%\system32\inetsrv\appcmd list apppool
+
+REM Belirli pool'u recycle et (yeniden başlat)
+%windir%\system32\inetsrv\appcmd recycle apppool "yourdomain.com"
+
+REM Pool'u başlat
+%windir%\system32\inetsrv\appcmd start apppool "yourdomain.com"
+
+REM Pool'u durdur
+%windir%\system32\inetsrv\appcmd stop apppool "yourdomain.com"
+```
+
+### Website Yönetimi
+```cmd
+REM Tüm websites'ı listele
+%windir%\system32\inetsrv\appcmd list site
+
+REM Belirli website'ı başlat
+%windir%\system32\inetsrv\appcmd start site "yourdomain.com"
+
+REM Belirli website'ı durdur
+%windir%\system32\inetsrv\appcmd stop site "yourdomain.com"
+```
+
+---
+
+## 🔄 NODE.JS PROCESS MANAGEMENT
+
+### Process Kontrol
+```cmd
+REM Tüm Node.js processlerini listele
+tasklist | findstr /I "node"
+
+REM Node.js processini öldür (force)
+taskkill /F /IM node.exe
+
+REM Belirli port'u dinleyen process'i öldür (PowerShell)
+Get-Process node | Stop-Process -Force
+```
+
+### Port Kontrol
+```cmd
+REM 3000 portunu dinleyen process'i bul
+netstat -ano | findstr :3000
+
+REM Belirli port'u dinleyen process'i öldür
+taskkill /PID 1234 /F
+```
+
+---
+
+## 📊 MONITORING & LOGGING
+
+### Node.js Process İstatistiği
+```cmd
+REM Node.js process'in kullandığı memory ve CPU
+wmic process where name="node.exe" get ProcessId, HandleCount, PageFileUsage
+
+REM Real-time monitoring (PowerShell)
+Get-Process node | Format-Table -AutoSize -Refresh
+```
+
+### IIS Logs
+```cmd
+REM Log dosya konumu
+C:\inetpub\logs\LogFiles\
+
+REM En son log'u aç
+explorer C:\inetpub\logs\LogFiles\W3SVC1\
+```
+
+### iisnode Logs
+```cmd
+REM iisnode log konumu
+explorer %SystemDrive%\iisnode\
+
+REM Son hataları kontrol et
+dir %SystemDrive%\iisnode\*.txt /T:W /O:-D
+```
+
+### Application Logs
+```cmd
+REM Deployment log'u
+type D:\httpdocs\yourdomain.com\httpdocs\deployment.log
+```
+
+---
+
+## 🛠️ TROUBLESHOOTING
+
+### 1. Node.js Processini Yeniden Başlat
+```cmd
+taskkill /F /IM node.exe /T
+timeout /T 3 /NOBREAK
+iisreset /restart
+```
+
+### 2. NPM Dependencies Sorunları
+```cmd
+cd D:\httpdocs\yourdomain.com\httpdocs
+npm cache clean --force
+rmdir node_modules /s /q
+del package-lock.json
+npm install
+npm run build
+iisreset /restart
+```
+
+### 3. IIS Cache Temizle
+```cmd
+REM IIS cache'i temizle
+%windir%\system32\inetsrv\appcmd recycle apppool "yourdomain.com"
+
+REM Tüm AppPool'ları recycle et
+%windir%\system32\inetsrv\appcmd list apppool | findstr /v "DefaultAppPool" | 
+  for /f "tokens=2 delims= " %A in ('more') do @%windir%\system32\inetsrv\appcmd recycle apppool "%A"
+```
+
+### 4. Disk Space Kontrol
+```cmd
+REM Disk kullanımını kontrol et
+dir D:\ /s
+wmic logicaldisk get name, size, freespace
+
+REM PowerShell'de
+Get-Volume | Select-Object DriveLetter, Size, SizeRemaining | Format-Table
+```
+
+### 5. Port Conflict Kontrol
+```cmd
+netstat -ano | findstr :3000
+netstat -ano | findstr :5050
+```
+
+---
+
+## 🔐 ENVIRONMENT & CONFIG
+
+### Environment Variables Kontrol
+```cmd
+REM Tüm environment variables'ı listele
+set
+
+REM Belirli variable'ı kontrol et
+echo %NODE_ENV%
+echo %FRONTEND_URL%
+echo %DATABASE_URL%
+```
+
+### .env Dosyasını Kontrol Et
+```cmd
+REM Dosyanın var olup olmadığını kontrol et
+if exist D:\httpdocs\yourdomain.com\httpdocs\.env (
+  echo .env file exists
+) else (
+  echo .env file NOT found
+)
+
+REM İçeriğini görüntüle
+type D:\httpdocs\yourdomain.com\httpdocs\.env
+```
+
+---
+
+## 📝 BATCH SCRIPT KULLANUMU
+
+### plesk-deploy.bat Çalıştırma
+
+```cmd
+REM Menü modunda (interaktif)
+D:\httpdocs\yourdomain.com\httpdocs\plesk-deploy.bat
+
+REM Seçim yapın:
+REM 1 = Tam Deployment
+REM 2 = Hızlı Build
+REM 3 = Production Build
+REM 4 = Node.js Troubleshoot
+REM 5 = NPM Troubleshoot
+REM 6 = Logs Görüntüle
+REM 7 = Disk Space Kontrol
+REM 8 = Node Process Monitoring
+REM 9 = IIS Status
+REM 0 = Çık
+```
+
+---
+
+## 🔵 POWERSHELL SCRIPT KULLANUMU
+
+### plesk-deploy.ps1 Çalıştırma
+
+#### İlk Kurulum (Tek Seferlik)
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+#### Tam Deployment
+```powershell
+.\plesk-deploy.ps1 -Scenario "full" -ProjectPath "D:\httpdocs\yourdomain.com\httpdocs"
+```
+
+#### Hızlı Build (Development changes)
+```powershell
+.\plesk-deploy.ps1 -Scenario "quick"
+```
+
+#### Production Build
+```powershell
+.\plesk-deploy.ps1 -Scenario "production"
+```
+
+#### Troubleshooting
+```powershell
+.\plesk-deploy.ps1 -Scenario "troubleshoot-node"
+.\plesk-deploy.ps1 -Scenario "troubleshoot-npm"
+```
+
+#### Logs Görüntüle
+```powershell
+.\plesk-deploy.ps1 -Scenario "logs"
+```
+
+#### Disk Space Kontrol
+```powershell
+.\plesk-deploy.ps1 -Scenario "disk"
+```
+
+#### Monitoring
+```powershell
+.\plesk-deploy.ps1 -Scenario "monitor"
+```
+
+---
+
+## 📋 PLESK "Additional Deployment Actions" Ayarı
+
+Eğer GitHub Push'ta otomatik deployment yapmak istiyorsanız, Plesk'te:
+
+### Seçenek 1: PowerShell ile (Önerilen)
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File "D:\httpdocs\yourdomain.com\httpdocs\plesk-deploy.ps1" -Scenario "full"
+```
+
+### Seçenek 2: Batch Script ile
+```cmd
+call "D:\httpdocs\yourdomain.com\httpdocs\plesk-deploy.bat" 1
+```
+
+### Seçenek 3: npm Script ile
+```cmd
+cd D:\httpdocs\yourdomain.com\httpdocs && call npm run plesk-deploy
+```
+
+### Seçenek 4: Manuel Komutlar
+```cmd
+cd D:\httpdocs\yourdomain.com\httpdocs
+call npm install
+call npm run build
+taskkill /F /IM node.exe /T 2>nul
+call iisreset /restart
+```
+
+---
+
+## ⏰ OTOMATIK DEPLOYMENT SCHEDULE
+
+### Windows Task Scheduler'da Kurulum
+
+1. **Task Scheduler'ı aç:**
+   ```cmd
+   taskschd.msc
+   ```
+
+2. **New Task oluştur:**
+   - Name: "MDDS Plesk Deployment"
+   - Run with highest privileges
+   - Run whether user is logged in or not
+
+3. **Trigger ekle:**
+   - Schedule: Daily/Weekly
+   - Time: 02:00 AM (off-peak)
+
+4. **Action ekle:**
+   ```
+   Program: C:\Windows\System32\cmd.exe
+   Arguments: /c "cd D:\httpdocs\yourdomain.com\httpdocs && npm run plesk-build"
+   Start in: D:\httpdocs\yourdomain.com\httpdocs
+   ```
+
+5. **Conditions:**
+   - Only run if network available
+   - Start only if idle
+
+---
+
+## 🔄 GIT INTEGRATION
+
+### Manual Git Pull + Build
+```cmd
+cd D:\httpdocs\yourdomain.com\httpdocs
+git pull origin main
+npm run plesk-build
+taskkill /F /IM node.exe /T
+iisreset /restart
+```
+
+### Git Pull Sonrası Build (PowerShell)
+```powershell
+$ProjectPath = "D:\httpdocs\yourdomain.com\httpdocs"
+Set-Location $ProjectPath
+git pull origin main
+& .\plesk-deploy.ps1 -Scenario "production"
+```
+
+---
+
+## 📞 QUICK REFERENCE TABLE
+
+| Görev | Komut |
+|-------|-------|
+| Full Deployment | `npm run plesk-deploy` |
+| Build Only | `npm run build` |
+| Node Process Öldür | `taskkill /F /IM node.exe` |
+| IIS Restart | `iisreset /restart` |
+| NPM Cache Temizle | `npm cache clean --force` |
+| node_modules Sil | `rmdir node_modules /s /q` |
+| Dependencies Yükle | `npm install` |
+| Logs Görüntüle | `type deployment.log` |
+| Process Listele | `tasklist \| findstr node` |
+| Port Kontrol | `netstat -ano \| findstr :3000` |
+| Disk Space | `wmic logicaldisk get name, freespace` |
+| AppPool Recycle | `%windir%\system32\inetsrv\appcmd recycle apppool "yourdomain.com"` |
+
+---
+
+## 💡 TIPS & BEST PRACTICES
+
+1. **Build öncesi environment check edin:**
+   ```cmd
+   npm run check
+   ```
+
+2. **Always use git before deploying:**
+   ```cmd
+   git status
+   git pull origin main
+   ```
+
+3. **Create backups before major changes:**
+   ```cmd
+   xcopy dist dist.backup /E /I /Y
+   ```
+
+4. **Monitor logs during deployment:**
+   - PowerShell'de: `Get-Content deployment.log -Tail 50 -Wait`
+
+5. **Test locally before pushing:**
+   ```cmd
+   npm run dev
+   ```
+
+6. **Use production mode for testing:**
+   ```cmd
+   cross-env NODE_ENV=production npm run build
+   ```
+
+---
+
+## 🆘 EMERGENCY PROCEDURES
+
+### Tam Rollback
+```cmd
+cd D:\httpdocs\yourdomain.com\httpdocs
+git reset --hard HEAD~1
+npm run plesk-build
+taskkill /F /IM node.exe /T
+iisreset /restart
+```
+
+### All Node.js Processes Öldür
+```cmd
+taskkill /F /IM node.exe /T /FI "MEMUSAGE gt 50000"
+```
+
+### IIS tamamen reset et
+```cmd
+iisreset /restart /force
+```
+
+---
+
+Daha fazla bilgi için `PLESK_DEPLOYMENT.md` dosyasına bakın.
