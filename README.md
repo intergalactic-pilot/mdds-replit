@@ -57,6 +57,43 @@ An interactive web application for strategic planning and analysis across multip
 
 📚 **See [DEPLOYMENT.md](DEPLOYMENT.md) for complete deployment instructions**
 
+### Subdomain Configuration
+
+For deployments where frontend and backend run on different subdomains, follow this setup:
+
+#### Frontend Configuration (.env)
+```
+# Set your backend API URL (different subdomain)
+VITE_API_URL=https://api.example.com
+```
+
+#### Backend Configuration (.env)
+```
+# Allow requests from your frontend subdomain(s)
+FRONTEND_URL=https://app.example.com
+
+# For multiple frontend origins:
+FRONTEND_URL=https://app.example.com,https://www.app.example.com
+```
+
+The CORS middleware will automatically:
+- Allow credentials (cookies) across subdomains
+- Accept specified HTTP methods (GET, POST, PUT, DELETE, PATCH)
+- Allow necessary headers (Content-Type, Authorization)
+- Cache preflight requests for 24 hours
+
+#### Local Development Setup
+```
+Frontend: http://localhost:5173
+Backend: http://localhost:5050
+
+# .env file
+VITE_API_URL=http://localhost:5050
+FRONTEND_URL=http://localhost:5173
+```
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for complete deployment instructions with examples for different hosting providers.
+
 ### Quick Deployment Summary
 
 #### Windows Server

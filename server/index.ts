@@ -1,8 +1,42 @@
 import express, { type Request, Response, NextFunction } from "express";
+import cors from "cors";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
+
+// CORS Configuration - Allow requests from specified frontend domain
+const getAllowedOrigins = (): cors.CorsOptions['origin'] => {
+  const frontendUrl = process.env.FRONTEND_URL;
+  
+  if (!frontendUrl) {
+    // If no FRONTEND_URL is set, allow all origins (development mode)
+    return true;
+  }
+  
+  // Parse allowed origins from environment variable (comma-separated)
+  const allowedOrigins = frontendUrl
+    .split(',')
+    .map((origin) => origin.trim());
+  
+  return (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS not allowed for origin: ${origin}`));
+    }
+  };
+};
+
+const corsOptions = {
+  origin: getAllowedOrigins(),
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  maxAge: 86400, // 24 hours
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
