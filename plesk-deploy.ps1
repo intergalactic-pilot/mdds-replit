@@ -31,29 +31,10 @@ $WarningPreference = "Continue"
 $LogFile = Join-Path $ProjectPath "deployment.log"
 $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 
-# Renklendirme
-function Write-Success {
-    param([string]$Message)
-    Write-Host "✓ $Message" -ForegroundColor Green
-    Add-Content -Path $LogFile -Value "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] SUCCESS: $Message"
-}
-
-function Write-Error {
-    param([string]$Message)
-    Write-Host "✗ $Message" -ForegroundColor Red
-    Add-Content -Path $LogFile -Value "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] ERROR: $Message"
-}
-
-function Write-Info {
-    param([string]$Message)
-    Write-Host "ℹ $Message" -ForegroundColor Cyan
-    Add-Content -Path $LogFile -Value "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] INFO: $Message"
-}
-
-function Write-Warning {
-    param([string]$Message)
-    Write-Host "⚠ $Message" -ForegroundColor Yellow
-    Add-Content -Path $LogFile -Value "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] WARNING: $Message"
+# Loglama için helper fonksiyon
+function Write-Log {
+    param([string]$Level, [string]$Message)
+    Add-Content -Path $LogFile -Value "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] ${Level}: $Message"
 }
 
 # ============================================================================
@@ -61,46 +42,56 @@ function Write-Warning {
 # ============================================================================
 
 function Test-ProjectDirectory {
-    Write-Info "Project directory kontrol ediliyor: $ProjectPath"
+    Write-Host "ℹ Project directory kontrol ediliyor: $ProjectPath" -ForegroundColor Cyan
+    Write-Log "INFO" "Project directory kontrol ediliyor: $ProjectPath"
     
     if (-not (Test-Path $ProjectPath)) {
-        Write-Error "Project directory bulunamadı: $ProjectPath"
+        Write-Host "✗ Project directory bulunamadı: $ProjectPath" -ForegroundColor Red
+        Write-Log "ERROR" "Project directory bulunamadı: $ProjectPath"
         exit 1
     }
     
-    Write-Success "Project directory bulundu"
+    Write-Host "✓ Project directory bulundu" -ForegroundColor Green
+    Write-Log "SUCCESS" "Project directory bulundu"
     return $true
 }
 
 function Stop-NodeProcesses {
-    Write-Info "Node.js processler sonlandırılıyor..."
+    Write-Host "ℹ Node.js processler sonlandırılıyor..." -ForegroundColor Cyan
+    Write-Log "INFO" "Node.js processler sonlandırılıyor..."
     
     try {
         $nodeProcesses = Get-Process -Name "node" -ErrorAction SilentlyContinue
         
         if ($nodeProcesses) {
             $nodeProcesses | Stop-Process -Force -ErrorAction SilentlyContinue
-            Write-Success "Node.js processler sonlandırıldı"
+            Write-Host "✓ Node.js processler sonlandırıldı" -ForegroundColor Green
+            Write-Log "SUCCESS" "Node.js processler sonlandırıldı"
             Start-Sleep -Seconds 2
         } else {
-            Write-Info "Çalışan Node.js process bulunamadı"
+            Write-Host "ℹ Çalışan Node.js process bulunamadı" -ForegroundColor Cyan
+            Write-Log "INFO" "Çalışan Node.js process bulunamadı"
         }
     }
     catch {
-        Write-Warning "Node.js process sonlandırılırken hata: $_"
+        Write-Host "⚠ Node.js process sonlandırılırken hata: $_" -ForegroundColor Yellow
+        Write-Log "WARNING" "Node.js process sonlandırılırken hata: $_"
     }
 }
 
 function Restart-IIS {
-    Write-Info "IIS yeniden başlatılıyor..."
+    Write-Host "ℹ IIS yeniden başlatılıyor..." -ForegroundColor Cyan
+    Write-Log "INFO" "IIS yeniden başlatılıyor..."
     
     try {
         & "C:\Windows\System32\inetsrv\iisreset.exe" /restart | Out-Null
-        Write-Success "IIS başarıyla yeniden başlatıldı"
+        Write-Host "✓ IIS başarıyla yeniden başlatıldı" -ForegroundColor Green
+        Write-Log "SUCCESS" "IIS başarıyla yeniden başlatıldı"
         Start-Sleep -Seconds 5
     }
     catch {
-        Write-Error "IIS yeniden başlatılırken hata: $_"
+        Write-Host "✗ IIS yeniden başlatılırken hata: $_" -ForegroundColor Red
+        Write-Log "ERROR" "IIS yeniden başlatılırken hata: $_"
         exit 1
     }
 }
@@ -108,7 +99,8 @@ function Restart-IIS {
 function Install-Dependencies {
     param([bool]$ProductionOnly = $false)
     
-    Write-Info "npm dependencies yükleniyor..."
+    Write-Host "ℹ npm dependencies yükleniyor..." -ForegroundColor Cyan
+    Write-Log "INFO" "npm dependencies yükleniyor..."
     
     try {
         Set-Location $ProjectPath
@@ -120,122 +112,142 @@ function Install-Dependencies {
         }
         
         if ($LASTEXITCODE -eq 0) {
-            Write-Success "Dependencies başarıyla yüklendi"
+            Write-Host "✓ Dependencies başarıyla yüklendi" -ForegroundColor Green
+            Write-Log "SUCCESS" "Dependencies başarıyla yüklendi"
         } else {
-            Write-Error "Dependencies yükleme başarısız"
+            Write-Host "✗ Dependencies yükleme başarısız" -ForegroundColor Red
+            Write-Log "ERROR" "Dependencies yükleme başarısız"
             exit 1
         }
     }
     catch {
-        Write-Error "Dependencies yükleme sırasında hata: $_"
+        Write-Host "✗ Dependencies yükleme sırasında hata: $_" -ForegroundColor Red
+        Write-Log "ERROR" "Dependencies yükleme sırasında hata: $_"
         exit 1
     }
 }
 
 function Build-Application {
-    Write-Info "Uygulama build'leniyor..."
+    Write-Host "ℹ Uygulama build'leniyor..." -ForegroundColor Cyan
+    Write-Log "INFO" "Uygulama build'leniyor..."
     
     try {
         Set-Location $ProjectPath
         & npm run build
         
         if ($LASTEXITCODE -eq 0) {
-            Write-Success "Uygulama başarıyla build edildi"
+            Write-Host "✓ Uygulama başarıyla build edildi" -ForegroundColor Green
+            Write-Log "SUCCESS" "Uygulama başarıyla build edildi"
         } else {
-            Write-Error "Build işlemi başarısız"
+            Write-Host "✗ Build işlemi başarısız" -ForegroundColor Red
+            Write-Log "ERROR" "Build işlemi başarısız"
             exit 1
         }
     }
     catch {
-        Write-Error "Build sırasında hata: $_"
+        Write-Host "✗ Build sırasında hata: $_" -ForegroundColor Red
+        Write-Log "ERROR" "Build sırasında hata: $_"
         exit 1
     }
 }
 
 function Test-StartupFile {
-    Write-Info "Startup file kontrol ediliyor: $StartupFile"
+    Write-Host "ℹ Startup file kontrol ediliyor: $StartupFile" -ForegroundColor Cyan
+    Write-Log "INFO" "Startup file kontrol ediliyor: $StartupFile"
     
     $startupPath = Join-Path $ProjectPath $StartupFile
     
     if (-not (Test-Path $startupPath)) {
-        Write-Error "Startup file bulunamadı: $startupPath"
+        Write-Host "✗ Startup file bulunamadı: $startupPath" -ForegroundColor Red
+        Write-Log "ERROR" "Startup file bulunamadı: $startupPath"
         exit 1
     }
     
-    Write-Success "Startup file doğrulandı"
+    Write-Host "✓ Startup file doğrulandı" -ForegroundColor Green
+    Write-Log "SUCCESS" "Startup file doğrulandı"
 }
 
 function Test-EnvironmentVariables {
-    Write-Info "Environment variables kontrol ediliyor..."
+    Write-Host "ℹ Environment variables kontrol ediliyor..." -ForegroundColor Cyan
+    Write-Log "INFO" "Environment variables kontrol ediliyor..."
     
     $envFile = Join-Path $ProjectPath ".env"
     
     if (-not (Test-Path $envFile)) {
-        Write-Warning ".env dosyası bulunamadı. Plesk environment variables kullanılıyor."
+        Write-Host "⚠ .env dosyası bulunamadı. Plesk environment variables kullanılıyor." -ForegroundColor Yellow
+        Write-Log "WARNING" ".env dosyası bulunamadı. Plesk environment variables kullanılıyor."
     } else {
-        Write-Success ".env dosyası bulundu"
+        Write-Host "✓ .env dosyası bulundu" -ForegroundColor Green
+        Write-Log "SUCCESS" ".env dosyası bulundu"
     }
 }
 
 function Clear-NPMCache {
-    Write-Info "npm cache temizleniyor..."
+    Write-Host "ℹ npm cache temizleniyor..." -ForegroundColor Cyan
+    Write-Log "INFO" "npm cache temizleniyor..."
     
     try {
         Set-Location $ProjectPath
         & npm cache clean --force
-        Write-Success "npm cache temizlendi"
+        Write-Host "✓ npm cache temizlendi" -ForegroundColor Green
+        Write-Log "SUCCESS" "npm cache temizlendi"
     }
     catch {
-        Write-Warning "npm cache temizleme sırasında hata: $_"
+        Write-Host "⚠ npm cache temizleme sırasında hata: $_" -ForegroundColor Yellow
+        Write-Log "WARNING" "npm cache temizleme sırasında hata: $_"
     }
 }
 
 function Remove-NodeModules {
-    Write-Info "node_modules klasörü siliniyor..."
+    Write-Host "ℹ node_modules klasörü siliniyor..." -ForegroundColor Cyan
+    Write-Log "INFO" "node_modules klasörü siliniyor..."
     
     try {
         $nodeModulesPath = Join-Path $ProjectPath "node_modules"
         
         if (Test-Path $nodeModulesPath) {
             Remove-Item -Path $nodeModulesPath -Recurse -Force -ErrorAction SilentlyContinue
-            Write-Success "node_modules silindi"
+            Write-Host "✓ node_modules silindi" -ForegroundColor Green
+            Write-Log "SUCCESS" "node_modules silindi"
         } else {
-            Write-Info "node_modules klasörü bulunamadı"
+            Write-Host "ℹ node_modules klasörü bulunamadı" -ForegroundColor Cyan
+            Write-Log "INFO" "node_modules klasörü bulunamadı"
         }
     }
     catch {
-        Write-Error "node_modules silinirken hata: $_"
+        Write-Host "✗ node_modules silinirken hata: $_" -ForegroundColor Red
+        Write-Log "ERROR" "node_modules silinirken hata: $_"
     }
 }
 
 function Show-Logs {
-    Write-Info "========== DEPLOYMENT LOG =========="
+    Write-Host "ℹ ========== DEPLOYMENT LOG ==========" -ForegroundColor Cyan
     
     if (Test-Path $LogFile) {
         Get-Content $LogFile | ForEach-Object { Write-Host $_ }
     } else {
-        Write-Info "Deployment log dosyası bulunamadı"
+        Write-Host "ℹ Deployment log dosyası bulunamadı" -ForegroundColor Cyan
     }
     
-    Write-Info ""
-    Write-Info "========== iisnode LOG =========="
+    Write-Host "ℹ " -ForegroundColor Cyan
+    Write-Host "ℹ ========== iisnode LOG ==========" -ForegroundColor Cyan
     
     $iisNodePath = "$env:SystemDrive\iisnode"
     if (Test-Path $iisNodePath) {
         Get-ChildItem -Path $iisNodePath -Recurse | ForEach-Object { Write-Host $_.FullName }
     } else {
-        Write-Info "iisnode klasörü bulunamadı"
+        Write-Host "ℹ iisnode klasörü bulunamadı" -ForegroundColor Cyan
     }
 }
 
 function Show-DiskSpace {
-    Write-Info "========== DISK SPACE USAGE =========="
+    Write-Host "ℹ ========== DISK SPACE USAGE ==========" -ForegroundColor Cyan
     
     Get-Volume | Select-Object DriveLetter, Size, SizeRemaining | Format-Table -AutoSize
 }
 
 function Show-NodeProcesses {
-    Write-Info "========== NODE.JS PROCESSES =========="
+    Write-Host "ℹ ========== NODE.JS PROCESSES ==========" -ForegroundColor Cyan
     
     try {
         Get-Process -Name "node" -ErrorAction SilentlyContinue | 
@@ -243,21 +255,22 @@ function Show-NodeProcesses {
             Format-Table -AutoSize
     }
     catch {
-        Write-Info "Çalışan Node.js process bulunamadı"
+        Write-Host "ℹ Çalışan Node.js process bulunamadı" -ForegroundColor Cyan
     }
 }
 
 function Show-IISStatus {
-    Write-Info "========== IIS APPLICATION POOLS =========="
+    Write-Host "ℹ ========== IIS APPLICATION POOLS ==========" -ForegroundColor Cyan
     
     try {
         & "C:\Windows\System32\inetsrv\appcmd.exe" list apppool
-        Write-Info ""
-        Write-Info "========== IIS WEBSITES =========="
+        Write-Host "ℹ " -ForegroundColor Cyan
+        Write-Host "ℹ ========== IIS WEBSITES ==========" -ForegroundColor Cyan
         & "C:\Windows\System32\inetsrv\appcmd.exe" list site
     }
     catch {
-        Write-Error "IIS status gösterilirken hata: $_"
+        Write-Host "✗ IIS status gösterilirken hata: $_" -ForegroundColor Red
+        Write-Log "ERROR" "IIS status gösterilirken hata: $_"
     }
 }
 
@@ -266,7 +279,8 @@ function Show-IISStatus {
 # ============================================================================
 
 function Invoke-FullDeployment {
-    Write-Info "========== TAM DEPLOYMENT BAŞLIYOR =========="
+    Write-Host "ℹ ========== TAM DEPLOYMENT BAŞLIYOR ==========" -ForegroundColor Cyan
+    Write-Log "INFO" "========== TAM DEPLOYMENT BAŞLIYOR =========="
     
     Test-ProjectDirectory
     Stop-NodeProcesses
@@ -276,11 +290,13 @@ function Invoke-FullDeployment {
     Test-StartupFile
     Restart-IIS
     
-    Write-Success "========== TAM DEPLOYMENT BAŞARIYLA TAMAMLANDI =========="
+    Write-Host "✓ ========== TAM DEPLOYMENT BAŞARIYLA TAMAMLANDI ==========" -ForegroundColor Green
+    Write-Log "SUCCESS" "========== TAM DEPLOYMENT BAŞARIYLA TAMAMLANDI =========="
 }
 
 function Invoke-QuickBuild {
-    Write-Info "========== HIZLI BUILD BAŞLIYOR (npm install atlanıyor) =========="
+    Write-Host "ℹ ========== HIZLI BUILD BAŞLIYOR (npm install atlanıyor) ==========" -ForegroundColor Cyan
+    Write-Log "INFO" "========== HIZLI BUILD BAŞLIYOR (npm install atlanıyor) =========="
     
     Test-ProjectDirectory
     Stop-NodeProcesses
@@ -288,11 +304,13 @@ function Invoke-QuickBuild {
     Test-StartupFile
     Restart-IIS
     
-    Write-Success "========== HIZLI BUILD BAŞARIYLA TAMAMLANDI =========="
+    Write-Host "✓ ========== HIZLI BUILD BAŞARIYLA TAMAMLANDI ==========" -ForegroundColor Green
+    Write-Log "SUCCESS" "========== HIZLI BUILD BAŞARIYLA TAMAMLANDI =========="
 }
 
 function Invoke-ProductionBuild {
-    Write-Info "========== PRODUCTION BUILD BAŞLIYOR =========="
+    Write-Host "ℹ ========== PRODUCTION BUILD BAŞLIYOR ==========" -ForegroundColor Cyan
+    Write-Log "INFO" "========== PRODUCTION BUILD BAŞLIYOR =========="
     
     Test-ProjectDirectory
     Stop-NodeProcesses
@@ -302,21 +320,26 @@ function Invoke-ProductionBuild {
     Test-StartupFile
     Restart-IIS
     
-    Write-Success "========== PRODUCTION BUILD BAŞARIYLA TAMAMLANDI =========="
+    Write-Host "✓ ========== PRODUCTION BUILD BAŞARIYLA TAMAMLANDI ==========" -ForegroundColor Green
+    Write-Log "SUCCESS" "========== PRODUCTION BUILD BAŞARIYLA TAMAMLANDI =========="
 }
 
 function Invoke-TroubleshootNode {
-    Write-Info "========== NODE.JS TROUBLESHOOTING =========="
+    Write-Host "ℹ ========== NODE.JS TROUBLESHOOTING ==========" -ForegroundColor Cyan
+    Write-Log "INFO" "========== NODE.JS TROUBLESHOOTING =========="
     
     Show-NodeProcesses
-    Write-Info "Node.js processler sonlandırılıyor..."
+    Write-Host "ℹ Node.js processler sonlandırılıyor..." -ForegroundColor Cyan
+    Write-Log "INFO" "Node.js processler sonlandırılıyor..."
     Stop-NodeProcesses
     Restart-IIS
-    Write-Success "Troubleshooting tamamlandı"
+    Write-Host "✓ Troubleshooting tamamlandı" -ForegroundColor Green
+    Write-Log "SUCCESS" "Troubleshooting tamamlandı"
 }
 
 function Invoke-TroubleshootNPM {
-    Write-Info "========== NPM TROUBLESHOOTING =========="
+    Write-Host "ℹ ========== NPM TROUBLESHOOTING ==========" -ForegroundColor Cyan
+    Write-Log "INFO" "========== NPM TROUBLESHOOTING =========="
     
     Test-ProjectDirectory
     Stop-NodeProcesses
@@ -327,7 +350,8 @@ function Invoke-TroubleshootNPM {
     Test-StartupFile
     Restart-IIS
     
-    Write-Success "NPM Troubleshooting tamamlandı"
+    Write-Host "✓ NPM Troubleshooting tamamlandı" -ForegroundColor Green
+    Write-Log "SUCCESS" "NPM Troubleshooting tamamlandı"
 }
 
 # ============================================================================
@@ -363,15 +387,18 @@ try {
             Show-IISStatus
         }
         default {
-            Write-Error "Bilinmeyen scenario: $Scenario"
+            Write-Host "✗ Bilinmeyen scenario: $Scenario" -ForegroundColor Red
+            Write-Log "ERROR" "Bilinmeyen scenario: $Scenario"
             exit 1
         }
     }
 }
 catch {
-    Write-Error "Deployment sırasında hata oluştu: $_"
+    Write-Host "✗ Deployment sırasında hata oluştu: $_" -ForegroundColor Red
+    Write-Log "ERROR" "Deployment sırasında hata oluştu: $_"
     exit 1
 }
 finally {
-    Write-Info "Deployment script tamamlandı"
+    Write-Host "ℹ Deployment script tamamlandı" -ForegroundColor Cyan
+    Write-Log "INFO" "Deployment script tamamlandı"
 }
