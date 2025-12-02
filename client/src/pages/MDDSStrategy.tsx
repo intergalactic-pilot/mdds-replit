@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useLocation } from 'wouter';
 import { useMDDSStore } from '../state/store';
 import { useIsMobile } from '../hooks/use-mobile';
@@ -33,12 +33,15 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
+// Memoize cards data to prevent re-computation
+const memoizedCardsData = applyDomainQuotas(cardsData as Card[]);
+
 export default function MDDSStrategy() {
   const store = useMDDSStore();
   const isMobile = useIsMobile();
   const showLoginScreen = useMDDSStore(state => state.showLoginScreen);
   const [, setLocation] = useLocation();
-  const [availableCards, setAvailableCards] = useState(applyDomainQuotas(cardsData as Card[]));
+  const [availableCards] = useState(memoizedCardsData);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [showFinishDialog, setShowFinishDialog] = useState(false);
   const [isFinishing, setIsFinishing] = useState(false);
